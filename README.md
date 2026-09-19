@@ -1,14 +1,20 @@
-InteliStock
+# **InteliStock**
+
+> **Sistema mobile de gerenciamento de estoque e apoio ao planejamento de compras.**
+
+---
 
 Sistema mobile de gerenciamento de estoque e apoio ao planejamento de
 compras.
 
-Projeto acadêmico --- desenvolvimento mobile com integração completa
-entre Front-end, Back-end e Banco de Dados.
+> **Projeto acadêmico --- desenvolvimento mobile com integração completa
+> entre Front-end, Back-end e Banco de Dados.**
 
-Sobre o projeto
+------------------------------------------------------------------------
 
-O InteliStock é um sistema de gerenciamento de estoque desenvolvido
+## **📌 Sobre o projeto**
+
+O **InteliStock** é um sistema de gerenciamento de estoque desenvolvido
 para auxiliar empresas no controle de seus produtos e no planejamento de
 compras.
 
@@ -23,8 +29,8 @@ tendências de consumo e gerar sugestões de reposição, auxiliando o
 usuário no planejamento e reduzindo os riscos de falta ou excesso de
 produtos.
 
-Além do controle de estoque, o sistema contará com um módulo de contas
-a pagar, permitindo o cadastro e acompanhamento de
+Além do controle de estoque, o sistema contará com um módulo de **contas
+a pagar**, permitindo o cadastro e acompanhamento de
 boletos/compromissos financeiros, incluindo informações como fornecedor,
 valor e data de vencimento.
 
@@ -32,78 +38,60 @@ O objetivo é centralizar informações relacionadas ao estoque e às
 obrigações financeiras em uma única plataforma, disponibilizando dados e
 indicadores que auxiliem na organização e na tomada de decisões.
 
-Objetivos
+------------------------------------------------------------------------
 
-Objetivo geral
+## **🎯 Objetivos**
+
+### **Objetivo geral**
 
 Desenvolver uma aplicação mobile para gerenciamento de estoque,
 acompanhamento de movimentações, análise de consumo, sugestão de
 reposição e controle de contas a pagar.
 
-Objetivos específicos
+### **Objetivos específicos**
 
-Cadastrar e consultar produtos;
+-   Cadastrar e consultar produtos;
+-   Acompanhar as quantidades disponíveis em estoque;
+-   Registrar entradas de produtos;
+-   Registrar saídas de produtos;
+-   Atualizar automaticamente o estoque após as movimentações;
+-   Manter histórico das movimentações;
+-   Calcular médias de consumo diário, semanal e mensal;
+-   Identificar tendências de consumo;
+-   Gerar sugestões de reposição;
+-   Cadastrar fornecedores;
+-   Registrar contas e boletos a pagar;
+-   Acompanhar valores e datas de vencimento;
+-   Disponibilizar indicadores para auxiliar o planejamento da empresa;
+-   Integrar o aplicativo mobile a uma API própria;
+-   Persistir os dados em banco de dados relacional.
 
-Acompanhar as quantidades disponíveis em estoque;
+------------------------------------------------------------------------
 
-Registrar entradas de produtos;
+# **📱 Aplicativo Mobile**
 
-Registrar saídas de produtos;
-
-Atualizar automaticamente o estoque após as movimentações;
-
-Manter histórico das movimentações;
-
-Calcular médias de consumo diário, semanal e mensal;
-
-Identificar tendências de consumo;
-
-Gerar sugestões de reposição;
-
-Cadastrar fornecedores;
-
-Registrar contas e boletos a pagar;
-
-Acompanhar valores e datas de vencimento;
-
-Disponibilizar indicadores para auxiliar o planejamento da empresa;
-
-Integrar o aplicativo mobile a uma API própria;
-
-Persistir os dados em banco de dados relacional.
-
-Aplicativo Mobile
-
-O aplicativo será desenvolvido utilizando React Native, com
-TypeScript como linguagem.
+O aplicativo será desenvolvido utilizando **React Native**, com
+**TypeScript** como linguagem.
 
 O Mobile será responsável pela interface com o usuário e pela
 comunicação com o Back-end através de requisições HTTP.
 
-Principais módulos planejados
+### **Principais módulos planejados**
 
-Login e autenticação;
+-   Login e autenticação;
+-   Dashboard;
+-   Produtos;
+-   Estoque;
+-   Movimentações;
+-   Análise de consumo;
+-   Sugestões de reposição;
+-   Fornecedores;
+-   Contas a pagar;
+-   Indicadores e relatórios.
 
-Dashboard;
+### **Fluxo simplificado**
 
-Produtos;
-
-Estoque;
-
-Movimentações;
-
-Análise de consumo;
-
-Sugestões de reposição;
-
-Fornecedores;
-
-Contas a pagar;
-
-Indicadores e relatórios.
-
-Fluxo simplificado
-
+``` text
 Usuário
    ↓
 Aplicativo React Native
@@ -113,35 +101,31 @@ API REST
 Back-end Spring Boot
    ↓
 PostgreSQL
+```
 
-Back-end
+------------------------------------------------------------------------
 
-O Back-end será desenvolvido em Java com Spring Boot.
+# **⚙️ Back-end**
+
+O Back-end será desenvolvido em **Java com Spring Boot**.
 
 Ele será responsável por:
 
-Disponibilizar a API REST;
+-   Disponibilizar a API REST;
+-   Receber e validar as requisições do aplicativo;
+-   Executar as regras de negócio;
+-   Realizar autenticação e autorização;
+-   Processar movimentações de estoque;
+-   Calcular indicadores de consumo;
+-   Gerar sugestões de reposição;
+-   Gerenciar contas a pagar;
+-   Comunicar-se com o banco de dados.
 
-Receber e validar as requisições do aplicativo;
-
-Executar as regras de negócio;
-
-Realizar autenticação e autorização;
-
-Processar movimentações de estoque;
-
-Calcular indicadores de consumo;
-
-Gerar sugestões de reposição;
-
-Gerenciar contas a pagar;
-
-Comunicar-se com o banco de dados.
-
-Arquitetura do Back-end
+## **Arquitetura do Back-end**
 
 Será utilizada uma organização em camadas:
 
+``` text
 Controller
     ↓
 Service
@@ -149,18 +133,20 @@ Service
 Repository
     ↓
 Database
+```
 
-Controller
+### **Controller**
 
 Recebe as requisições HTTP e encaminha os dados para a camada de
 serviço.
 
-Service
+### **Service**
 
 Concentra as regras de negócio do sistema.
 
 Exemplo:
 
+``` text
 Registrar saída
       ↓
 Verificar produto
@@ -172,52 +158,56 @@ Registrar movimentação
 Atualizar estoque
       ↓
 Retornar resultado
+```
 
-Repository
+### **Repository**
 
 Responsável pelo acesso aos dados através do Spring Data JPA.
 
-Entity
+### **Entity**
 
 Representa as principais entidades persistidas no banco de dados.
 
-DTO
+### **DTO**
 
 Será utilizado para controlar os dados enviados e recebidos pela API,
 evitando expor diretamente as entidades do banco em todas as operações.
 
-Banco de Dados
+------------------------------------------------------------------------
 
-O banco de dados escolhido será o PostgreSQL.
+# **🗄️ Banco de Dados**
+
+O banco de dados escolhido será o **PostgreSQL**.
 
 A persistência será realizada pelo Back-end Java utilizando:
 
-Spring Data JPA;
+-   Spring Data JPA;
+-   Hibernate;
+-   PostgreSQL.
 
-Hibernate;
+## **Entidades principais previstas**
 
-PostgreSQL.
-
-Entidades principais previstas
-
-Usuário
+### **Usuário**
 
 Responsável pelo acesso ao sistema.
 
 Campos previstos:
 
+``` text
 id
 nome
 email
 senha
 created_at
+```
 
-Produto
+### **Produto**
 
 Representa os itens controlados pelo estoque.
 
 Campos previstos:
 
+``` text
 id
 nome
 descricao
@@ -227,13 +217,15 @@ unidade_medida
 preco
 fornecedor_id
 created_at
+```
 
-Movimentação
+### **Movimentação**
 
 Registra as entradas e saídas de produtos.
 
 Campos previstos:
 
+``` text
 id
 produto_id
 tipo
@@ -241,87 +233,105 @@ quantidade
 data
 observacao
 usuario_id
+```
 
 Tipos de movimentação:
 
+``` text
 ENTRADA
 SAIDA
+```
 
-Fornecedor
+### **Fornecedor**
 
 Representa os fornecedores relacionados aos produtos e às contas.
 
 Campos previstos:
 
+``` text
 id
 nome
 cnpj
 telefone
 email
+```
 
-Conta a pagar
+### **Conta a pagar**
 
 Representa os compromissos financeiros cadastrados no sistema.
 
 Campos previstos:
 
+``` text
 id
 fornecedor_id
 descricao
 valor
 data_vencimento
 status
+```
 
-A modelagem definitiva do banco será validada antes da implementação
-para evitar alterações desnecessárias durante o desenvolvimento.
+> A modelagem definitiva do banco será validada antes da implementação
+> para evitar alterações desnecessárias durante o desenvolvimento.
 
-Inteligência de estoque
+------------------------------------------------------------------------
+
+# **🧠 Inteligência de estoque**
 
 Uma das funcionalidades centrais do InteliStock será utilizar o
 histórico de movimentações para produzir indicadores de consumo e
 auxiliar no planejamento de reposição.
 
-Consumo médio diário
+## **Consumo médio diário**
 
 Exemplo conceitual:
 
+``` text
 Consumo médio diário =
 Quantidade consumida / Número de dias
+```
 
 Exemplo:
 
+``` text
 Consumo em 30 dias: 300 unidades
 
 300 / 30 = 10 unidades por dia
+```
 
-Consumo semanal e mensal
+## **Consumo semanal e mensal**
 
 O sistema também poderá consolidar as movimentações para apresentar o
 consumo em diferentes períodos.
 
+``` text
 Diário
    ↓
 Semanal
    ↓
 Mensal
+```
 
-Estoque mínimo
+## **Estoque mínimo**
 
 Uma regra de negócio poderá utilizar o consumo médio e uma margem de
 segurança para determinar um nível mínimo de estoque.
 
 Exemplo conceitual:
 
+``` text
 Estoque mínimo =
 Consumo médio diário × Dias de segurança
+```
 
-Sugestão de reposição
+## **Sugestão de reposição**
 
 Quando o estoque estiver abaixo do nível definido, o sistema poderá
 apresentar uma sugestão de reposição.
 
 Exemplo:
 
+``` text
 Produto: Leite
 
 Estoque atual: 32
@@ -329,26 +339,27 @@ Estoque mínimo: 50
 
 → Estoque abaixo do mínimo
 → Gerar alerta de reposição
+```
 
 A fórmula definitiva para a quantidade sugerida será definida durante a
 etapa de regras de negócio.
 
-Segurança
+------------------------------------------------------------------------
+
+# **🔐 Segurança**
 
 O sistema terá autenticação de usuários.
 
 A arquitetura prevista utilizará:
 
-Spring Security;
-
-JWT (JSON Web Token);
-
-Senhas armazenadas utilizando hash seguro;
-
-Controle de acesso aos endpoints protegidos.
+-   **Spring Security**;
+-   **JWT (JSON Web Token)**;
+-   Senhas armazenadas utilizando hash seguro;
+-   Controle de acesso aos endpoints protegidos.
 
 Fluxo:
 
+``` text
 Login
   ↓
 Spring Security
@@ -360,65 +371,85 @@ JWT
 Aplicativo armazena o token
   ↓
 Token enviado nas próximas requisições
+```
 
-API REST
+------------------------------------------------------------------------
+
+# **🌐 API REST**
 
 A comunicação entre o aplicativo e o Back-end será realizada através de
 uma API REST utilizando JSON.
 
-Endpoints planejados
+## **Endpoints planejados**
 
-Autenticação
+### **Autenticação**
 
+``` http
 POST /api/auth/login
 POST /api/auth/register
+```
 
-Produtos
+### **Produtos**
 
+``` http
 GET    /api/produtos
 GET    /api/produtos/{id}
 POST   /api/produtos
 PUT    /api/produtos/{id}
 DELETE /api/produtos/{id}
+```
 
-Movimentações
+### **Movimentações**
 
+``` http
 GET  /api/movimentacoes
 POST /api/movimentacoes
+```
 
-Estoque
+### **Estoque**
 
+``` http
 GET /api/estoque
 GET /api/estoque/baixo
 GET /api/estoque/{produtoId}
+```
 
-Análises
+### **Análises**
 
+``` http
 GET /api/analises/consumo
 GET /api/analises/reposicao
+```
 
-Fornecedores
+### **Fornecedores**
 
+``` http
 GET    /api/fornecedores
 GET    /api/fornecedores/{id}
 POST   /api/fornecedores
 PUT    /api/fornecedores/{id}
 DELETE /api/fornecedores/{id}
+```
 
-Contas a pagar
+### **Contas a pagar**
 
+``` http
 GET    /api/contas
 GET    /api/contas/{id}
 POST   /api/contas
 PUT    /api/contas/{id}
 DELETE /api/contas/{id}
+```
 
-Os endpoints acima representam o planejamento inicial da API. Os
-contratos definitivos serão definidos durante a implementação do
-Back-end.
+> Os endpoints acima representam o planejamento inicial da API. Os
+> contratos definitivos serão definidos durante a implementação do
+> Back-end.
 
-🏗️ Arquitetura geral
+------------------------------------------------------------------------
 
+# **🏗️ Arquitetura geral**
+
+``` text
 ┌───────────────────────────────────────────────┐
 │                  MOBILE                       │
 │                                               │
@@ -447,50 +478,56 @@ Back-end.
 │                                               │
 │                  PostgreSQL                   │
 └───────────────────────────────────────────────┘
+```
 
-Tecnologias
+------------------------------------------------------------------------
 
-Front-end Mobile
+# **🛠️ Tecnologias**
 
-Tecnologia         Utilização
+## **Front-end Mobile**
 
-React Native       Desenvolvimento do aplicativo mobile
-TypeScript         Linguagem de programação
-Axios              Comunicação HTTP com a API
-React Navigation   Navegação entre telas
+  Tecnologia         Utilização
+  ------------------ --------------------------------------
+  React Native       Desenvolvimento do aplicativo mobile
+  TypeScript         Linguagem de programação
+  Axios              Comunicação HTTP com a API
+  React Navigation   Navegação entre telas
 
-Back-end
+## **Back-end**
 
-Tecnologia        Utilização
+  Tecnologia        Utilização
+  ----------------- -----------------------------------------
+  Java              Linguagem do Back-end
+  Spring Boot       Desenvolvimento da API
+  Spring Web        Criação dos endpoints REST
+  Spring Data JPA   Persistência e acesso aos dados
+  Hibernate         ORM
+  Spring Security   Autenticação e autorização
+  JWT               Autenticação baseada em token
+  Maven             Gerenciamento do projeto e dependências
 
-Java              Linguagem do Back-end
-Spring Boot       Desenvolvimento da API
-Spring Web        Criação dos endpoints REST
-Spring Data JPA   Persistência e acesso aos dados
-Hibernate         ORM
-Spring Security   Autenticação e autorização
-JWT               Autenticação baseada em token
-Maven             Gerenciamento do projeto e dependências
+## **Banco de dados**
 
-Banco de dados
+  Tecnologia   Utilização
+  ------------ ---------------------------
+  PostgreSQL   Banco de dados relacional
 
-Tecnologia   Utilização
+## **Desenvolvimento e testes**
 
-PostgreSQL   Banco de dados relacional
+  Ferramenta           Utilização
+  -------------------- ------------------------------------
+  Visual Studio Code   Desenvolvimento do Mobile
+  IntelliJ IDEA        Desenvolvimento do Back-end Java
+  Git                  Controle de versão
+  GitHub               Hospedagem do código e colaboração
+  GitHub Desktop       Gerenciamento do repositório
+  Postman              Testes da API
 
-Desenvolvimento e testes
+------------------------------------------------------------------------
 
-Ferramenta           Utilização
+# **📁 Estrutura planejada do repositório**
 
-Visual Studio Code   Desenvolvimento do Mobile
-IntelliJ IDEA        Desenvolvimento do Back-end Java
-Git                  Controle de versão
-GitHub               Hospedagem do código e colaboração
-GitHub Desktop       Gerenciamento do repositório
-Postman              Testes da API
-
-Estrutura planejada do repositório
-
+``` text
 InteliStock/
 │
 ├── docs/
@@ -523,11 +560,15 @@ InteliStock/
 ├── database/
 │
 └── README.md
+```
 
-Fluxo de uma operação
+------------------------------------------------------------------------
+
+# **🔄 Fluxo de uma operação**
 
 Exemplo: registro de saída de um produto.
 
+``` text
 1. Usuário acessa o aplicativo
           ↓
 2. Seleciona um produto
@@ -551,27 +592,26 @@ Exemplo: registro de saída de um produto.
 11. API retorna resposta JSON
           ↓
 12. React Native atualiza a interface
+```
 
-📊 Dashboard
+------------------------------------------------------------------------
+
+# **📊 Dashboard**
 
 O Dashboard deverá centralizar os principais indicadores do sistema.
 
 Indicadores planejados:
 
-Quantidade de produtos cadastrados;
-
-Produtos com estoque baixo;
-
-Consumo por período;
-
-Movimentações recentes;
-
-Contas próximas do vencimento;
-
-Indicadores relacionados à reposição.
+-   Quantidade de produtos cadastrados;
+-   Produtos com estoque baixo;
+-   Consumo por período;
+-   Movimentações recentes;
+-   Contas próximas do vencimento;
+-   Indicadores relacionados à reposição.
 
 Exemplo conceitual:
 
+``` text
 ┌──────────────────────────────────┐
 │          INTELISTOCK             │
 ├──────────────────────────────────┤
@@ -584,8 +624,11 @@ Exemplo conceitual:
 ├──────────────────────────────────┤
 │ Produtos | Estoque | Contas      │
 └──────────────────────────────────┘
+```
 
-Escopo inicial
+------------------------------------------------------------------------
+
+# **🚫 Escopo inicial**
 
 De acordo com a definição inicial do projeto, o InteliStock está focado
 em gerenciamento de estoque, análise de consumo, reposição e contas a
@@ -595,137 +638,103 @@ Funcionalidades que não fazem parte da primeira versão deverão ser
 mantidas fora do escopo até que sejam formalmente incluídas no
 planejamento.
 
-Plano de desenvolvimento
+------------------------------------------------------------------------
 
-Fase 1 --- Planejamento
+# **🚀 Plano de desenvolvimento**
 
-Definição dos requisitos;
+## **Fase 1 --- Planejamento**
 
-Definição da arquitetura;
+-   Definição dos requisitos;
+-   Definição da arquitetura;
+-   Modelagem do banco;
+-   Definição da API;
+-   Organização do GitHub.
 
-Modelagem do banco;
+## **Fase 2 --- Back-end**
 
-Definição da API;
+-   Criação do projeto Spring Boot;
+-   Configuração do PostgreSQL;
+-   Configuração do JPA/Hibernate;
+-   Criação das entidades;
+-   Criação dos repositories;
+-   Criação dos services;
+-   Criação dos controllers.
 
-Organização do GitHub.
+## **Fase 3 --- Segurança**
 
-Fase 2 --- Back-end
+-   Cadastro;
+-   Login;
+-   Spring Security;
+-   JWT;
+-   Proteção dos endpoints.
 
-Criação do projeto Spring Boot;
+## **Fase 4 --- Estoque**
 
-Configuração do PostgreSQL;
+-   Cadastro de produtos;
+-   Entradas;
+-   Saídas;
+-   Histórico;
+-   Atualização automática do estoque.
 
-Configuração do JPA/Hibernate;
+## **Fase 5 --- Análises**
 
-Criação das entidades;
+-   Consumo diário;
+-   Consumo semanal;
+-   Consumo mensal;
+-   Estoque mínimo;
+-   Tendências;
+-   Sugestões de reposição.
 
-Criação dos repositories;
+## **Fase 6 --- Contas a pagar**
 
-Criação dos services;
+-   Cadastro de fornecedores;
+-   Cadastro de contas;
+-   Valores;
+-   Datas de vencimento;
+-   Status dos pagamentos.
 
-Criação dos controllers.
+## **Fase 7 --- Mobile**
 
-Fase 3 --- Segurança
+-   Estrutura do React Native;
+-   Navegação;
+-   Telas;
+-   Consumo da API;
+-   Autenticação;
+-   Dashboard;
+-   Módulos de estoque e financeiro.
 
-Cadastro;
+## **Fase 8 --- Testes e integração**
 
-Login;
+-   Testes da API;
+-   Testes das regras de negócio;
+-   Testes de integração;
+-   Testes do aplicativo;
+-   Correção de erros.
 
-Spring Security;
+## **Fase 9 --- Finalização**
 
-JWT;
+-   Documentação;
+-   Organização do código;
+-   Deploy;
+-   Preparação da apresentação;
+-   Demonstração do sistema.
 
-Proteção dos endpoints.
+------------------------------------------------------------------------
 
-Fase 4 --- Estoque
-
-Cadastro de produtos;
-
-Entradas;
-
-Saídas;
-
-Histórico;
-
-Atualização automática do estoque.
-
-Fase 5 --- Análises
-
-Consumo diário;
-
-Consumo semanal;
-
-Consumo mensal;
-
-Estoque mínimo;
-
-Tendências;
-
-Sugestões de reposição.
-
-Fase 6 --- Contas a pagar
-
-Cadastro de fornecedores;
-
-Cadastro de contas;
-
-Valores;
-
-Datas de vencimento;
-
-Status dos pagamentos.
-
-Fase 7 --- Mobile
-
-Estrutura do React Native;
-
-Navegação;
-
-Telas;
-
-Consumo da API;
-
-Autenticação;
-
-Dashboard;
-
-Módulos de estoque e financeiro.
-
-Fase 8 --- Testes e integração
-
-Testes da API;
-
-Testes das regras de negócio;
-
-Testes de integração;
-
-Testes do aplicativo;
-
-Correção de erros.
-
-Fase 9 --- Finalização
-
-Documentação;
-
-Organização do código;
-
-Deploy;
-
-Preparação da apresentação;
-
-Demonstração do sistema.
-
-Estratégia de Git
+# **🌿 Estratégia de Git**
 
 O desenvolvimento será realizado utilizando Git e GitHub.
 
 A branch principal será:
 
+``` text
 main
+```
 
 Durante o desenvolvimento, recomenda-se trabalhar com branches de
 funcionalidades:
 
+``` text
 main
 │
 ├── feature/backend
@@ -735,9 +744,11 @@ main
 ├── feature/produtos
 ├── feature/estoque
 └── feature/contas
+```
 
 Exemplos de commits:
 
+``` text
 docs: adiciona documentação inicial
 feat: cria estrutura do backend
 feat: configura conexão com PostgreSQL
@@ -745,17 +756,23 @@ feat: implementa entidade Produto
 feat: implementa cadastro de produtos
 feat: implementa movimentação de estoque
 feat: adiciona autenticação JWT
+```
 
-Equipe
+------------------------------------------------------------------------
+
+# **👥 Equipe**
 
 Projeto desenvolvido por:
 
-Beatriz Salles Pereira
+-   Beatriz Salles Pereira
+-   Caio Roberto de Almeida Silva
+-   Guilherme Paiva de Jesus
+-   João Gabriel Barros Rodrigues
+-   Rafaely Cristina Campos Reis
 
-Caio Roberto de Almeida Silva
+------------------------------------------------------------------------
 
-Guilherme Paiva de Jesus
 
-João Gabriel Barros Rodrigues
+## **📜 Licença**
 
-Rafaely Cristina Campos Reis
+Projeto acadêmico desenvolvido para fins educacionais.
