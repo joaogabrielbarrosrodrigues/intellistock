@@ -1,0 +1,39 @@
+package br.com.intellistock.intellistock_backend.repository;
+
+import br.com.intellistock.intellistock_backend.entity.ContaPagar;
+import br.com.intellistock.intellistock_backend.entity.StatusConta;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.UUID;
+
+public interface ContaPagarRepository extends JpaRepository<ContaPagar, UUID>, JpaSpecificationExecutor<ContaPagar> {
+
+    boolean existsByFornecedorId(UUID fornecedorId);
+
+    @Query("""
+            select c from ContaPagar c join fetch c.fornecedor
+            where c.status = :status and c.dataVencimento >= :inicio and c.dataVencimento <= :fim
+            order by c.dataVencimento
+            """)
+    List<ContaPagar> findByStatusAndVencimentoEntre(@Param("status") StatusConta status,
+                                                    @Param("inicio") LocalDate inicio,
+                                                    @Param("fim") LocalDate fim);
+
+    @Query("select count(c) from ContaPagar c where c.status = :status and c.dataVencimento < :data")
+    long countByStatusAndVencimentoAntes(@Param("status") StatusConta status, @Param("data") LocalDate data);
+
+    @Query("select count(c) from ContaPagar c where c.status = :status and c.dataVencimento >= :data")
+    long countByStatusAndVencimentoAPartirDe(@Param("status") StatusConta status, @Param("data") LocalDate data);
+
+    @Query("select coalesce(sum(c.valor), 0) from ContaPagar c where c.status = :status")
+    BigDecimal sumValorByStatus(@Param("status") StatusConta status);
+
+    @Query("select coalesce(sum(c.valor), 0) from ContaPagar c where c.status = :status and c.dataVencimento < :data")
+    BigDecimal sumValorByStatusAndVencimentoAntes(@Param("status") StatusConta status, @Param("data") LocalDate data);
+}

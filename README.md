@@ -121,6 +121,10 @@ Ele será responsável por:
 -   Gerenciar contas a pagar;
 -   Comunicar-se com o banco de dados.
 
+> ✅ **Status:** back-end implementado (autenticação, produtos, fornecedores,
+> movimentações, estoque, contas a pagar, análises de consumo/reposição e dashboard).
+> Como rodar, endpoints e regras de cálculo: [intellistock-backend/README.md](intellistock-backend/README.md).
+
 ## **Arquitetura do Back-end**
 
 Será utilizada uma organização em camadas:

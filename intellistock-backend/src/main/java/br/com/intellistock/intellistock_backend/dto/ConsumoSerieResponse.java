@@ -1,0 +1,28 @@
+package br.com.intellistock.intellistock_backend.dto;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.UUID;
+
+/**
+ * Serie temporal de consumo, pronta para graficos.
+ *
+ * @param produtoId null quando a serie consolida todos os produtos
+ */
+public record ConsumoSerieResponse(
+        UUID produtoId,
+        String produtoNome,
+        Agrupamento agrupamento,
+        List<Ponto> pontos
+) {
+
+    public enum Agrupamento {
+        DIARIO,
+        SEMANAL,
+        MENSAL
+    }
+
+    public record Ponto(LocalDate inicio, LocalDate fim, BigDecimal quantidade) {
+    }
+}

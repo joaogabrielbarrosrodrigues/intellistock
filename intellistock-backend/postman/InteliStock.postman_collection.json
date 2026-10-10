@@ -1,0 +1,193 @@
+{
+  "info": {
+    "name": "InteliStock API",
+    "description": "Colecao para testes manuais do back-end InteliStock. Rode 'Registrar' e 'Login' primeiro: o token e os IDs criados sao salvos nas variaveis da colecao.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "token", "value": "" },
+    { "key": "fornecedorId", "value": "" },
+    { "key": "produtoId", "value": "" },
+    { "key": "contaId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Registrar",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/auth/register",
+            "body": { "mode": "raw", "raw": "{\n  \"nome\": \"Joao Gabriel\",\n  \"email\": \"joao@example.com\",\n  \"senha\": \"senha1234\"\n}" }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "if (pm.response.code === 200) { pm.collectionVariables.set('token', pm.response.json().token); }"
+            ] }
+          }],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/auth/login",
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"joao@example.com\",\n  \"senha\": \"senha1234\"\n}" }
+          }
+        },
+        {
+          "name": "Usuario autenticado",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/users/me" }
+        }
+      ]
+    },
+    {
+      "name": "Fornecedores",
+      "item": [
+        {
+          "name": "Criar fornecedor",
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "if (pm.response.code === 201) { pm.collectionVariables.set('fornecedorId', pm.response.json().id); }"
+            ] }
+          }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/fornecedores",
+            "body": { "mode": "raw", "raw": "{\n  \"nome\": \"Laticinios Bom Leite\",\n  \"cnpj\": \"11.222.333/0001-81\",\n  \"telefone\": \"(11) 99999-0000\",\n  \"email\": \"contato@bomleite.com\"\n}" }
+          }
+        },
+        { "name": "Listar fornecedores", "request": { "method": "GET", "url": "{{baseUrl}}/api/fornecedores" } },
+        { "name": "Buscar fornecedor", "request": { "method": "GET", "url": "{{baseUrl}}/api/fornecedores/{{fornecedorId}}" } },
+        {
+          "name": "Atualizar fornecedor",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/fornecedores/{{fornecedorId}}",
+            "body": { "mode": "raw", "raw": "{\n  \"nome\": \"Laticinios Bom Leite LTDA\",\n  \"cnpj\": \"11.222.333/0001-81\",\n  \"telefone\": \"(11) 98888-0000\",\n  \"email\": \"financeiro@bomleite.com\"\n}" }
+          }
+        },
+        { "name": "Excluir fornecedor", "request": { "method": "DELETE", "url": "{{baseUrl}}/api/fornecedores/{{fornecedorId}}" } }
+      ]
+    },
+    {
+      "name": "Produtos",
+      "item": [
+        {
+          "name": "Criar produto",
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "if (pm.response.code === 201) { pm.collectionVariables.set('produtoId', pm.response.json().id); }"
+            ] }
+          }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/produtos",
+            "body": { "mode": "raw", "raw": "{\n  \"nome\": \"Leite Integral\",\n  \"descricao\": \"Caixa 1L\",\n  \"quantidadeInicial\": 100,\n  \"estoqueMinimo\": 50,\n  \"unidadeMedida\": \"L\",\n  \"preco\": 4.99,\n  \"fornecedorId\": \"{{fornecedorId}}\"\n}" }
+          }
+        },
+        { "name": "Listar produtos", "request": { "method": "GET", "url": "{{baseUrl}}/api/produtos?busca=leite" } },
+        { "name": "Buscar produto", "request": { "method": "GET", "url": "{{baseUrl}}/api/produtos/{{produtoId}}" } },
+        {
+          "name": "Atualizar produto",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/produtos/{{produtoId}}",
+            "body": { "mode": "raw", "raw": "{\n  \"nome\": \"Leite Integral 1L\",\n  \"estoqueMinimo\": 60,\n  \"unidadeMedida\": \"L\",\n  \"preco\": 5.29,\n  \"fornecedorId\": \"{{fornecedorId}}\"\n}" }
+          }
+        },
+        { "name": "Excluir produto (logico)", "request": { "method": "DELETE", "url": "{{baseUrl}}/api/produtos/{{produtoId}}" } },
+        { "name": "Reativar produto", "request": { "method": "PATCH", "url": "{{baseUrl}}/api/produtos/{{produtoId}}/reativar" } }
+      ]
+    },
+    {
+      "name": "Movimentacoes e estoque",
+      "item": [
+        {
+          "name": "Registrar entrada",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/movimentacoes",
+            "body": { "mode": "raw", "raw": "{\n  \"produtoId\": \"{{produtoId}}\",\n  \"tipo\": \"ENTRADA\",\n  \"quantidade\": 24,\n  \"observacao\": \"NF 1234\"\n}" }
+          }
+        },
+        {
+          "name": "Registrar saida",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/movimentacoes",
+            "body": { "mode": "raw", "raw": "{\n  \"produtoId\": \"{{produtoId}}\",\n  \"tipo\": \"SAIDA\",\n  \"quantidade\": 10,\n  \"observacao\": \"Venda balcao\"\n}" }
+          }
+        },
+        { "name": "Historico do produto", "request": { "method": "GET", "url": "{{baseUrl}}/api/movimentacoes?produtoId={{produtoId}}" } },
+        { "name": "Estoque geral", "request": { "method": "GET", "url": "{{baseUrl}}/api/estoque" } },
+        { "name": "Estoque baixo", "request": { "method": "GET", "url": "{{baseUrl}}/api/estoque/baixo" } },
+        { "name": "Estoque do produto", "request": { "method": "GET", "url": "{{baseUrl}}/api/estoque/{{produtoId}}" } }
+      ]
+    },
+    {
+      "name": "Contas a pagar",
+      "item": [
+        {
+          "name": "Criar conta",
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "if (pm.response.code === 201) { pm.collectionVariables.set('contaId', pm.response.json().id); }"
+            ] }
+          }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/contas",
+            "body": { "mode": "raw", "raw": "{\n  \"fornecedorId\": \"{{fornecedorId}}\",\n  \"descricao\": \"Boleto NF 1234\",\n  \"valor\": 1520.90,\n  \"dataVencimento\": \"2026-12-20\",\n  \"observacao\": \"Parcela 1/3\"\n}" }
+          }
+        },
+        { "name": "Listar contas", "request": { "method": "GET", "url": "{{baseUrl}}/api/contas" } },
+        { "name": "Contas vencidas", "request": { "method": "GET", "url": "{{baseUrl}}/api/contas?status=VENCIDA" } },
+        { "name": "Buscar conta", "request": { "method": "GET", "url": "{{baseUrl}}/api/contas/{{contaId}}" } },
+        {
+          "name": "Pagar conta",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/contas/{{contaId}}/pagar",
+            "body": { "mode": "raw", "raw": "{}" }
+          }
+        },
+        { "name": "Reabrir conta", "request": { "method": "PATCH", "url": "{{baseUrl}}/api/contas/{{contaId}}/reabrir" } },
+        { "name": "Cancelar conta", "request": { "method": "PATCH", "url": "{{baseUrl}}/api/contas/{{contaId}}/cancelar" } },
+        { "name": "Excluir conta", "request": { "method": "DELETE", "url": "{{baseUrl}}/api/contas/{{contaId}}" } }
+      ]
+    },
+    {
+      "name": "Analises e dashboard",
+      "item": [
+        { "name": "Consumo (todos)", "request": { "method": "GET", "url": "{{baseUrl}}/api/analises/consumo?dias=30" } },
+        { "name": "Consumo do produto", "request": { "method": "GET", "url": "{{baseUrl}}/api/analises/consumo?produtoId={{produtoId}}" } },
+        { "name": "Serie semanal", "request": { "method": "GET", "url": "{{baseUrl}}/api/analises/consumo/serie?agrupamento=SEMANAL" } },
+        { "name": "Sugestoes de reposicao", "request": { "method": "GET", "url": "{{baseUrl}}/api/analises/reposicao" } },
+        { "name": "Reposicao com parametros", "request": { "method": "GET", "url": "{{baseUrl}}/api/analises/reposicao?diasCobertura=15&prazoEntregaDias=3&diasSeguranca=5&todos=true" } },
+        { "name": "Dashboard", "request": { "method": "GET", "url": "{{baseUrl}}/api/dashboard?diasVencimento=7" } }
+      ]
+    }
+  ]
+}

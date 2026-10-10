@@ -45,7 +45,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     );
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
-            } catch (IllegalArgumentException ignored) {
+            } catch (RuntimeException ignored) {
+                // Token mal formado, adulterado ou expirado: segue sem autenticacao e o
+                // entry point responde 401 se o endpoint exigir login.
                 SecurityContextHolder.clearContext();
             }
         }
