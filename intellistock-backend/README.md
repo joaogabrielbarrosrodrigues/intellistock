@@ -12,8 +12,16 @@ cd intellistock-backend
 # testes (usam H2 em memória, não precisam do PostgreSQL)
 ./mvnw test
 
-# aplicação (Windows: mvnw.cmd)
+# aplicação (Linux/macOS)
 DB_PASSWORD=sua_senha JWT_SECRET=um-segredo-com-pelo-menos-32-caracteres ./mvnw spring-boot:run
+```
+
+No PowerShell do Windows:
+
+```powershell
+$env:DB_PASSWORD="sua_senha"
+$env:JWT_SECRET="um-segredo-com-pelo-menos-32-caracteres"
+.\mvnw.cmd spring-boot:run
 ```
 
 As tabelas são criadas/atualizadas automaticamente (`ddl-auto=update`). A API sobe em `http://localhost:8080`.
