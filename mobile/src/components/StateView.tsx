@@ -1,5 +1,6 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { colors } from "../theme/colors";
+import { radius, spacing } from "../theme/tokens";
 
 export type StateViewProps = {
   loading?: boolean;
@@ -37,11 +38,9 @@ const styles = StyleSheet.create({
   container: {
     alignItems: "center",
     backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: 8,
-    borderWidth: 1,
-    gap: 10,
-    padding: 20
+    borderRadius: radius.lg,
+    gap: spacing.sm,
+    padding: spacing.lg
   },
   text: {
     color: colors.muted
@@ -52,9 +51,9 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: colors.primary,
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 10
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs
   },
   buttonText: {
     color: "#FFFFFF",

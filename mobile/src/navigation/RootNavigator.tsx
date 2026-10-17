@@ -8,6 +8,7 @@ import { ContasScreen } from "../screens/ContasScreen";
 import { DashboardScreen } from "../screens/DashboardScreen";
 import { EstoqueScreen } from "../screens/EstoqueScreen";
 import { LoginScreen } from "../screens/LoginScreen";
+import { MaisScreen } from "../screens/MaisScreen";
 import { ProdutosScreen } from "../screens/ProdutosScreen";
 
 export type AuthStackParamList = {
@@ -19,6 +20,7 @@ export type AppTabParamList = {
   Produtos: undefined;
   Estoque: undefined;
   Contas: undefined;
+  Mais: undefined;
 };
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -31,7 +33,8 @@ function AppTabs() {
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.muted,
-        tabBarStyle: { borderTopColor: colors.border, height: 62, paddingBottom: 8, paddingTop: 6 },
+        tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border, height: 66, paddingBottom: 8, paddingTop: 6 },
+        tabBarLabelStyle: { fontSize: 11, fontWeight: "700" },
         tabBarIcon: ({ color, size }) => {
           const iconName =
             route.name === "Dashboard"
@@ -40,7 +43,9 @@ function AppTabs() {
                 ? "cube-outline"
                 : route.name === "Estoque"
                   ? "layers-outline"
-                  : "card-outline";
+                  : route.name === "Contas"
+                    ? "card-outline"
+                    : "ellipsis-horizontal-circle-outline";
 
           return <Ionicons name={iconName} size={size} color={color} />;
         }
@@ -50,6 +55,7 @@ function AppTabs() {
       <Tab.Screen name="Produtos" component={ProdutosScreen} />
       <Tab.Screen name="Estoque" component={EstoqueScreen} />
       <Tab.Screen name="Contas" component={ContasScreen} />
+      <Tab.Screen name="Mais" component={MaisScreen} />
     </Tab.Navigator>
   );
 }

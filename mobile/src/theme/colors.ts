@@ -1,14 +1,21 @@
 export const colors = {
-  background: "#F7FAF9",
+  background: "#F5F7F6",
   surface: "#FFFFFF",
-  surfaceMuted: "#EEF6F4",
-  primary: "#0F766E",
-  primaryDark: "#115E59",
+  surfaceMuted: "#EDF7F3",
+  primary: "#087A5B",
+  primaryDark: "#075B45",
+  primaryLight: "#DDF5EA",
   accent: "#2563EB",
-  warning: "#B45309",
+  warning: "#B54708",
+  warningLight: "#FFF4E5",
   danger: "#B42318",
-  success: "#047857",
-  text: "#10201E",
+  dangerLight: "#FEECEC",
+  success: "#087A5B",
+  successLight: "#DDF5EA",
+  text: "#17201D",
+  textSecondary: "#475467",
   muted: "#667085",
-  border: "#D0D5DD"
-};
+  border: "#D9E1DD",
+  overlay: "rgba(17, 33, 27, 0.46)",
+  white: "#FFFFFF"
+} as const;

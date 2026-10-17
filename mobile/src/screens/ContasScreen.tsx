@@ -1,39 +1,38 @@
-import { StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { getApiErrorMessage } from "../api/errors";
+import type { ContaPagar, StatusConta } from "../api/types";
+import { ContaFormModal } from "../components/ContaFormModal";
 import { EmptyState } from "../components/EmptyState";
 import { Header } from "../components/Header";
 import { Screen } from "../components/Screen";
+import { ConfirmationDialog, StatusBadge } from "../components/ui";
 import { StateView } from "../components/StateView";
-import { useContasQuery } from "../hooks/useIntellistockQueries";
+import { useContaMutations, useContasQuery, useFornecedoresQuery } from "../hooks/useIntellistockQueries";
 import { colors } from "../theme/colors";
+import { radius, shadow, spacing } from "../theme/tokens";
 import { formatCurrency, formatDate } from "../utils";
 
+type Filter = "TODAS" | StatusConta;
 export function ContasScreen() {
-  const query = useContasQuery();
-  const contas = query.data ?? [];
-  return (
-    <Screen refreshing={query.isRefetching} onRefresh={() => void query.refetch()}>
-      <Header title="Contas" subtitle="Compromissos financeiros" />
-      <StateView loading={query.isLoading} error={query.isError ? getApiErrorMessage(query.error, "Não foi possível carregar as contas.") : null} onRetry={() => void query.refetch()} />
-      {!query.isLoading && !query.isError && contas.length === 0 ? <EmptyState message="Nenhuma conta cadastrada." /> : null}
-      {contas.map((conta) => (
-        <View key={conta.id} style={styles.card}>
-          <View style={styles.row}><Text style={styles.title}>{conta.descricao}</Text><Text style={[styles.status, statusStyle[conta.status]]}>{conta.status}</Text></View>
-          <Text style={styles.subtitle}>{conta.fornecedor?.nome ?? "Fornecedor não informado"}</Text>
-          <View style={styles.row}><Text style={styles.value}>{formatCurrency(conta.valor)}</Text><Text style={styles.date}>Vence em {formatDate(conta.dataVencimento)}</Text></View>
-        </View>
-      ))}
-    </Screen>
-  );
+  const [filter, setFilter] = useState<Filter>("TODAS"); const [editing, setEditing] = useState<ContaPagar | null | undefined>(undefined); const [payment, setPayment] = useState<ContaPagar | null>(null); const [removing, setRemoving] = useState<ContaPagar | null>(null); const [feedback, setFeedback] = useState<string | null>(null);
+  const query = useContasQuery(filter === "TODAS" ? undefined : filter); const suppliers = useFornecedoresQuery(); const mutations = useContaMutations(); const contas = query.data ?? [];
+  async function pay() { if (!payment) return; try { await mutations.pay.mutateAsync(payment.id); setPayment(null); setFeedback("Pagamento registrado com sucesso."); } catch (error) { setPayment(null); setFeedback(getApiErrorMessage(error, "Não foi possível registrar o pagamento.")); } }
+  async function remove() { if (!removing) return; try { await mutations.remove.mutateAsync(removing.id); setRemoving(null); setFeedback("Conta excluída com sucesso."); } catch (error) { setRemoving(null); setFeedback(getApiErrorMessage(error, "Não foi possível excluir a conta.")); } }
+  return <Screen refreshing={query.isRefetching} onRefresh={() => void query.refetch()}>
+    <Header subtitle="Compromissos e vencimentos" title="Contas a pagar" />
+    <View style={styles.filterScroll}>{(["TODAS", "PENDENTE", "VENCIDA", "PAGA"] as Filter[]).map((value) => <Pressable key={value} accessibilityRole="button" onPress={() => setFilter(value)} style={[styles.filter, filter === value && styles.filterSelected]}><Text style={[styles.filterText, filter === value && styles.filterTextSelected]}>{value === "TODAS" ? "Todas" : value[0] + value.slice(1).toLowerCase()}</Text></Pressable>)}</View>
+    <Pressable accessibilityLabel="Cadastrar conta" accessibilityRole="button" onPress={() => setEditing(null)} style={styles.newButton}><Ionicons color={colors.white} name="add" size={21} /><Text style={styles.newText}>Nova conta</Text></Pressable>
+    {feedback ? <Text accessibilityRole="alert" style={styles.feedback}>{feedback}</Text> : null}
+    <StateView error={query.isError ? getApiErrorMessage(query.error, "Não foi possível carregar as contas.") : null} loading={query.isLoading} onRetry={() => void query.refetch()} />
+    {!query.isLoading && !query.isError && contas.length === 0 ? <EmptyState message="Cadastre uma conta ou selecione outro filtro." title="Nenhuma conta encontrada" /> : null}
+    {contas.map((conta) => { const open = conta.status === "PENDENTE" || conta.status === "VENCIDA"; return <View key={conta.id} style={styles.card}><Pressable accessibilityHint={open ? "Abre a edição da conta" : undefined} accessibilityRole="button" disabled={!open} onPress={() => setEditing(conta)} style={styles.cardBody}><View style={styles.cardHeader}><Text numberOfLines={1} style={styles.title}>{conta.descricao}</Text><StatusBadge label={conta.status} tone={statusTone(conta.status)} /></View><Text numberOfLines={1} style={styles.supplier}>{conta.fornecedor?.nome ?? "Fornecedor não informado"}</Text><View style={styles.data}><View><Text style={styles.amount}>{formatCurrency(conta.valor)}</Text><Text style={styles.due}>{dueLabel(conta)}</Text></View>{open ? <Text style={styles.edit}>Editar</Text> : null}</View></Pressable>{open ? <View style={styles.actions}><Pressable accessibilityRole="button" onPress={() => setPayment(conta)} style={styles.pay}><Text style={styles.payText}>Marcar como paga</Text></Pressable><Pressable accessibilityRole="button" onPress={() => setRemoving(conta)} style={styles.delete}><Ionicons color={colors.danger} name="trash-outline" size={19} /></Pressable></View> : null}</View>; })}
+    <ContaFormModal conta={editing} onClose={() => setEditing(undefined)} onSaved={setFeedback} suppliers={suppliers.data ?? []} visible={editing !== undefined} />
+    <ConfirmationDialog confirmLabel="Registrar pagamento" loading={mutations.pay.isPending} message={`Confirmar o pagamento de ${formatCurrency(payment?.valor)}? Esta ação pode ser revertida somente pela API administrativa.`} onCancel={() => setPayment(null)} onConfirm={() => void pay()} title="Confirmar pagamento" visible={Boolean(payment)} />
+    <ConfirmationDialog confirmLabel="Excluir" loading={mutations.remove.isPending} message="Esta exclusão remove a conta definitivamente. Verifique se ela não é mais necessária." onCancel={() => setRemoving(null)} onConfirm={() => void remove()} title="Excluir conta?" visible={Boolean(removing)} />
+  </Screen>;
 }
-
-const statusStyle = StyleSheet.create({ PENDENTE: { color: colors.warning }, VENCIDA: { color: colors.danger }, PAGA: { color: colors.success }, CANCELADA: { color: colors.muted } });
-const styles = StyleSheet.create({
-  card: { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: 8, borderWidth: 1, gap: 8, padding: 14 },
-  row: { alignItems: "center", flexDirection: "row", justifyContent: "space-between", gap: 10 },
-  title: { color: colors.text, flex: 1, fontSize: 17, fontWeight: "800" },
-  subtitle: { color: colors.muted },
-  status: { fontWeight: "900", fontSize: 12 },
-  value: { color: colors.primaryDark, fontSize: 16, fontWeight: "800" },
-  date: { color: colors.muted }
-});
+function statusTone(status: StatusConta) { return status === "PAGA" ? "success" : status === "VENCIDA" ? "danger" : status === "PENDENTE" ? "warning" : "neutral" as const; }
+function dueLabel(conta: ContaPagar) { if (conta.status === "PAGA") return conta.dataPagamento ? `Pago em ${formatDate(conta.dataPagamento)}` : "Pagamento registrado"; if (conta.status === "CANCELADA") return "Cancelada"; if ((conta.diasParaVencimento ?? 0) < 0) return `Venceu em ${formatDate(conta.dataVencimento)}`; if (conta.diasParaVencimento === 0) return "Vence hoje"; return `Vence em ${formatDate(conta.dataVencimento)}`; }
+const styles = StyleSheet.create({ filterScroll: { flexDirection: "row", flexWrap: "wrap", gap: spacing.xs }, filter: { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.pill, borderWidth: 1, paddingHorizontal: spacing.sm, paddingVertical: 8 }, filterSelected: { backgroundColor: colors.primary, borderColor: colors.primary }, filterText: { color: colors.textSecondary, fontSize: 13, fontWeight: "800" }, filterTextSelected: { color: colors.white }, newButton: { alignItems: "center", backgroundColor: colors.primary, borderRadius: radius.md, flexDirection: "row", gap: 6, justifyContent: "center", minHeight: 48 }, newText: { color: colors.white, fontSize: 15, fontWeight: "800" }, feedback: { backgroundColor: colors.successLight, borderRadius: radius.sm, color: colors.success, fontWeight: "700", padding: spacing.sm }, card: { backgroundColor: colors.surface, borderRadius: radius.lg, overflow: "hidden", ...shadow.card }, cardBody: { gap: spacing.xs, padding: spacing.md }, cardHeader: { alignItems: "center", flexDirection: "row", gap: spacing.xs, justifyContent: "space-between" }, title: { color: colors.text, flex: 1, fontSize: 17, fontWeight: "800" }, supplier: { color: colors.muted }, data: { alignItems: "flex-end", flexDirection: "row", justifyContent: "space-between", marginTop: spacing.xs }, amount: { color: colors.primaryDark, fontSize: 18, fontWeight: "900" }, due: { color: colors.textSecondary, fontSize: 13, marginTop: 3 }, edit: { color: colors.primary, fontSize: 13, fontWeight: "800" }, actions: { borderTopColor: colors.border, borderTopWidth: StyleSheet.hairlineWidth, flexDirection: "row", minHeight: 44 }, pay: { alignItems: "center", flex: 1, justifyContent: "center" }, payText: { color: colors.success, fontSize: 13, fontWeight: "800" }, delete: { alignItems: "center", borderLeftColor: colors.border, borderLeftWidth: StyleSheet.hairlineWidth, justifyContent: "center", width: 52 } });

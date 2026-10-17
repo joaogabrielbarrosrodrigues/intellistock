@@ -20,6 +20,12 @@ public class JwtService {
 
     public JwtService(@Value("${app.jwt.secret}") String secret,
                       @Value("${app.jwt.expiration-minutes}") long expirationMinutes) {
+        if (secret == null || secret.getBytes(StandardCharsets.UTF_8).length < 32) {
+            throw new IllegalStateException("JWT_SECRET deve possuir ao menos 32 bytes e nao pode usar valor padrao.");
+        }
+        if (expirationMinutes <= 0) {
+            throw new IllegalStateException("JWT_EXPIRATION_MINUTES deve ser maior que zero.");
+        }
         this.secret = secret;
         this.expirationMinutes = expirationMinutes;
     }

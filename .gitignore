@@ -1,0 +1,12 @@
+# Runtime configuration and local credentials
+.env
+.env.*
+!.env.example
+intellistock-backend/src/main/resources/application-local.properties
+
+# Build and tooling outputs
+intellistock-backend/target/
+mobile/node_modules/
+mobile/.expo/
+mobile/dist/
+*.log

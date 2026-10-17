@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useAuth } from "../contexts/AuthContext";
 import { colors } from "../theme/colors";
+import { radius, spacing } from "../theme/tokens";
 
 export type HeaderProps = { title: string; subtitle?: string };
 
@@ -14,7 +15,7 @@ export function Header({ title, subtitle }: HeaderProps) {
         <Text style={styles.title}>{title}</Text>
         {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
       </View>
-      <Pressable accessibilityLabel="Sair" accessibilityRole="button" style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]} onPress={() => void signOut()}>
+      <Pressable accessibilityHint="Encerra a sessão neste dispositivo" accessibilityLabel="Sair" accessibilityRole="button" style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]} onPress={() => void signOut()}>
         <Ionicons name="log-out-outline" size={22} color={colors.primaryDark} />
       </Pressable>
     </View>
@@ -33,21 +34,22 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.text,
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: "800"
   },
   subtitle: {
     color: colors.muted,
     fontSize: 14,
-    marginTop: 2
+    lineHeight: 20,
+    marginTop: spacing.xxs
   },
   button: {
     alignItems: "center",
     backgroundColor: colors.surfaceMuted,
-    borderRadius: 8,
-    height: 42,
+    borderRadius: radius.md,
+    height: 44,
     justifyContent: "center",
-    width: 42
+    width: 44
   },
   buttonPressed: {
     opacity: 0.7
