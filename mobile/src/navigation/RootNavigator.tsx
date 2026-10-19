@@ -1,15 +1,19 @@
 import { Ionicons } from "@expo/vector-icons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { useEffect, useRef } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { colors } from "../theme/colors";
 import { useAuth } from "../contexts/AuthContext";
+import { useToast } from "../contexts/ToastContext";
 import { ContasScreen } from "../screens/ContasScreen";
 import { DashboardScreen } from "../screens/DashboardScreen";
 import { EstoqueScreen } from "../screens/EstoqueScreen";
 import { LoginScreen } from "../screens/LoginScreen";
 import { MaisScreen } from "../screens/MaisScreen";
 import { ProdutosScreen } from "../screens/ProdutosScreen";
+import { useEstoqueQuery } from "../hooks/useIntellistockQueries";
+import { formatQuantity } from "../utils";
 
 export type AuthStackParamList = {
   Login: undefined;
@@ -60,6 +64,39 @@ function AppTabs() {
   );
 }
 
+function AuthenticatedApp() {
+  const estoqueQuery = useEstoqueQuery();
+  const { showToast } = useToast();
+  const previousLowStock = useRef<Record<string, boolean>>({});
+  const initialized = useRef(false);
+
+  useEffect(() => {
+    if (!estoqueQuery.isSuccess || !estoqueQuery.data) return;
+
+    const lowStock = estoqueQuery.data.filter((item) => item.situacao !== "NORMAL");
+    const newlyLow = initialized.current
+      ? lowStock.filter((item) => previousLowStock.current[item.produtoId] === false)
+      : lowStock;
+
+    previousLowStock.current = Object.fromEntries(
+      estoqueQuery.data.map((item) => [item.produtoId, item.situacao !== "NORMAL"])
+    );
+    initialized.current = true;
+
+    if (newlyLow.length === 0) return;
+
+    const names = newlyLow.slice(0, 2).map((item) => `${item.produtoNome} (${formatQuantity(item.quantidade, item.unidadeMedida)})`);
+    const extra = newlyLow.length > 2 ? ` e mais ${newlyLow.length - 2}` : "";
+    showToast({
+      title: "Alerta de estoque",
+      message: `${names.join(", ")}${extra} atingiu o estoque mínimo.`,
+      tone: "warning"
+    });
+  }, [estoqueQuery.data, estoqueQuery.isSuccess, showToast]);
+
+  return <AppTabs />;
+}
+
 export function RootNavigator() {
   const { token, loading } = useAuth();
 
@@ -79,5 +116,5 @@ export function RootNavigator() {
     );
   }
 
-  return <AppTabs />;
+  return <AuthenticatedApp />;
 }

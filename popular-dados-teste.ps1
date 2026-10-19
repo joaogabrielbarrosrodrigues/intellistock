@@ -22,7 +22,18 @@ function Invoke-Api {
     if ($null -ne $Body) {
         $params.Body = ($Body | ConvertTo-Json -Depth 8)
     }
-    Invoke-RestMethod @params
+    try {
+        Invoke-RestMethod @params
+    } catch {
+        $responseBody = $null
+        if ($_.Exception.Response) {
+            $reader = [System.IO.StreamReader]::new($_.Exception.Response.GetResponseStream())
+            $responseBody = $reader.ReadToEnd()
+            $reader.Dispose()
+        }
+        $bodyText = if ($null -eq $params.Body) { "<sem corpo>" } else { $params.Body }
+        throw "Falha HTTP $Method $Path ($($_.Exception.Response.StatusCode)): $responseBody`nCorpo enviado: $bodyText"
+    }
 }
 
 Write-Host "Verificando o backend em $ApiUrl..." -ForegroundColor Cyan
@@ -43,9 +54,9 @@ Write-Host "Autenticado como $email" -ForegroundColor Green
 
 $fornecedores = @(Invoke-Api -Method Get -Path "/api/fornecedores" -Headers $headers)
 $supplierData = @(
-    @{ nome = "Distribuidora Central"; cnpj = "12.345.678/0001-90"; telefone = "11999990001"; email = "central@teste.local" },
-    @{ nome = "Fornecedor Naturalis"; cnpj = "23.456.789/0001-01"; telefone = "11999990002"; email = "naturalis@teste.local" },
-    @{ nome = "Embalagens Brasil"; cnpj = "34.567.890/0001-12"; telefone = "11999990003"; email = "embalagens@teste.local" }
+    @{ nome = "Distribuidora Central"; cnpj = $null; telefone = "11999990001"; email = "central@teste.local" },
+    @{ nome = "Fornecedor Naturalis"; cnpj = $null; telefone = "11999990002"; email = "naturalis@teste.local" },
+    @{ nome = "Embalagens Brasil"; cnpj = $null; telefone = "11999990003"; email = "embalagens@teste.local" }
 )
 
 foreach ($data in $supplierData) {
