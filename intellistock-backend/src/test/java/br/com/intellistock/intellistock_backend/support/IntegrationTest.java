@@ -93,16 +93,21 @@ public abstract class IntegrationTest {
 
     protected String criarProduto(String token, String nome, String quantidadeInicial, String estoqueMinimo)
             throws Exception {
+        return criarProduto(token, nome, quantidadeInicial, estoqueMinimo, "UN");
+    }
+
+    protected String criarProduto(String token, String nome, String quantidadeInicial, String estoqueMinimo,
+                                  String unidadeMedida) throws Exception {
         String body = postJson(token, "/api/produtos", """
                 {
                   "nome": "%s",
                   "descricao": "Produto de teste",
                   "quantidadeInicial": %s,
                   "estoqueMinimo": %s,
-                  "unidadeMedida": "UN",
+                  "unidadeMedida": "%s",
                   "preco": 2.50
                 }
-                """.formatted(nome, quantidadeInicial, estoqueMinimo))
+                """.formatted(nome, quantidadeInicial, estoqueMinimo, unidadeMedida))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         return JsonPath.read(body, "$.id");

@@ -6,6 +6,7 @@ import br.com.intellistock.intellistock_backend.entity.Movimentacao;
 import br.com.intellistock.intellistock_backend.entity.Produto;
 import br.com.intellistock.intellistock_backend.entity.TipoMovimentacao;
 import br.com.intellistock.intellistock_backend.entity.User;
+import br.com.intellistock.intellistock_backend.exception.BusinessException;
 import br.com.intellistock.intellistock_backend.exception.ResourceNotFoundException;
 import br.com.intellistock.intellistock_backend.repository.MovimentacaoRepository;
 import br.com.intellistock.intellistock_backend.repository.ProdutoRepository;
@@ -94,6 +95,11 @@ public class ProdutoService {
     @Transactional
     public ProdutoResponse atualizar(UUID id, ProdutoRequest request) {
         Produto produto = buscarEntidade(id);
+        if (produto.getUnidadeMedida() != request.unidadeMedida()
+                && movimentacaoRepository.existsByProdutoId(id)) {
+            throw new BusinessException(
+                    "Unidade de medida nao pode ser alterada depois que o produto possui movimentacoes.");
+        }
         preencher(produto, request);
         return ProdutoResponse.from(produto);
     }

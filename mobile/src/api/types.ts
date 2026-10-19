@@ -15,6 +15,7 @@ export type Movimentacao = { id: Id; produtoId: Id; produtoNome: string; tipo: T
 
 export type ConsumoItem = { produtoId: Id; produtoNome: string; unidadeMedida: UnidadeMedida; periodoDias: number; totalConsumido: number; mediaDiaria: number; mediaSemanal: number; mediaMensal: number; mediaDiariaRecente: number; tendencia: "ALTA" | "BAIXA" | "ESTAVEL" | "SEM_DADOS"; variacaoPercentual?: number | null };
 export type Reposicao = { produtoId: Id; produtoNome: string; unidadeMedida: UnidadeMedida; fornecedor?: FornecedorResumo | null; estoqueAtual: number; estoqueMinimoCadastrado: number; consumoMedioDiario: number; pontoPedido: number; diasRestantes?: number | null; precisaRepor: boolean; quantidadeSugerida: number; custoEstimado: number; prioridade: "ALTA" | "MEDIA" | "BAIXA" | "NENHUMA" };
+export type ConsumoMensalPorUnidade = { unidadeMedida: UnidadeMedida; pontos: { inicio: string; fim: string; quantidade: number }[] };
 
 export type DashboardResponse = {
   estoque: { totalProdutos: number; produtosEstoqueBaixo: number; produtosSemEstoque: number; valorTotalEstoque: number; totalFornecedores: number };
@@ -22,7 +23,7 @@ export type DashboardResponse = {
   sugestoesReposicao: number;
   movimentacoesRecentes: Movimentacao[];
   contasProximasVencimento: ContaPagar[];
-  consumoMensal: { periodo: string; quantidade: number }[];
+  consumoMensal: ConsumoMensalPorUnidade[];
 };
 
 export type ProdutoPayload = { nome: string; descricao?: string | null; quantidadeInicial?: number; estoqueMinimo: number; unidadeMedida: UnidadeMedida; preco: number; fornecedorId?: Id | null };

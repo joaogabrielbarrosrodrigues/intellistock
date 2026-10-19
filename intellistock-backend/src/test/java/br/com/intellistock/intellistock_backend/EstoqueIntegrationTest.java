@@ -168,6 +168,21 @@ class EstoqueIntegrationTest extends IntegrationTest {
     }
 
     @Test
+    void unidadeDeMedidaNaoMudaDepoisDeExistirHistorico() throws Exception {
+        String produtoId = criarProduto(token, "Oleo", "8", "2");
+
+        putJson(token, "/api/produtos/{id}", """
+                {"nome": "Oleo", "estoqueMinimo": 2, "unidadeMedida": "L", "preco": 7.9}
+                """, produtoId)
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.message").value(
+                        "Unidade de medida nao pode ser alterada depois que o produto possui movimentacoes."));
+
+        getJson(token, "/api/produtos/{id}", produtoId)
+                .andExpect(jsonPath("$.unidadeMedida").value("UN"));
+    }
+
+    @Test
     void fornecedorComProdutoVinculadoNaoPodeSerExcluido() throws Exception {
         String fornecedorId = criarFornecedor(token, "Fornecedor Vinculado", null);
         postJson(token, "/api/produtos", """

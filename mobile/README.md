@@ -10,6 +10,8 @@ npm install
 npm start
 ```
 
+Na raiz do repositório, `\.\rodar-projeto.ps1` inicia o back-end e o front-end juntos.
+
 Por padrao, o app usa `http://localhost:8080`. Para testar em um celular fisico, aponte para o IP da maquina onde o backend esta rodando:
 
 ```powershell
@@ -33,7 +35,11 @@ npm start
 - Dashboard com `GET /api/dashboard`.
 - Produtos com `GET /api/produtos`.
 - Estoque com `GET /api/estoque`.
-- Contas com `GET /api/contas`.
+- Contas com listagem, cadastro, edição, pagamento, cancelamento, reabertura e exclusão pelos endpoints reais.
+
+O Dashboard apresenta o consumo mensal em gráficos separados por unidade de medida, evitando somar
+litros, quilos, unidades e embalagens. Em Android/iOS, a sessão usa `expo-secure-store`; no Expo Web
+de desenvolvimento, usa o armazenamento local do navegador como compatibilidade.
 
 ## Validacao
 

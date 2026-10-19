@@ -4,6 +4,7 @@ import br.com.intellistock.intellistock_backend.dto.ConsumoResponse;
 import br.com.intellistock.intellistock_backend.dto.ConsumoSerieResponse;
 import br.com.intellistock.intellistock_backend.dto.ConsumoSerieResponse.Agrupamento;
 import br.com.intellistock.intellistock_backend.dto.ReposicaoResponse;
+import br.com.intellistock.intellistock_backend.entity.UnidadeMedida;
 import br.com.intellistock.intellistock_backend.service.AnaliseService;
 import br.com.intellistock.intellistock_backend.service.AnaliseService.ParametrosReposicao;
 import jakarta.validation.constraints.Max;
@@ -38,15 +39,17 @@ public class AnaliseController {
     }
 
     /**
-     * Serie temporal do consumo para graficos. Sem produtoId consolida todos os produtos.
+     * Serie temporal do consumo para graficos. Se produtoId for omitido, unidadeMedida
+     * passa a ser obrigatoria para impedir a soma de unidades incompatíveis.
      */
     @GetMapping("/consumo/serie")
     public ConsumoSerieResponse serie(
             @RequestParam(required = false) UUID produtoId,
+            @RequestParam(required = false) UnidadeMedida unidadeMedida,
             @RequestParam(defaultValue = "DIARIO") Agrupamento agrupamento,
             @RequestParam(required = false) @Min(value = 1, message = "Minimo de 1 dia.")
             @Max(value = 730, message = "Maximo de 730 dias.") Integer dias) {
-        return analiseService.serie(produtoId, agrupamento, dias);
+        return analiseService.serie(produtoId, unidadeMedida, agrupamento, dias);
     }
 
     /**

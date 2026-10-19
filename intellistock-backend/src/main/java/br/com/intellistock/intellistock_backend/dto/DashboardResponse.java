@@ -9,7 +9,7 @@ public record DashboardResponse(
         long sugestoesReposicao,
         List<MovimentacaoResponse> movimentacoesRecentes,
         List<ContaPagarResponse> contasProximasVencimento,
-        List<ConsumoSerieResponse.Ponto> consumoMensal
+        List<ConsumoPorUnidadeResponse> consumoMensal
 ) {
 
     public record Estoque(

@@ -1,61 +1,163 @@
-# Modernização do InteliStock
+# Auditoria e modernização do InteliStock
 
-Este ciclo preserva a arquitetura em camadas e os contratos HTTP já existentes. A entrega prioriza o aplicativo mobile e remove riscos de configuração sem executar qualquer alteração no banco de dados.
+Relatório atualizado em 19/10/2026. O trabalho preservou a arquitetura em camadas, os dados existentes
+e o escopo acadêmico. Nenhum comando destrutivo ou alteração automática de schema foi executado.
 
-## Diagnóstico e prioridades
+## Resultado geral
 
-| Prioridade | Situação encontrada | Tratamento neste ciclo |
+O fluxo principal está implementado: autenticação, fornecedores, produtos, movimentações, estoque,
+contas a pagar, consumo, reposição e Dashboard. O mobile consome a API real e atualiza suas consultas
+após operações de escrita.
+
+As correções deste ciclo concentraram-se em confiabilidade do Dashboard, coerência matemática das
+análises, ciclo completo de contas, persistência de sessão, mensagens de erro, segurança da configuração
+local e legibilidade dos principais componentes.
+
+## Diagnóstico por prioridade
+
+| Prioridade | Diagnóstico | Resultado |
 | --- | --- | --- |
-| P0 | Senha do banco e chave JWT tinham valores padrão versionados; CORS aceitava qualquer origem. | Removidos os valores padrão. A aplicação agora exige `DB_USERNAME`, `DB_PASSWORD` e `JWT_SECRET`; o segredo é validado com no mínimo 32 bytes. CORS local é restrito a origens de desenvolvimento configuráveis. |
-| P1 | O mobile só consumia listas, apesar de a API oferecer cadastros, alterações, pagamento e movimentação. | Contratos tipados, mutações React Query e fluxos de cadastro/edição foram conectados aos endpoints reais. |
-| P1 | Atualização automática de esquema poderia ser ativada em qualquer ambiente. | O padrão é `validate`; `ddl-auto=update` ficou restrito ao perfil explícito `dev`. |
-| P2 | Interface com cards/bordas inconsistentes e pouca visibilidade operacional. | Criado um design system leve e redesenhadas as telas de login, dashboard, produtos, estoque, contas e mais. |
-| P3 | Não há migrações versionadas nem validação contra PostgreSQL real. | Mantido sem alteração destrutiva; plano de evolução abaixo. |
+| P0 | O Dashboard somava saídas de `UN`, `KG`, `L` e outras unidades em uma única série sem significado. | Corrigido. A API e o mobile agora exibem séries mensais separadas por unidade. |
+| P0 | O contrato do gráfico esperava `periodo`, mas a API devolvia `inicio`/`fim`, causando tela branca após o login. | Corrigido e protegido por validação do contrato e error boundary. |
+| P1 | `expo-secure-store` era chamado no Web, onde a implementação falhava. | Corrigido. Android/iOS continuam com SecureStore; Web de desenvolvimento usa armazenamento local. |
+| P1 | Era possível trocar a unidade de um produto com histórico, reclassificando movimentações antigas. | Corrigido. A API retorna 422 quando já existem movimentações. |
+| P1 | Reposição sempre arredondava para número inteiro, inclusive para medidas contínuas. | Corrigido. Itens contáveis usam inteiro; `KG`, `G`, `L`, `ML` e `M` preservam três casas. |
+| P1 | O mobile não expunha cancelamento e reabertura de contas, embora a API já os oferecesse. | Corrigido, com confirmações para pagar, cancelar, reabrir e excluir. |
+| P1 | Erros de renderização deixavam a aplicação inteiramente branca. | Corrigido com uma tela de recuperação global. |
+| P1 | Credenciais locais estavam no script de inicialização. | Corrigido. O script lê `.env.local.ps1`, ignorado pelo Git. |
+| P2 | Busca enviava uma requisição a cada tecla. | Corrigido em produtos e fornecedores com debounce de 300 ms. |
+| P2 | Listagens de produtos e contas podiam fazer consultas adicionais por fornecedor. | Corrigido com `EntityGraph`. |
+| P2 | Datas locais e quantidades com três casas podiam ser apresentadas incorretamente. | Corrigido na formatação e validação do mobile. |
 
-## Configuração segura do backend
+## Contratos corrigidos
 
-Use [`application.example.properties`](intellistock-backend/src/main/resources/application.example.properties) como referência, mas defina os valores no ambiente do processo. O projeto não carrega `.env` automaticamente.
+### Dashboard
 
-No PowerShell, para desenvolvimento local:
+`GET /api/dashboard` mantém o mesmo endpoint, mas `consumoMensal` agora é uma coleção de séries:
 
-```powershell
-$env:DB_USERNAME = "postgres"
-$env:DB_PASSWORD = "sua-senha-local"
-$env:JWT_SECRET = "um-segredo-aleatorio-com-no-minimo-32-bytes"
-$env:SPRING_PROFILES_ACTIVE = "dev"
-cd intellistock-backend
-.\mvnw.cmd spring-boot:run
+```json
+{
+  "consumoMensal": [
+    {
+      "unidadeMedida": "KG",
+      "pontos": [
+        { "inicio": "2026-10-01", "fim": "2026-10-19", "quantidade": 12.5 }
+      ]
+    }
+  ]
+}
 ```
 
-O perfil `dev` permite que Hibernate atualize apenas o banco local. Sem esse perfil, a aplicação usa `ddl-auto=validate`, adequado para ambientes compartilhados e produção. Arquivos locais e credenciais estão ignorados pelo Git.
+Essa mudança é deliberada e evita uma soma matematicamente inválida.
 
-### Próxima etapa segura para o banco
+### Série de consumo
 
-Antes de adotar Flyway, faça backup e gere uma migração de baseline a partir do schema PostgreSQL atual. Em homologação, aplique primeiro a baseline sem DDL destrutivo, altere para `ddl-auto=validate` e compare o schema. Só então passe novas alterações a migrações versionadas. Esta etapa não foi automatizada porque pode afetar bases existentes.
+`GET /api/analises/consumo/serie` exige exatamente um filtro:
 
-## Aplicativo mobile
+- `produtoId=<uuid>` para a série de um produto; ou
+- `unidadeMedida=UN|KG|G|L|ML|M|CX|PCT|FD` para consolidar apenas unidades compatíveis.
 
-O endereço da API é configurado por `EXPO_PUBLIC_API_URL`. Em dispositivo físico, use o IP LAN da máquina, por exemplo:
+Sem filtro, ou com os dois filtros ao mesmo tempo, a API retorna 422.
 
-```powershell
-$env:EXPO_PUBLIC_API_URL = "http://192.168.1.20:8080"
-cd mobile
-npm start
-```
+## Arquitetura e manutenção
 
-O aplicativo nativo não depende de CORS; a configuração de origem é relevante para o Expo Web.
+- O mobile mantém apresentação em `screens`, componentes compartilhados em `components`, acesso HTTP
+  em `api`, estado remoto em `hooks`, sessão em `contexts/storage` e tokens em `theme`.
+- Dashboard, produtos, contas e formulário de contas foram descompactados para facilitar manutenção.
+- Erros HTTP continuam centralizados e as mutações invalidam todas as consultas relacionadas.
+- Botões de escrita ficam indisponíveis enquanto a operação está em andamento.
+- A largura do conteúdo foi limitada em telas grandes sem prejudicar o layout nativo.
+- Não foram adicionadas dependências.
 
-### Fluxos entregues
+## Segurança e modelo de dados
 
-- Login com validação, carregamento e armazenamento seguro da sessão já existente.
-- Dashboard com KPIs, consumo mensal baseado na API, movimentações e vencimentos reais.
-- Produtos: busca, cadastro, edição e desativação com confirmação.
-- Estoque: filtros, entradas e saídas por produto, feedback de regra de estoque insuficiente e histórico real.
-- Contas: filtro por status, cadastro, edição, pagamento e exclusão confirmada.
-- Área “Mais”: fornecedores com cadastro/edição/exclusão e painel de consumo/reposição calculado no backend.
-- Todas as operações de escrita invalidam as consultas relacionadas no React Query para atualizar a tela sem dados fictícios.
+- Senhas permanecem protegidas por BCrypt e a API usa JWT assinado com segredo mínimo de 32 bytes.
+- CORS não possui mais fallback implícito para `*`; as origens vêm da configuração obrigatória.
+- O perfil padrão usa `ddl-auto=validate`; somente o perfil local `dev` usa `update`.
+- `.env.local.ps1` contém apenas configuração local e é ignorado pelo Git.
+- O sistema atual representa **uma operação compartilhada**: qualquer usuário autenticado acessa os mesmos
+  produtos, fornecedores, contas e indicadores. Não há organização/tenant nas entidades. Multi-tenancy
+  não foi implementado porque essa decisão de negócio ainda não foi confirmada.
 
 ## Validação executada
 
-- `mobile`: `npm run typecheck` — aprovado.
-- `intellistock-backend`: `.\mvnw.cmd test` — aprovado, 35 testes. Eles usam H2 em modo de compatibilidade PostgreSQL e MockMvc; não substituem uma suíte de integração com PostgreSQL real.
+### Back-end
+
+Comando executado:
+
+```powershell
+cd intellistock-backend
+.\mvnw.cmd test
+```
+
+Resultado: **38 testes aprovados, 0 falhas e 0 erros**. A suíte cobre autenticação, validações,
+fornecedores, produtos, regras de estoque, histórico, contas, consumo, reposição,
+unidades incompatíveis, arredondamento e erros HTTP.
+
+Os testes usam H2 em memória no modo de compatibilidade PostgreSQL e MockMvc. Eles não equivalem a um
+teste de integração contra PostgreSQL real.
+
+### Mobile
+
+Comandos executados:
+
+```powershell
+cd mobile
+npm run typecheck
+npx expo export --platform web --output-dir dist
+```
+
+Resultado: TypeScript aprovado e bundle Web gerado com sucesso. Não existe ainda uma suíte automatizada
+de componentes/hooks no projeto; nenhuma aprovação de teste mobile foi inferida além dessas verificações.
+
+## Não validado neste ambiente
+
+- Fluxo manual completo em aparelho ou emulador Android.
+- Compatibilidade visual em diferentes densidades e tamanhos físicos.
+- Integração contra uma instância PostgreSQL real.
+- Concorrência real com múltiplos processos/instâncias da API.
+- Estratégia de isolamento por empresa/organização.
+- Cadastro de usuário dentro do mobile; o endpoint existe, mas a interface atual oferece apenas login.
+
+## Checklist manual Android
+
+- [ ] Iniciar PostgreSQL, back-end e Expo; confirmar que não há erro nos terminais.
+- [ ] Autenticar um usuário e confirmar a restauração da sessão ao reabrir o app.
+- [ ] Cadastrar um fornecedor e encontrá-lo pela busca.
+- [ ] Cadastrar um produto com unidade, preço, estoque mínimo e fornecedor.
+- [ ] Registrar uma entrada e confirmar saldo e histórico.
+- [ ] Registrar uma saída válida e conferir Dashboard, estoque e histórico.
+- [ ] Tentar uma saída superior ao saldo e confirmar a mensagem de estoque insuficiente.
+- [ ] Criar produtos em unidades diferentes e confirmar gráficos separados no Dashboard.
+- [ ] Validar consumo, tendência e quantidade sugerida de reposição.
+- [ ] Cadastrar uma conta, editar, pagar e conferir os indicadores financeiros.
+- [ ] Cancelar e reabrir uma conta, conferindo filtros e Dashboard.
+- [ ] Confirmar diálogos antes de desativar produto, excluir fornecedor ou excluir conta.
+- [ ] Desligar o back-end temporariamente e validar mensagem de rede e ação “Tentar novamente”.
+
+## Recomendações futuras
+
+### P1
+
+- Definir formalmente se os dados são compartilhados ou separados por organização antes de ampliar o uso.
+- Criar testes de integração com PostgreSQL real, preferencialmente em ambiente isolado.
+- Adicionar testes mobile para autenticação, formulários, erros e invalidação de consultas.
+- Fazer a validação ponta a ponta no Android antes da apresentação.
+
+### P2
+
+- Adotar paginação na API e `FlatList` quando o volume real justificar; as listas atuais carregam tudo.
+- Substituir o campo textual de vencimento por seletor nativo de data após validar a biblioteca adequada.
+- Considerar rate limiting no login se a API for exposta publicamente.
+- Adotar Flyway somente após backup, baseline do schema atual e plano de reversão.
+
+## Como executar
+
+Na raiz do projeto, depois de preencher `.env.local.ps1`:
+
+```powershell
+.\rodar-projeto.ps1
+```
+
+O script abre o back-end em outra janela e inicia o Expo no terminal atual. Para dispositivo físico,
+defina `EXPO_PUBLIC_API_URL` com o IP LAN da máquina antes de iniciar o Expo.

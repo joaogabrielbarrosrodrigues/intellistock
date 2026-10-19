@@ -2,6 +2,30 @@
 
 > **Sistema mobile de gerenciamento de estoque e apoio ao planejamento de compras.**
 
+## Executar o projeto
+
+No Windows, a configuração local fica em `.env.local.ps1` (ignorado pelo Git). Na primeira configuração,
+copie `.env.example.ps1`, informe as credenciais do PostgreSQL e mantenha o banco `intellistock` criado.
+
+Depois disso, abra um PowerShell na raiz e execute apenas:
+
+```powershell
+.\rodar-projeto.ps1
+```
+
+Para carregar dados de teste no banco, com o backend já rodando, abra outro PowerShell e execute:
+
+```powershell
+.\popular-dados-teste.ps1
+```
+
+O script cria um usuário de teste, fornecedores, produtos em unidades diferentes, movimentações históricas e contas a pagar. Ele pode ser executado novamente sem duplicar esses dados.
+
+O script abre o back-end em outra janela e inicia o Expo no terminal atual. Mantenha as duas janelas abertas.
+A API usa `http://localhost:8080` e o Expo Web normalmente usa `http://localhost:8081`.
+
+Para encerrar, pressione `Ctrl+C` no terminal do Expo e feche a janela do back-end.
+
 ---
 
 Sistema mobile de gerenciamento de estoque e apoio ao planejamento de

@@ -2,6 +2,7 @@ package br.com.intellistock.intellistock_backend.service;
 
 import br.com.intellistock.intellistock_backend.config.AnaliseProperties;
 import br.com.intellistock.intellistock_backend.dto.ConsumoResponse;
+import br.com.intellistock.intellistock_backend.dto.ConsumoPorUnidadeResponse;
 import br.com.intellistock.intellistock_backend.dto.ConsumoSerieResponse;
 import br.com.intellistock.intellistock_backend.dto.ConsumoSerieResponse.Agrupamento;
 import br.com.intellistock.intellistock_backend.dto.FornecedorResumo;
@@ -10,9 +11,12 @@ import br.com.intellistock.intellistock_backend.dto.ReposicaoResponse.Prioridade
 import br.com.intellistock.intellistock_backend.dto.Tendencia;
 import br.com.intellistock.intellistock_backend.entity.Produto;
 import br.com.intellistock.intellistock_backend.entity.TipoMovimentacao;
+import br.com.intellistock.intellistock_backend.entity.UnidadeMedida;
+import br.com.intellistock.intellistock_backend.exception.BusinessException;
 import br.com.intellistock.intellistock_backend.repository.MovimentacaoRepository;
 import br.com.intellistock.intellistock_backend.repository.ProdutoRepository;
 import br.com.intellistock.intellistock_backend.repository.QuantidadeNaData;
+import br.com.intellistock.intellistock_backend.repository.QuantidadePorUnidadeNaData;
 import br.com.intellistock.intellistock_backend.repository.TotalPorProduto;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +31,7 @@ import java.time.ZoneId;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -111,11 +116,18 @@ public class AnaliseService {
     /**
      * Serie de consumo agrupada por dia, semana (iniciando na segunda-feira) ou mes.
      *
-     * @param produtoId null consolida todos os produtos
+     * @param produtoId produto específico; quando omitido, unidadeMedida é obrigatória
      * @param dias      janela em dias; quando null usa 30 (diario), 84 (semanal) ou 180 (mensal)
      */
     @Transactional(readOnly = true)
-    public ConsumoSerieResponse serie(UUID produtoId, Agrupamento agrupamento, Integer dias) {
+    public ConsumoSerieResponse serie(UUID produtoId, UnidadeMedida unidadeMedida, Agrupamento agrupamento,
+                                      Integer dias) {
+        if (produtoId == null && unidadeMedida == null) {
+            throw new BusinessException("Informe produtoId ou unidadeMedida para gerar a serie de consumo.");
+        }
+        if (produtoId != null && unidadeMedida != null) {
+            throw new BusinessException("Informe apenas produtoId ou unidadeMedida, nao ambos.");
+        }
         int periodo = dias != null ? dias : switch (agrupamento) {
             case DIARIO -> 30;
             case SEMANAL -> 84;
@@ -123,17 +135,41 @@ public class AnaliseService {
         };
         LocalDate hoje = LocalDate.now(clock);
         Produto produto = produtoId == null ? null : produtoService.buscarEntidade(produtoId);
-        List<ConsumoSerieResponse.Ponto> pontos = pontos(produtoId, agrupamento, hoje.minusDays(periodo - 1L), hoje);
-        return new ConsumoSerieResponse(produtoId, produto == null ? null : produto.getNome(), agrupamento, pontos);
+        UnidadeMedida unidade = produto == null ? unidadeMedida : produto.getUnidadeMedida();
+        List<ConsumoSerieResponse.Ponto> pontos = pontos(
+                produtoId, unidadeMedida, agrupamento, hoje.minusDays(periodo - 1L), hoje);
+        return new ConsumoSerieResponse(
+                produtoId, produto == null ? null : produto.getNome(), unidade, agrupamento, pontos);
     }
 
     /**
-     * Consumo total (todos os produtos) dos ultimos meses, incluindo o mes corrente.
+     * Consumo mensal separado por unidade de medida. Somar, por exemplo, litros e unidades
+     * produz um indicador sem significado; por isso cada unidade possui sua própria série.
      */
     @Transactional(readOnly = true)
-    public List<ConsumoSerieResponse.Ponto> consumoMensal(int meses) {
+    public List<ConsumoPorUnidadeResponse> consumoMensal(int meses) {
         LocalDate hoje = LocalDate.now(clock);
-        return pontos(null, Agrupamento.MENSAL, hoje.withDayOfMonth(1).minusMonths(meses - 1L), hoje);
+        LocalDate inicio = hoje.withDayOfMonth(1).minusMonths(meses - 1L);
+        ZoneId zona = clock.getZone();
+        OffsetDateTime inicioTs = inicio.atStartOfDay(zona).toOffsetDateTime();
+        OffsetDateTime fimTs = hoje.plusDays(1).atStartOfDay(zona).toOffsetDateTime();
+
+        List<QuantidadePorUnidadeNaData> quantidades = movimentacaoRepository.findQuantidadesPorUnidade(
+                TipoMovimentacao.SAIDA, inicioTs, fimTs);
+        Map<UnidadeMedida, Map<LocalDate, BigDecimal>> series = new EnumMap<>(UnidadeMedida.class);
+
+        for (QuantidadePorUnidadeNaData item : quantidades) {
+            LocalDate mes = item.data().atZoneSameInstant(zona).toLocalDate().withDayOfMonth(1);
+            series.computeIfAbsent(item.unidadeMedida(), ignored -> bucketsMensais(inicio, hoje))
+                    .merge(mes, item.quantidade(), BigDecimal::add);
+        }
+
+        return series.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .map(entry -> new ConsumoPorUnidadeResponse(
+                        entry.getKey(),
+                        pontosDosBuckets(entry.getValue(), inicio, hoje, Agrupamento.MENSAL)))
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -172,11 +208,12 @@ public class AnaliseService {
         BigDecimal necessidade = base.multiply(BigDecimal.valueOf((long) diasCobertura + prazoEntrega))
                 .add(seguranca)
                 .subtract(estoqueAtual)
-                .max(BigDecimal.ZERO)
-                .setScale(0, RoundingMode.CEILING);
+                .max(BigDecimal.ZERO);
 
         boolean precisaRepor = estoqueAtual.compareTo(pontoPedido) <= 0 && necessidade.signum() > 0;
-        BigDecimal sugerida = precisaRepor ? necessidade : BigDecimal.ZERO;
+        BigDecimal sugerida = precisaRepor
+                ? arredondarQuantidadeSugerida(necessidade, produto.getUnidadeMedida())
+                : BigDecimal.ZERO;
         BigDecimal diasRestantes = base.signum() > 0
                 ? estoqueAtual.divide(base, 1, RoundingMode.HALF_UP)
                 : null;
@@ -261,15 +298,17 @@ public class AnaliseService {
         );
     }
 
-    private List<ConsumoSerieResponse.Ponto> pontos(UUID produtoId, Agrupamento agrupamento, LocalDate inicio,
-                                                    LocalDate fim) {
+    private List<ConsumoSerieResponse.Ponto> pontos(UUID produtoId, UnidadeMedida unidadeMedida,
+                                                    Agrupamento agrupamento, LocalDate inicio, LocalDate fim) {
         ZoneId zona = clock.getZone();
         OffsetDateTime inicioTs = inicio.atStartOfDay(zona).toOffsetDateTime();
         OffsetDateTime fimTs = fim.plusDays(1).atStartOfDay(zona).toOffsetDateTime();
 
-        List<QuantidadeNaData> quantidades = produtoId == null
-                ? movimentacaoRepository.findQuantidades(TipoMovimentacao.SAIDA, inicioTs, fimTs)
-                : movimentacaoRepository.findQuantidadesPorProduto(produtoId, TipoMovimentacao.SAIDA, inicioTs, fimTs);
+        List<QuantidadeNaData> quantidades = produtoId != null
+                ? movimentacaoRepository.findQuantidadesPorProduto(
+                        produtoId, TipoMovimentacao.SAIDA, inicioTs, fimTs)
+                : movimentacaoRepository.findQuantidadesPorUnidadeMedida(
+                        unidadeMedida, TipoMovimentacao.SAIDA, inicioTs, fimTs);
 
         Map<LocalDate, BigDecimal> buckets = new TreeMap<>();
         for (LocalDate cursor = inicioDoBucket(inicio, agrupamento); !cursor.isAfter(fim);
@@ -281,6 +320,27 @@ public class AnaliseService {
             buckets.merge(inicioDoBucket(data, agrupamento), item.quantidade(), BigDecimal::add);
         }
 
+        List<ConsumoSerieResponse.Ponto> pontos = new ArrayList<>();
+        buckets.forEach((bucket, quantidade) -> {
+            LocalDate inicioPonto = bucket.isBefore(inicio) ? inicio : bucket;
+            LocalDate fimBucket = proximoBucket(bucket, agrupamento).minusDays(1);
+            LocalDate fimPonto = fimBucket.isAfter(fim) ? fim : fimBucket;
+            pontos.add(new ConsumoSerieResponse.Ponto(inicioPonto, fimPonto, escala(quantidade)));
+        });
+        return pontos;
+    }
+
+    private Map<LocalDate, BigDecimal> bucketsMensais(LocalDate inicio, LocalDate fim) {
+        Map<LocalDate, BigDecimal> buckets = new TreeMap<>();
+        for (LocalDate cursor = inicio.withDayOfMonth(1); !cursor.isAfter(fim); cursor = cursor.plusMonths(1)) {
+            buckets.put(cursor, BigDecimal.ZERO);
+        }
+        return buckets;
+    }
+
+    private List<ConsumoSerieResponse.Ponto> pontosDosBuckets(Map<LocalDate, BigDecimal> buckets,
+                                                               LocalDate inicio, LocalDate fim,
+                                                               Agrupamento agrupamento) {
         List<ConsumoSerieResponse.Ponto> pontos = new ArrayList<>();
         buckets.forEach((bucket, quantidade) -> {
             LocalDate inicioPonto = bucket.isBefore(inicio) ? inicio : bucket;
@@ -335,6 +395,19 @@ public class AnaliseService {
 
     private static BigDecimal escala(BigDecimal valor) {
         return valor.setScale(ESCALA_QUANTIDADE, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * Embalagens e itens contáveis são comprados em números inteiros. Medidas contínuas
+     * preservam até três casas decimais, que é a precisão aceita pelo domínio e pelo banco.
+     * CEILING evita sugerir uma quantidade inferior à necessidade calculada.
+     */
+    private static BigDecimal arredondarQuantidadeSugerida(BigDecimal valor, UnidadeMedida unidade) {
+        int escala = switch (unidade) {
+            case UN, CX, PCT, FD -> 0;
+            case KG, G, L, ML, M -> ESCALA_QUANTIDADE;
+        };
+        return valor.setScale(escala, RoundingMode.CEILING);
     }
 
     private static int valor(Integer informado, int padrao) {

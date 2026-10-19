@@ -14,6 +14,8 @@ import java.util.UUID;
 
 public interface MovimentacaoRepository extends JpaRepository<Movimentacao, UUID>, JpaSpecificationExecutor<Movimentacao> {
 
+    boolean existsByProdutoId(UUID produtoId);
+
     @Query("""
             select new br.com.intellistock.intellistock_backend.repository.TotalPorProduto(
                 m.produto.id, sum(m.quantidade))
@@ -26,14 +28,15 @@ public interface MovimentacaoRepository extends JpaRepository<Movimentacao, UUID
                                         @Param("fim") OffsetDateTime fim);
 
     @Query("""
-            select new br.com.intellistock.intellistock_backend.repository.QuantidadeNaData(
-                m.data, m.quantidade)
+            select new br.com.intellistock.intellistock_backend.repository.QuantidadePorUnidadeNaData(
+                m.data, m.produto.unidadeMedida, m.quantidade)
             from Movimentacao m
             where m.tipo = :tipo and m.data >= :inicio and m.data < :fim
             """)
-    List<QuantidadeNaData> findQuantidades(@Param("tipo") TipoMovimentacao tipo,
-                                           @Param("inicio") OffsetDateTime inicio,
-                                           @Param("fim") OffsetDateTime fim);
+    List<QuantidadePorUnidadeNaData> findQuantidadesPorUnidade(
+            @Param("tipo") TipoMovimentacao tipo,
+            @Param("inicio") OffsetDateTime inicio,
+            @Param("fim") OffsetDateTime fim);
 
     @Query("""
             select new br.com.intellistock.intellistock_backend.repository.QuantidadeNaData(
@@ -45,6 +48,19 @@ public interface MovimentacaoRepository extends JpaRepository<Movimentacao, UUID
                                                      @Param("tipo") TipoMovimentacao tipo,
                                                      @Param("inicio") OffsetDateTime inicio,
                                                      @Param("fim") OffsetDateTime fim);
+
+    @Query("""
+            select new br.com.intellistock.intellistock_backend.repository.QuantidadeNaData(
+                m.data, m.quantidade)
+            from Movimentacao m
+            where m.produto.unidadeMedida = :unidadeMedida
+              and m.tipo = :tipo and m.data >= :inicio and m.data < :fim
+            """)
+    List<QuantidadeNaData> findQuantidadesPorUnidadeMedida(
+            @Param("unidadeMedida") br.com.intellistock.intellistock_backend.entity.UnidadeMedida unidadeMedida,
+            @Param("tipo") TipoMovimentacao tipo,
+            @Param("inicio") OffsetDateTime inicio,
+            @Param("fim") OffsetDateTime fim);
 
     @Query("select m from Movimentacao m join fetch m.produto left join fetch m.usuario order by m.data desc")
     List<Movimentacao> findRecentes(Pageable pageable);

@@ -5,14 +5,34 @@ export function formatCurrency(value: number | string | null | undefined) {
 
 export function formatQuantity(value: number | string | null | undefined, unit?: string) {
   const numeric = Number(value ?? 0);
-  const text = numeric.toLocaleString("pt-BR", { maximumFractionDigits: 2 });
+  const text = numeric.toLocaleString("pt-BR", { maximumFractionDigits: 3 });
   return unit ? `${text} ${unit}` : text;
 }
 
 export function formatDate(value?: string) {
-  if (!value) {
-    return "-";
+  if (!value) return "-";
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const [year, month, day] = value.split("-").map(Number);
+    return new Date(year, month - 1, day).toLocaleDateString("pt-BR");
   }
 
-  return new Date(value).toLocaleDateString("pt-BR", { timeZone: "UTC" });
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "-" : date.toLocaleDateString("pt-BR");
+}
+
+export function todayIsoLocal() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+export function isValidIsoDate(value: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+
+  return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
 }

@@ -4,8 +4,11 @@ import br.com.intellistock.intellistock_backend.entity.ContaPagar;
 import br.com.intellistock.intellistock_backend.entity.StatusConta;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -13,6 +16,10 @@ import java.util.List;
 import java.util.UUID;
 
 public interface ContaPagarRepository extends JpaRepository<ContaPagar, UUID>, JpaSpecificationExecutor<ContaPagar> {
+
+    @Override
+    @EntityGraph(attributePaths = "fornecedor")
+    List<ContaPagar> findAll(Specification<ContaPagar> spec, Sort sort);
 
     boolean existsByFornecedorId(UUID fornecedorId);
 

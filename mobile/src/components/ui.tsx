@@ -3,7 +3,7 @@ import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, Text
 import { colors } from "../theme/colors";
 import { radius, shadow, spacing } from "../theme/tokens";
 
-type ButtonVariant = "primary" | "secondary" | "danger" | "ghost";
+export type ButtonVariant = "primary" | "secondary" | "danger" | "ghost";
 
 export function Button({ title, onPress, variant = "primary", loading = false, disabled = false, compact = false }: {
   title: string;
@@ -70,11 +70,12 @@ export function FormModal({ visible, title, onClose, children }: { visible: bool
   );
 }
 
-export function ConfirmationDialog({ visible, title, message, confirmLabel = "Confirmar", onCancel, onConfirm, loading = false }: {
+export function ConfirmationDialog({ visible, title, message, confirmLabel = "Confirmar", confirmVariant = "danger", onCancel, onConfirm, loading = false }: {
   visible: boolean;
   title: string;
   message: string;
   confirmLabel?: string;
+  confirmVariant?: ButtonVariant;
   onCancel: () => void;
   onConfirm: () => void;
   loading?: boolean;
@@ -87,7 +88,7 @@ export function ConfirmationDialog({ visible, title, message, confirmLabel = "Co
           <Text style={styles.dialogMessage}>{message}</Text>
           <View style={styles.dialogActions}>
             <View style={styles.dialogAction}><Button compact title="Cancelar" variant="secondary" onPress={onCancel} /></View>
-            <View style={styles.dialogAction}><Button compact title={confirmLabel} variant="danger" loading={loading} onPress={onConfirm} /></View>
+            <View style={styles.dialogAction}><Button compact title={confirmLabel} variant={confirmVariant} loading={loading} onPress={onConfirm} /></View>
           </View>
         </View>
       </View>

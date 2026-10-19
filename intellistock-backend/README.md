@@ -21,10 +21,13 @@ No PowerShell do Windows:
 ```powershell
 $env:DB_PASSWORD="sua_senha"
 $env:JWT_SECRET="um-segredo-com-pelo-menos-32-caracteres"
+$env:SPRING_PROFILES_ACTIVE="dev"
 .\mvnw.cmd spring-boot:run
 ```
 
-As tabelas são criadas/atualizadas automaticamente (`ddl-auto=update`). A API sobe em `http://localhost:8080`.
+O perfil `dev` permite criar/atualizar o schema local (`ddl-auto=update`). Sem esse perfil, o padrão é
+`ddl-auto=validate`, para impedir alterações automáticas em bases compartilhadas. A API sobe em
+`http://localhost:8080`.
 
 ### Variáveis de ambiente
 
@@ -190,8 +193,9 @@ da metade antiga. Variação ≥ +10% indica ALTA e ≤ −10% indica BAIXA (lim
 
 ### `GET /api/analises/consumo/serie`
 
-Série temporal para gráficos. Parâmetros: `produtoId` (opcional, sem ele consolida todos),
-`agrupamento` (`DIARIO`, `SEMANAL`, `MENSAL`) e `dias`.
+Série temporal para gráficos. Informe exatamente um dos filtros `produtoId` ou `unidadeMedida`.
+Isso impede somar quantidades incompatíveis. Também aceita `agrupamento` (`DIARIO`, `SEMANAL`,
+`MENSAL`) e `dias`. A resposta identifica a `unidadeMedida` da série.
 
 ### `GET /api/analises/reposicao`
 
@@ -216,6 +220,9 @@ quantidadeSugerida = consumoBase × (diasCobertura + prazoEntrega) + estoqueSegu
 diasRestantes      = estoqueAtual / consumoBase
 ```
 
+A sugestão é arredondada para cima em unidades inteiras para `UN`, `CX`, `PCT` e `FD`. Para
+`KG`, `G`, `L`, `ML` e `M`, preserva até três casas decimais.
+
 Prioridade: **ALTA** se o produto zerou ou vai acabar antes de a reposição chegar; **MEDIA** se está abaixo
 do estoque de segurança; **BAIXA** nos demais casos que precisam de reposição. A resposta também traz
 `custoEstimado` (quantidade sugerida × preço) e é ordenada por prioridade.
@@ -232,7 +239,8 @@ segurança = max(10, 42) = 42, ponto de pedido = 84, sugestão = 6 × 37 + 42 �
 - `sugestoesReposicao`: quantidade de produtos que precisam de reposição;
 - `movimentacoesRecentes`: as 10 últimas;
 - `contasProximasVencimento`: lista das contas que vencem nos próximos N dias;
-- `consumoMensal`: consumo total dos últimos 6 meses (para o gráfico).
+- `consumoMensal`: séries dos últimos 6 meses separadas por unidade de medida. Cada item contém
+  `unidadeMedida` e `pontos`; litros, quilos e unidades nunca são somados entre si.
 
 ## Formato de erro
 
@@ -256,6 +264,15 @@ Todos os erros, inclusive 401/403 do Spring Security, seguem o mesmo formato:
 | 404    | Recurso ou endpoint inexistente                                         |
 | 409    | Duplicidade (e-mail, CNPJ), exclusão bloqueada por vínculo, edição concorrente |
 | 422    | Regra de negócio (estoque insuficiente, produto inativo, conta já paga) |
+
+## Testes automatizados
+
+```powershell
+.\mvnw.cmd test
+```
+
+A suíte atual possui 38 testes e usa H2 em memória no modo de compatibilidade PostgreSQL. Ela não
+substitui uma validação separada contra PostgreSQL real.
 
 ## Testes manuais
 

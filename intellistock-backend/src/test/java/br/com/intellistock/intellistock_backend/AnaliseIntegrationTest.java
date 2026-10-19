@@ -81,9 +81,13 @@ class AnaliseIntegrationTest extends IntegrationTest {
                 .andExpect(jsonPath("$.pontos[24].quantidade").value(90.0))
                 .andExpect(jsonPath("$.pontos[9].quantidade").value(30.0));
 
-        getJson(token, "/api/analises/consumo/serie?agrupamento=MENSAL")
+        getJson(token, "/api/analises/consumo/serie?unidadeMedida=UN&agrupamento=MENSAL")
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.produtoId").doesNotExist());
+                .andExpect(jsonPath("$.produtoId").doesNotExist())
+                .andExpect(jsonPath("$.unidadeMedida").value("UN"));
+
+        getJson(token, "/api/analises/consumo/serie?agrupamento=MENSAL")
+                .andExpect(status().isUnprocessableEntity());
     }
 
     @Test
@@ -93,7 +97,35 @@ class AnaliseIntegrationTest extends IntegrationTest {
                 .andExpect(jsonPath("$.estoque.totalProdutos", greaterThanOrEqualTo(1)))
                 .andExpect(jsonPath("$.sugestoesReposicao", greaterThanOrEqualTo(1)))
                 .andExpect(jsonPath("$.movimentacoesRecentes", hasSize(3)))
-                .andExpect(jsonPath("$.consumoMensal", hasSize(6)));
+                .andExpect(jsonPath("$.consumoMensal", hasSize(1)))
+                .andExpect(jsonPath("$.consumoMensal[0].unidadeMedida").value("UN"))
+                .andExpect(jsonPath("$.consumoMensal[0].pontos", hasSize(6)));
+    }
+
+    @Test
+    void dashboardNaoSomaConsumoDeUnidadesIncompativeis() throws Exception {
+        String produtoKg = criarProduto(token, "Cafe", "5", "1", "KG");
+        movimentar(token, produtoKg, "SAIDA", "2.5", diasAtras(3)).andExpect(status().isCreated());
+
+        getJson(token, "/api/dashboard")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.consumoMensal", hasSize(2)))
+                .andExpect(jsonPath("$.consumoMensal[0].unidadeMedida").value("UN"))
+                .andExpect(jsonPath("$.consumoMensal[1].unidadeMedida").value("KG"))
+                .andExpect(jsonPath("$.consumoMensal[0].pontos", hasSize(6)))
+                .andExpect(jsonPath("$.consumoMensal[1].pontos", hasSize(6)))
+                .andExpect(jsonPath("$.consumoMensal[1].pontos[5].quantidade").value(2.5));
+    }
+
+    @Test
+    void reposicaoPreservaFracaoParaUnidadeContinua() throws Exception {
+        String produtoKg = criarProduto(token, "Farinha", "1", "1", "KG");
+        movimentar(token, produtoKg, "SAIDA", "0.333", null).andExpect(status().isCreated());
+
+        String filtro = "$[?(@.produtoId == '" + produtoKg + "')]";
+        getJson(token, "/api/analises/reposicao?dias=1&diasCobertura=1&prazoEntregaDias=0&diasSeguranca=0&todos=true")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath(filtro + ".quantidadeSugerida", contains(0.666)));
     }
 
     private static String diasAtras(int dias) {

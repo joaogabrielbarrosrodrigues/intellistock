@@ -29,6 +29,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setToken(session.token);
           setUser(session.user);
         }
+      } catch {
+        setAuthToken(null);
+        setToken(null);
+        setUser(null);
       } finally {
         setLoading(false);
       }

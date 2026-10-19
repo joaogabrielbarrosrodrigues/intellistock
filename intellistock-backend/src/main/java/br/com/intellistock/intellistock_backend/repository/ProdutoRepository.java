@@ -4,9 +4,12 @@ import br.com.intellistock.intellistock_backend.entity.Produto;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -23,7 +26,12 @@ public interface ProdutoRepository extends JpaRepository<Produto, UUID>, JpaSpec
     @Query("select p from Produto p where p.id = :id")
     Optional<Produto> findByIdForUpdate(@Param("id") UUID id);
 
+    @EntityGraph(attributePaths = "fornecedor")
     List<Produto> findByAtivoTrueOrderByNomeAsc();
+
+    @Override
+    @EntityGraph(attributePaths = "fornecedor")
+    List<Produto> findAll(Specification<Produto> spec, Sort sort);
 
     @Query("select p from Produto p where p.ativo = true and p.quantidade <= p.estoqueMinimo order by p.nome")
     List<Produto> findEstoqueBaixo();
