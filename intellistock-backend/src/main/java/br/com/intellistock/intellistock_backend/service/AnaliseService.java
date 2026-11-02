@@ -182,7 +182,7 @@ public class AnaliseService {
         Totais totais = totais(janela);
         return produtoRepository.findByAtivoTrueOrderByNomeAsc().stream()
                 .map(produto -> calcularReposicao(produto, calcularConsumo(produto.getId(), janela, totais),
-                        diasCobertura, prazoEntrega, diasSeguranca))
+                        janela.dias(), diasCobertura, prazoEntrega, diasSeguranca))
                 .filter(sugestao -> incluirTodos || sugestao.precisaRepor())
                 .sorted(Comparator.comparing(ReposicaoResponse::prioridade)
                         .thenComparing(ReposicaoResponse::diasRestantes, Comparator.nullsLast(Comparator.naturalOrder()))
@@ -195,8 +195,8 @@ public class AnaliseService {
         return reposicao(ParametrosReposicao.padrao(), false).size();
     }
 
-    private ReposicaoResponse calcularReposicao(Produto produto, Consumo consumo, int diasCobertura,
-                                                int prazoEntrega, int diasSeguranca) {
+    private ReposicaoResponse calcularReposicao(Produto produto, Consumo consumo, int periodoAnaliseDias,
+                                                int diasCobertura, int prazoEntrega, int diasSeguranca) {
         BigDecimal estoqueAtual = produto.getQuantidade();
         BigDecimal base = consumo.tendencia() == Tendencia.ALTA
                 ? consumo.mediaDiaria().max(consumo.mediaRecente())
@@ -235,7 +235,12 @@ public class AnaliseService {
                 precisaRepor,
                 sugerida,
                 sugerida.multiply(produto.getPreco()).setScale(2, RoundingMode.HALF_UP),
-                prioridade(precisaRepor, estoqueAtual, seguranca, diasRestantes, prazoEntrega)
+                prioridade(precisaRepor, estoqueAtual, seguranca, diasRestantes, prazoEntrega),
+                consumo.total(),
+                periodoAnaliseDias,
+                diasCobertura,
+                prazoEntrega,
+                diasSeguranca
         );
     }
 

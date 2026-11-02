@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { getApiErrorMessage } from "../api/errors";
 import type { ContaPagar, Fornecedor } from "../api/types";
 import { useContaMutations } from "../hooks/useIntellistockQueries";
@@ -7,6 +7,7 @@ import { colors } from "../theme/colors";
 import { radius, spacing } from "../theme/tokens";
 import { isValidIsoDate, todayIsoLocal } from "../utils";
 import { Button, FormModal, TextField } from "./ui";
+import { AppText as Text } from "./AppText";
 
 type Props = {
   visible: boolean;

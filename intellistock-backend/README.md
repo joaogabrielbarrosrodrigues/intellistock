@@ -227,8 +227,23 @@ Prioridade: **ALTA** se o produto zerou ou vai acabar antes de a reposição che
 do estoque de segurança; **BAIXA** nos demais casos que precisam de reposição. A resposta também traz
 `custoEstimado` (quantidade sugerida × preço) e é ordenada por prioridade.
 
+A resposta inclui `totalConsumido`, `periodoAnaliseDias`, `diasCobertura`,
+`prazoEntregaDias` e `diasSeguranca`, além de `consumoMedioDiario`,
+`consumoBaseDiario`, `estoqueSeguranca` e `pontoPedido`. Assim o aplicativo
+consegue explicar cada sugestão sem repetir parâmetros fixos no frontend.
+Sem saídas na janela, a base de consumo é zero e uma eventual sugestão serve
+apenas para atingir o estoque mínimo cadastrado; não é previsão de demanda.
+O cálculo não mede automaticamente se o histórico é representativo.
+
 Exemplo: saldo 80, consumo de 30 un. na primeira quinzena e 90 na segunda (tendência de ALTA, base 6/dia):
 segurança = max(10, 42) = 42, ponto de pedido = 84, sugestão = 6 × 37 + 42 − 80 = **184 unidades**.
+
+No caso de 400 UN consumidas apenas na quinzena recente e saldo de 100 UN,
+a média de 30 dias é 13,333 UN/dia, mas a base pela tendência de ALTA é
+26,667 UN/dia. Com os padrões (7 dias de entrega, 7 de segurança e 30 de
+cobertura), o ponto é 373,338 UN e a necessidade de 1.073,348 UN é
+arredondada para **1.074 UN**. Ao preço de R$ 25,90/UN, o custo estimado é
+R$ 27.816,60. Essa projeção deve ser revista se a alta recente foi pontual.
 
 ## Dashboard
 

@@ -15,6 +15,11 @@ import java.util.UUID;
  * @param diasRestantes           estimativa de dias ate zerar; null quando nao ha consumo
  * @param quantidadeSugerida      consumoBaseDiario x (diasCobertura + prazoEntrega) + estoqueSeguranca - estoqueAtual,
  *                                arredondada para cima
+ * @param totalConsumido          saidas registradas na janela analisada
+ * @param periodoAnaliseDias      tamanho da janela; nao garante historico representativo
+ * @param diasCobertura           dias de consumo planejados alem do prazo de entrega
+ * @param prazoEntregaDias        prazo de entrega usado nesta sugestao
+ * @param diasSeguranca           dias usados no calculo do estoque de seguranca
  */
 public record ReposicaoResponse(
         UUID produtoId,
@@ -33,7 +38,12 @@ public record ReposicaoResponse(
         boolean precisaRepor,
         BigDecimal quantidadeSugerida,
         BigDecimal custoEstimado,
-        Prioridade prioridade
+        Prioridade prioridade,
+        BigDecimal totalConsumido,
+        int periodoAnaliseDias,
+        int diasCobertura,
+        int prazoEntregaDias,
+        int diasSeguranca
 ) {
 
     public enum Prioridade {

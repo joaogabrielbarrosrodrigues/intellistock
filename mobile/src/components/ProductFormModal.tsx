@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { getApiErrorMessage } from "../api/errors";
 import type { Fornecedor, Produto, UnidadeMedida } from "../api/types";
 import { useProdutoMutations } from "../hooks/useIntellistockQueries";
 import { colors } from "../theme/colors";
 import { radius, spacing } from "../theme/tokens";
 import { Button, FormModal, TextField } from "./ui";
+import { AppText as Text } from "./AppText";
 
 const unidades: UnidadeMedida[] = ["UN", "KG", "G", "L", "ML", "CX", "FD", "PCT", "M"];
 const numeric = (value: string) => Number(value.replace(",", "."));

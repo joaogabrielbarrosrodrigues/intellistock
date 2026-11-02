@@ -1,16 +1,19 @@
-import { Ionicons } from "@expo/vector-icons";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Linking, Pressable, StyleSheet, View } from "react-native";
 import { getApiErrorMessage } from "../api/errors";
 import type { ContaPagar, StatusConta } from "../api/types";
 import { ContaFormModal } from "../components/ContaFormModal";
+import { AppText as Text } from "../components/AppText";
 import { EmptyState } from "../components/EmptyState";
 import { FeedbackBanner, type FeedbackTone } from "../components/FeedbackBanner";
 import { Header } from "../components/Header";
 import { Screen } from "../components/Screen";
 import { StateView } from "../components/StateView";
-import { ConfirmationDialog, StatusBadge } from "../components/ui";
+import { Card, ConfirmationDialog, StatusBadge } from "../components/ui";
 import { useContaMutations, useContasQuery, useFornecedoresQuery } from "../hooks/useIntellistockQueries";
+import { useDueReminderStatus } from "../notifications/DueReminderProvider";
+import { sendTestDueReminder } from "../notifications/dueReminderScheduler";
 import { colors } from "../theme/colors";
 import { radius, shadow, spacing } from "../theme/tokens";
 import { formatCurrency, formatDate } from "../utils";
@@ -30,7 +33,17 @@ export function ContasScreen() {
   const query = useContasQuery(filter === "TODAS" ? undefined : filter);
   const suppliers = useFornecedoresQuery();
   const mutations = useContaMutations();
+  const reminderStatus = useDueReminderStatus();
   const contas = query.data ?? [];
+
+  async function testReminder() {
+    try {
+      await sendTestDueReminder();
+      setFeedback({ message: "Aviso de teste programado para aparecer em alguns segundos.", tone: "success" });
+    } catch {
+      setFeedback({ message: "Não foi possível enviar o aviso de teste neste aparelho.", tone: "error" });
+    }
+  }
 
   async function confirmAction() {
     if (!pendingAction) return;
@@ -65,6 +78,14 @@ export function ContasScreen() {
         <Ionicons color={colors.white} name="add" size={21} />
         <Text style={styles.newText}>Nova conta</Text>
       </Pressable>
+
+      {reminderStatus === "enabled" ? (
+        <Card style={styles.reminderCard}><Text style={styles.reminderText}>Avisos ativados: 7 dias antes, 3 dias antes e no dia do vencimento, às 9h.</Text><Pressable accessibilityRole="button" onPress={() => void testReminder()}><Text style={styles.reminderAction}>Testar avisos</Text></Pressable></Card>
+      ) : reminderStatus === "disabled" ? (
+        <Card style={styles.reminderCard}><Text style={styles.reminderText}>Ative as notificações do app para receber lembretes de vencimento.</Text><Pressable accessibilityRole="button" onPress={() => void Linking.openSettings()}><Text style={styles.reminderAction}>Abrir configurações</Text></Pressable></Card>
+      ) : reminderStatus === "error" ? (
+        <Card style={styles.reminderCard}><Text style={styles.reminderText}>Não foi possível programar os lembretes neste aparelho. Reinicie o app e confira as permissões.</Text></Card>
+      ) : null}
 
       <FeedbackBanner message={feedback?.message} tone={feedback?.tone} />
       <StateView
@@ -191,6 +212,9 @@ function isActionPending(action: Action | undefined, mutations: ReturnType<typeo
 }
 
 const styles = StyleSheet.create({
+  reminderCard: { gap: spacing.xs },
+  reminderText: { color: colors.textSecondary, fontSize: 13, lineHeight: 19 },
+  reminderAction: { color: colors.primary, fontSize: 13, fontWeight: "800", paddingVertical: spacing.xs },
   filters: { flexDirection: "row", flexWrap: "wrap", gap: spacing.xs },
   filter: { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.pill, borderWidth: 1, paddingHorizontal: spacing.sm, paddingVertical: 8 },
   filterSelected: { backgroundColor: colors.primary, borderColor: colors.primary },

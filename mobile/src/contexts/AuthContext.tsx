@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { login as loginRequest } from "../api/intellistock";
 import { onUnauthorized, setAuthToken } from "../api/client";
 import type { User } from "../api/types";
+import { cancelDueReminders } from "../notifications/dueReminderScheduler";
 import { clearSession, readSession, writeSession } from "../storage/sessionStorage";
 
 type AuthContextValue = {
@@ -46,6 +47,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(null);
     setUser(null);
     queryClient.clear();
+    try {
+      await cancelDueReminders();
+    } catch {
+      // A sessão deve ser encerrada mesmo se o sistema de notificações falhar.
+    }
     await clearSession();
   }, [queryClient]);
 

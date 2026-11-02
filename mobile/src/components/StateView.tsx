@@ -1,6 +1,7 @@
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 import { colors } from "../theme/colors";
 import { radius, spacing } from "../theme/tokens";
+import { AppText as Text } from "./AppText";
 
 export type StateViewProps = {
   loading?: boolean;

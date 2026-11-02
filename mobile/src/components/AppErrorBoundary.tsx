@@ -1,8 +1,9 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { colors } from "../theme/colors";
 import { spacing } from "../theme/tokens";
 import { Button } from "./ui";
+import { AppText as Text } from "./AppText";
 
 type Props = { children: ReactNode };
 type State = { error: Error | null };

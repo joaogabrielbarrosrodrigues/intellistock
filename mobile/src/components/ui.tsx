@@ -1,7 +1,9 @@
 import type { ReactNode } from "react";
-import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, type TextInputProps, View } from "react-native";
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, TextInput, type TextInputProps, View } from "react-native";
 import { colors } from "../theme/colors";
 import { radius, shadow, spacing } from "../theme/tokens";
+import { typography } from "../theme/typography";
+import { AppText as Text } from "./AppText";
 
 export type ButtonVariant = "primary" | "secondary" | "danger" | "ghost";
 
@@ -113,7 +115,7 @@ const styles = StyleSheet.create({
   card: { backgroundColor: colors.surface, borderRadius: radius.lg, padding: spacing.md, ...shadow.card },
   field: { gap: spacing.xs },
   fieldLabel: { color: colors.textSecondary, fontSize: 14, fontWeight: "700" },
-  input: { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.sm, borderWidth: 1, color: colors.text, fontSize: 16, minHeight: 48, paddingHorizontal: spacing.sm },
+  input: { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.sm, borderWidth: 1, color: colors.text, fontFamily: typography.body, fontSize: 16, minHeight: 48, paddingHorizontal: spacing.sm },
   inputMultiline: { minHeight: 96, paddingTop: spacing.sm, textAlignVertical: "top" },
   inputError: { borderColor: colors.danger },
   fieldError: { color: colors.danger, fontSize: 12 },

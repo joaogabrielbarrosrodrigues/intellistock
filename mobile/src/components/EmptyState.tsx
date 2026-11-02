@@ -1,7 +1,8 @@
-import { Ionicons } from "@expo/vector-icons";
-import { StyleSheet, Text, View } from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { StyleSheet, View } from "react-native";
 import { colors } from "../theme/colors";
 import { radius, spacing } from "../theme/tokens";
+import { AppText as Text } from "./AppText";
 
 export type EmptyStateProps = { message: string; title?: string };
 

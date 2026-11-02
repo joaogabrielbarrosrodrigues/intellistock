@@ -1,9 +1,11 @@
-import { Ionicons } from "@expo/vector-icons";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useEffect, useRef } from "react";
 import { ActivityIndicator, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors } from "../theme/colors";
+import { typography } from "../theme/typography";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
 import { ContasScreen } from "../screens/ContasScreen";
@@ -13,6 +15,7 @@ import { LoginScreen } from "../screens/LoginScreen";
 import { MaisScreen } from "../screens/MaisScreen";
 import { ProdutosScreen } from "../screens/ProdutosScreen";
 import { useEstoqueQuery } from "../hooks/useIntellistockQueries";
+import { DueReminderProvider } from "../notifications/DueReminderProvider";
 import { formatQuantity } from "../utils";
 
 export type AuthStackParamList = {
@@ -31,14 +34,16 @@ const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 const Tab = createBottomTabNavigator<AppTabParamList>();
 
 function AppTabs() {
+  const insets = useSafeAreaInsets();
+  const bottomPadding = Math.max(insets.bottom, 8);
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.muted,
-        tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border, height: 66, paddingBottom: 8, paddingTop: 6 },
-        tabBarLabelStyle: { fontSize: 11, fontWeight: "700" },
+        tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border, height: 58 + bottomPadding, paddingBottom: bottomPadding, paddingTop: 6 },
+        tabBarLabelStyle: { fontFamily: typography.bodyStrong, fontSize: 11 },
         tabBarIcon: ({ color, size }) => {
           const iconName =
             route.name === "Dashboard"
@@ -94,7 +99,7 @@ function AuthenticatedApp() {
     });
   }, [estoqueQuery.data, estoqueQuery.isSuccess, showToast]);
 
-  return <AppTabs />;
+  return <DueReminderProvider><AppTabs /></DueReminderProvider>;
 }
 
 export function RootNavigator() {

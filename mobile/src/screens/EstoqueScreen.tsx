@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { getApiErrorMessage } from "../api/errors";
 import type { EstoqueItem, TipoMovimentacao } from "../api/types";
 import { EmptyState } from "../components/EmptyState";
+import { AppText as Text } from "../components/AppText";
 import { Header } from "../components/Header";
 import { MovimentacaoModal } from "../components/MovimentacaoModal";
 import { Screen } from "../components/Screen";

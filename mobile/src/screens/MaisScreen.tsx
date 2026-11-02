@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { Ionicons } from "@expo/vector-icons";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { Pressable, StyleSheet, TextInput, View } from "react-native";
 import { getApiErrorMessage } from "../api/errors";
 import type { Fornecedor } from "../api/types";
 import { EmptyState } from "../components/EmptyState";
+import { AppText as Text } from "../components/AppText";
 import { FornecedorFormModal } from "../components/FornecedorFormModal";
 import { Header } from "../components/Header";
+import { ReposicaoCard } from "../components/ReposicaoCard";
 import { Screen } from "../components/Screen";
 import { Card, ConfirmationDialog, SectionTitle, StatusBadge } from "../components/ui";
 import { StateView } from "../components/StateView";
@@ -13,14 +15,15 @@ import { useConsumoQuery, useFornecedorMutations, useFornecedoresQuery, useRepos
 import { useDebouncedValue } from "../hooks/useDebouncedValue";
 import { colors } from "../theme/colors";
 import { radius, shadow, spacing } from "../theme/tokens";
-import { formatCurrency, formatQuantity } from "../utils";
+import { typography } from "../theme/typography";
+import { formatQuantity } from "../utils";
 
 type Section = "menu" | "fornecedores" | "analises";
 export function MaisScreen() {
   const [section, setSection] = useState<Section>("menu");
   if (section === "fornecedores") return <FornecedoresView onBack={() => setSection("menu")} />;
   if (section === "analises") return <AnalisesView onBack={() => setSection("menu")} />;
-  return <Screen><Header subtitle="Fornecedores e planejamento" title="Mais" /><MenuCard icon="people-outline" onPress={() => setSection("fornecedores")} subtitle="Cadastre e mantenha parceiros atualizados" title="Fornecedores" /><MenuCard icon="analytics-outline" onPress={() => setSection("analises")} subtitle="Consumo e sugestões calculadas pela API" title="Análise e reposição" /><Card style={styles.note}><Text style={styles.noteTitle}>Dados confiáveis</Text><Text style={styles.noteText}>As sugestões usam o histórico real de saídas, estoque atual e parâmetros de cobertura configurados no backend.</Text></Card></Screen>;
+  return <Screen><Header subtitle="Fornecedores e planejamento" title="Mais" /><MenuCard icon="people-outline" onPress={() => setSection("fornecedores")} subtitle="Cadastre e mantenha parceiros atualizados" title="Fornecedores" /><MenuCard icon="analytics-outline" onPress={() => setSection("analises")} subtitle="Acompanhe o consumo e planeje compras" title="Análise e reposição" /><Card style={styles.note}><Text style={styles.noteTitle}>Como usar as sugestões</Text><Text style={styles.noteText}>Confira o consumo registrado, o estoque atual e o prazo de entrega antes de comprar.</Text></Card></Screen>;
 }
 
 function BackHeader({ title, subtitle, onBack }: { title: string; subtitle: string; onBack: () => void }) { return <View style={styles.backHeader}><Pressable accessibilityLabel="Voltar" accessibilityRole="button" onPress={onBack} style={styles.back}><Ionicons color={colors.primaryDark} name="arrow-back" size={21} /></Pressable><View style={styles.backText}><Text style={styles.backTitle}>{title}</Text><Text style={styles.backSubtitle}>{subtitle}</Text></View></View>; }
@@ -33,8 +36,44 @@ function FornecedoresView({ onBack }: { onBack: () => void }) {
 }
 
 function AnalisesView({ onBack }: { onBack: () => void }) {
-  const consumo = useConsumoQuery(); const reposicoes = useReposicoesQuery(); const loading = consumo.isLoading || reposicoes.isLoading; const error = consumo.isError ? getApiErrorMessage(consumo.error, "Não foi possível carregar a análise de consumo.") : reposicoes.isError ? getApiErrorMessage(reposicoes.error, "Não foi possível carregar as sugestões de reposição.") : null;
-  return <Screen refreshing={consumo.isRefetching || reposicoes.isRefetching} onRefresh={() => { void consumo.refetch(); void reposicoes.refetch(); }}><BackHeader onBack={onBack} subtitle="Baseado no histórico real" title="Análise e reposição" /><StateView error={error} loading={loading} onRetry={() => { void consumo.refetch(); void reposicoes.refetch(); }} />{!loading && !error ? <><SectionTitle title="Sugestões de reposição" />{(reposicoes.data ?? []).length === 0 ? <EmptyState message="Nenhum produto precisa de reposição neste momento." title="Estoque sob controle" /> : (reposicoes.data ?? []).map((item) => <Card key={item.produtoId} style={styles.analysisCard}><View style={styles.analysisHeader}><Text numberOfLines={1} style={styles.analysisTitle}>{item.produtoNome}</Text><StatusBadge label={item.prioridade} tone={item.prioridade === "ALTA" ? "danger" : item.prioridade === "MEDIA" ? "warning" : "primary"} /></View><Text style={styles.analysisMeta}>Atual {formatQuantity(item.estoqueAtual, item.unidadeMedida)} · ponto de pedido {formatQuantity(item.pontoPedido, item.unidadeMedida)}</Text><View style={styles.analysisBottom}><Text style={styles.suggestion}>Comprar {formatQuantity(item.quantidadeSugerida, item.unidadeMedida)}</Text><Text style={styles.cost}>{formatCurrency(item.custoEstimado)}</Text></View></Card>)}<SectionTitle title="Consumo por produto" />{(consumo.data ?? []).length === 0 ? <EmptyState message="Registre saídas para calcular os indicadores de consumo." title="Ainda sem histórico" /> : (consumo.data ?? []).slice(0, 20).map((item) => <Card key={item.produtoId} style={styles.analysisCard}><View style={styles.analysisHeader}><Text numberOfLines={1} style={styles.analysisTitle}>{item.produtoNome}</Text><StatusBadge label={item.tendencia} tone={item.tendencia === "ALTA" ? "warning" : item.tendencia === "BAIXA" ? "primary" : "neutral"} /></View><Text style={styles.analysisMeta}>{formatQuantity(item.totalConsumido, item.unidadeMedida)} consumidos em {item.periodoDias} dias</Text><Text style={styles.suggestion}>Média diária: {formatQuantity(item.mediaDiaria, item.unidadeMedida)}</Text></Card>)}</> : null}</Screen>;
+  const consumo = useConsumoQuery();
+  const reposicoes = useReposicoesQuery();
+  const loading = consumo.isLoading || reposicoes.isLoading;
+  const error = consumo.isError
+    ? getApiErrorMessage(consumo.error, "Não foi possível carregar a análise de consumo.")
+    : reposicoes.isError
+      ? getApiErrorMessage(reposicoes.error, "Não foi possível carregar as sugestões de reposição.")
+      : null;
+  const consumed = (consumo.data ?? []).filter((item) => item.totalConsumido > 0);
+  const retry = () => { void consumo.refetch(); void reposicoes.refetch(); };
+
+  return (
+    <Screen refreshing={consumo.isRefetching || reposicoes.isRefetching} onRefresh={retry}>
+      <BackHeader onBack={onBack} subtitle="Baseado no histórico real" title="Análise e reposição" />
+      <StateView error={error} loading={loading} onRetry={retry} />
+      {!loading && !error ? (
+        <>
+          <SectionTitle title="Sugestões de reposição" />
+          {(reposicoes.data ?? []).length === 0
+            ? <EmptyState message="Nenhum produto precisa de reposição neste momento." title="Estoque sob controle" />
+            : (reposicoes.data ?? []).map((item) => <ReposicaoCard key={item.produtoId} item={item} />)}
+          <SectionTitle title="Consumo por produto" />
+          {consumed.length === 0
+            ? <EmptyState message="Registre saídas para calcular os indicadores de consumo." title="Ainda sem histórico de consumo" />
+            : consumed.slice(0, 20).map((item) => (
+              <Card key={item.produtoId} style={styles.analysisCard}>
+                <View style={styles.analysisHeader}>
+                  <Text numberOfLines={1} style={styles.analysisTitle}>{item.produtoNome}</Text>
+                  <StatusBadge label={item.tendencia} tone={item.tendencia === "ALTA" ? "warning" : item.tendencia === "BAIXA" ? "primary" : "neutral"} />
+                </View>
+                <Text style={styles.analysisMeta}>{formatQuantity(item.totalConsumido, item.unidadeMedida)} consumidos em {item.periodoDias} dias</Text>
+                <Text style={styles.suggestion}>Média diária: {formatQuantity(item.mediaDiaria, item.unidadeMedida)}</Text>
+              </Card>
+            ))}
+        </>
+      ) : null}
+    </Screen>
+  );
 }
 
-const styles = StyleSheet.create({ backHeader: { alignItems: "center", flexDirection: "row", gap: spacing.sm }, back: { alignItems: "center", backgroundColor: colors.surfaceMuted, borderRadius: radius.md, height: 44, justifyContent: "center", width: 44 }, backText: { flex: 1 }, backTitle: { color: colors.text, fontSize: 25, fontWeight: "800" }, backSubtitle: { color: colors.muted, fontSize: 13, marginTop: 2 }, menuCard: { alignItems: "center", backgroundColor: colors.surface, borderRadius: radius.lg, flexDirection: "row", gap: spacing.sm, padding: spacing.md, ...shadow.card }, menuIcon: { alignItems: "center", backgroundColor: colors.primaryLight, borderRadius: radius.md, height: 48, justifyContent: "center", width: 48 }, menuText: { flex: 1 }, menuTitle: { color: colors.text, fontSize: 16, fontWeight: "800" }, menuSubtitle: { color: colors.muted, fontSize: 13, lineHeight: 18, marginTop: 3 }, note: { backgroundColor: colors.primaryLight }, noteTitle: { color: colors.primaryDark, fontSize: 16, fontWeight: "800" }, noteText: { color: colors.textSecondary, lineHeight: 20, marginTop: 5 }, tools: { flexDirection: "row", gap: spacing.sm }, search: { alignItems: "center", backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.md, borderWidth: 1, flex: 1, flexDirection: "row", gap: spacing.xs, minHeight: 48, paddingHorizontal: spacing.sm }, searchInput: { color: colors.text, flex: 1 }, add: { alignItems: "center", backgroundColor: colors.primary, borderRadius: radius.md, justifyContent: "center", width: 48 }, feedback: { backgroundColor: colors.successLight, borderRadius: radius.sm, color: colors.success, fontWeight: "700", padding: spacing.sm }, supplierCard: { alignItems: "center", backgroundColor: colors.surface, borderRadius: radius.lg, flexDirection: "row", overflow: "hidden", ...shadow.card }, supplierBody: { flex: 1, gap: 4, padding: spacing.md }, supplierName: { color: colors.text, fontSize: 16, fontWeight: "800" }, supplierInfo: { color: colors.muted, fontSize: 13 }, remove: { alignItems: "center", alignSelf: "stretch", borderLeftColor: colors.border, borderLeftWidth: StyleSheet.hairlineWidth, justifyContent: "center", width: 50 }, analysisCard: { gap: spacing.xs }, analysisHeader: { alignItems: "center", flexDirection: "row", gap: spacing.xs, justifyContent: "space-between" }, analysisTitle: { color: colors.text, flex: 1, fontSize: 16, fontWeight: "800" }, analysisMeta: { color: colors.muted, fontSize: 13 }, analysisBottom: { alignItems: "center", flexDirection: "row", justifyContent: "space-between", marginTop: spacing.xs }, suggestion: { color: colors.primaryDark, fontWeight: "800" }, cost: { color: colors.textSecondary, fontWeight: "800" } });
+const styles = StyleSheet.create({ backHeader: { alignItems: "center", flexDirection: "row", gap: spacing.sm }, back: { alignItems: "center", backgroundColor: colors.surfaceMuted, borderRadius: radius.md, height: 44, justifyContent: "center", width: 44 }, backText: { flex: 1 }, backTitle: { color: colors.text, fontSize: 25, fontWeight: "800" }, backSubtitle: { color: colors.muted, fontSize: 13, marginTop: 2 }, menuCard: { alignItems: "center", backgroundColor: colors.surface, borderRadius: radius.lg, flexDirection: "row", gap: spacing.sm, padding: spacing.md, ...shadow.card }, menuIcon: { alignItems: "center", backgroundColor: colors.primaryLight, borderRadius: radius.md, height: 48, justifyContent: "center", width: 48 }, menuText: { flex: 1 }, menuTitle: { color: colors.text, fontSize: 16, fontWeight: "800" }, menuSubtitle: { color: colors.muted, fontSize: 13, lineHeight: 18, marginTop: 3 }, note: { backgroundColor: colors.primaryLight }, noteTitle: { color: colors.primaryDark, fontSize: 16, fontWeight: "800" }, noteText: { color: colors.textSecondary, lineHeight: 20, marginTop: 5 }, tools: { flexDirection: "row", gap: spacing.sm }, search: { alignItems: "center", backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.md, borderWidth: 1, flex: 1, flexDirection: "row", gap: spacing.xs, minHeight: 48, paddingHorizontal: spacing.sm }, searchInput: { color: colors.text, flex: 1, fontFamily: typography.body }, add: { alignItems: "center", backgroundColor: colors.primary, borderRadius: radius.md, justifyContent: "center", width: 48 }, feedback: { backgroundColor: colors.successLight, borderRadius: radius.sm, color: colors.success, fontWeight: "700", padding: spacing.sm }, supplierCard: { alignItems: "center", backgroundColor: colors.surface, borderRadius: radius.lg, flexDirection: "row", overflow: "hidden", ...shadow.card }, supplierBody: { flex: 1, gap: 4, padding: spacing.md }, supplierName: { color: colors.text, fontSize: 16, fontWeight: "800" }, supplierInfo: { color: colors.muted, fontSize: 13 }, remove: { alignItems: "center", alignSelf: "stretch", borderLeftColor: colors.border, borderLeftWidth: StyleSheet.hairlineWidth, justifyContent: "center", width: 50 }, analysisCard: { gap: spacing.xs }, analysisHeader: { alignItems: "center", flexDirection: "row", gap: spacing.xs, justifyContent: "space-between" }, analysisTitle: { color: colors.text, flex: 1, fontSize: 16, fontWeight: "800" }, analysisMeta: { color: colors.muted, fontSize: 13 }, analysisBottom: { alignItems: "center", flexDirection: "row", justifyContent: "space-between", marginTop: spacing.xs }, suggestion: { color: colors.primaryDark, fontWeight: "800" }, cost: { color: colors.textSecondary, fontWeight: "800" } });

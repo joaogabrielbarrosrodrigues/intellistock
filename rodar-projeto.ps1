@@ -1,50 +1,40 @@
 $ErrorActionPreference = "Stop"
-$raiz = $PSScriptRoot
-$configuracaoLocal = Join-Path $raiz ".env.local.ps1"
 
-if (-not (Test-Path -LiteralPath $configuracaoLocal)) {
-    Write-Host "Configuracao local nao encontrada: .env.local.ps1" -ForegroundColor Red
-    Write-Host "Copie .env.example.ps1 para .env.local.ps1 e preencha os valores." -ForegroundColor Yellow
-    exit 1
+$configuracao = Join-Path $PSScriptRoot ".env.local.ps1"
+if (-not (Test-Path -LiteralPath $configuracao)) {
+    throw "Crie .env.local.ps1 a partir de .env.example.ps1 e preencha os valores."
 }
+. $configuracao
 
-. $configuracaoLocal
-
-$variaveisObrigatorias = @("DB_USERNAME", "DB_PASSWORD", "JWT_SECRET")
-foreach ($variavel in $variaveisObrigatorias) {
-    if (-not (Test-Path "Env:$variavel")) {
-        Write-Host "Variavel obrigatoria ausente: $variavel" -ForegroundColor Red
-        exit 1
+foreach ($nome in "DB_USERNAME", "DB_PASSWORD", "JWT_SECRET") {
+    if (-not (Get-Item "Env:$nome" -ErrorAction SilentlyContinue).Value) {
+        throw "Preencha $nome em .env.local.ps1."
     }
 }
 
-Write-Host "=== INTELISTOCK ===" -ForegroundColor Green
-Write-Host ""
-
-# ================================================================
-# BACK-END - Java / Spring Boot / PostgreSQL
-# ================================================================
-$backend = Join-Path $raiz "intellistock-backend"
-
-$backendComando = @"
-Set-Location '$backend'
-Write-Host 'BACK-END: http://localhost:8080' -ForegroundColor Cyan
-& '.\mvnw.cmd' spring-boot:run '-Dspring-boot.run.profiles=dev'
-"@
-
-Write-Host "Iniciando BACK-END em uma nova janela..." -ForegroundColor Cyan
-Start-Process powershell.exe -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-Command", $backendComando
-
-# ================================================================
-# FRONT-END - React Native / Expo
-# ================================================================
-$frontend = Join-Path $raiz "mobile"
-Set-Location $frontend
-
-if (-not (Test-Path (Join-Path $frontend "node_modules"))) {
-    Write-Host "FRONT-END: instalando dependencias..." -ForegroundColor Yellow
-    npm install
+$mobile = Join-Path $PSScriptRoot "mobile"
+if (-not (Test-Path (Join-Path $mobile "node_modules"))) {
+    Push-Location $mobile
+    try { npm install; if ($LASTEXITCODE -ne 0) { throw "npm install falhou." } }
+    finally { Pop-Location }
 }
 
-Write-Host "FRONT-END: iniciando Expo..." -ForegroundColor Magenta
-npm start -- --clear
+if (-not $env:EXPO_PUBLIC_API_URL) {
+    $ip = Get-NetIPConfiguration |
+        Where-Object { $_.NetAdapter.Status -eq "Up" -and $_.IPv4DefaultGateway } |
+        ForEach-Object { $_.IPv4Address.IPAddress } |
+        Where-Object { $_ -and $_ -notmatch "^169\.254\." } |
+        Select-Object -First 1
+    if (-not $ip) { throw "Defina EXPO_PUBLIC_API_URL com o IP do computador para acessar pelo celular." }
+    $env:EXPO_PUBLIC_API_URL = "http://${ip}:8080"
+}
+
+$backend = Join-Path $PSScriptRoot "intellistock-backend"
+Write-Host "Iniciando backend em outra janela e Expo nesta janela."
+Write-Host "API para o celular: $env:EXPO_PUBLIC_API_URL"
+Start-Process powershell.exe -WorkingDirectory $backend -ArgumentList @(
+    "-NoExit", "-Command", "& '.\mvnw.cmd' spring-boot:run '-Dspring-boot.run.profiles=dev'"
+)
+
+Set-Location $mobile
+npm start -- --lan --clear

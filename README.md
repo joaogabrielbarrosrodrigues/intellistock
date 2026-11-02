@@ -22,7 +22,9 @@ Para carregar dados de teste no banco, com o backend já rodando, abra outro Pow
 O script cria um usuário de teste, fornecedores, produtos em unidades diferentes, movimentações históricas e contas a pagar. Ele pode ser executado novamente sem duplicar esses dados.
 
 O script abre o back-end em outra janela e inicia o Expo no terminal atual. Mantenha as duas janelas abertas.
-A API usa `http://localhost:8080` e o Expo Web normalmente usa `http://localhost:8081`.
+A API usa `http://localhost:8080` no computador. Para celulares na mesma rede, o script configura o IP local do computador; confira o endereço exibido no terminal. O Expo Web normalmente usa `http://localhost:8081`.
+
+Para apresentar no iPhone e Android, siga o [guia mobile](mobile/README.md) e o [checklist de testes](CHECKLIST_APRESENTACAO_MOBILE.md).
 
 Para encerrar, pressione `Ctrl+C` no terminal do Expo e feche a janela do back-end.
 

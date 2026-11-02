@@ -1,9 +1,10 @@
-import { Ionicons } from "@expo/vector-icons";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, TextInput, View } from "react-native";
 import { getApiErrorMessage } from "../api/errors";
 import type { Produto } from "../api/types";
 import { EmptyState } from "../components/EmptyState";
+import { AppText as Text } from "../components/AppText";
 import { FeedbackBanner, type FeedbackTone } from "../components/FeedbackBanner";
 import { Header } from "../components/Header";
 import { ProductFormModal } from "../components/ProductFormModal";
@@ -14,6 +15,7 @@ import { useDebouncedValue } from "../hooks/useDebouncedValue";
 import { useFornecedoresQuery, useProdutoMutations, useProdutosQuery } from "../hooks/useIntellistockQueries";
 import { colors } from "../theme/colors";
 import { radius, shadow, spacing } from "../theme/tokens";
+import { typography } from "../theme/typography";
 import { formatCurrency, formatQuantity } from "../utils";
 
 type Feedback = { message: string; tone: FeedbackTone };
@@ -124,7 +126,7 @@ export function ProdutosScreen() {
 const styles = StyleSheet.create({
   toolbar: { flexDirection: "row", gap: spacing.sm },
   search: { alignItems: "center", backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.md, borderWidth: 1, flex: 1, flexDirection: "row", gap: spacing.xs, minHeight: 48, paddingHorizontal: spacing.sm },
-  searchInput: { color: colors.text, flex: 1, fontSize: 16 },
+  searchInput: { color: colors.text, flex: 1, fontFamily: typography.body, fontSize: 16 },
   add: { alignItems: "center", backgroundColor: colors.primary, borderRadius: radius.md, justifyContent: "center", width: 48 },
   card: { backgroundColor: colors.surface, borderRadius: radius.lg, overflow: "hidden", ...shadow.card },
   cardPress: { gap: spacing.xs, padding: spacing.md },

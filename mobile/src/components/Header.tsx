@@ -1,8 +1,9 @@
-import { Ionicons } from "@expo/vector-icons";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { Pressable, StyleSheet, View } from "react-native";
 import { useAuth } from "../contexts/AuthContext";
 import { colors } from "../theme/colors";
 import { radius, spacing } from "../theme/tokens";
+import { AppText as Text } from "./AppText";
 
 export type HeaderProps = { title: string; subtitle?: string };
 

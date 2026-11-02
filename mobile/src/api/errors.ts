@@ -8,8 +8,8 @@ export function getApiErrorMessage(error: unknown, fallback: string) {
       const fieldMessage = Object.values(data.fields ?? {}).find((message) => Boolean(message));
       return fieldMessage || data.message || data.error || fallback;
     }
-    if (error.code === "ECONNABORTED") return "A API demorou demais para responder.";
-    if (!error.response) return "Não foi possível conectar à API. Verifique a rede e se o backend está rodando.";
+    if (error.code === "ECONNABORTED") return "A conexão demorou demais para responder. Tente novamente.";
+    if (!error.response) return "Não foi possível conectar. Confira a rede e tente novamente.";
   }
 
   return fallback;

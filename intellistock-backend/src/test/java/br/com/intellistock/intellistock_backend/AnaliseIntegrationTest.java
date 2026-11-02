@@ -53,6 +53,11 @@ class AnaliseIntegrationTest extends IntegrationTest {
         getJson(token, "/api/analises/reposicao")
                 .andExpect(status().isOk())
                 .andExpect(jsonPath(filtro + ".consumoBaseDiario", contains(6.0)))
+                .andExpect(jsonPath(filtro + ".totalConsumido", contains(120.0)))
+                .andExpect(jsonPath(filtro + ".periodoAnaliseDias", contains(30)))
+                .andExpect(jsonPath(filtro + ".diasCobertura", contains(30)))
+                .andExpect(jsonPath(filtro + ".prazoEntregaDias", contains(7)))
+                .andExpect(jsonPath(filtro + ".diasSeguranca", contains(7)))
                 .andExpect(jsonPath(filtro + ".estoqueSeguranca", contains(42.0)))
                 .andExpect(jsonPath(filtro + ".pontoPedido", contains(84.0)))
                 .andExpect(jsonPath(filtro + ".precisaRepor", contains(true)))
@@ -67,9 +72,44 @@ class AnaliseIntegrationTest extends IntegrationTest {
         // Prazo de 14 dias: 80 / 6 = 13,3 dias restantes, menos que o prazo => prioridade ALTA
         String filtro = "$[?(@.produtoId == '" + produtoId + "')]";
         getJson(token, "/api/analises/reposicao?prazoEntregaDias=14")
-                .andExpect(jsonPath(filtro + ".prioridade", contains("ALTA")));
+                .andExpect(jsonPath(filtro + ".prioridade", contains("ALTA")))
+                .andExpect(jsonPath(filtro + ".prazoEntregaDias", contains(14)));
 
         getJson(token, "/api/analises/reposicao?diasCobertura=0").andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void explicaExemploDeAltaRecenteSemMudarARegraDeCompra() throws Exception {
+        String body = postJson(token, "/api/produtos", """
+                {"nome":"Cafe Seu Joao","quantidadeInicial":500,"estoqueMinimo":10,
+                 "unidadeMedida":"UN","preco":25.90}
+                """)
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        String cafeId = com.jayway.jsonpath.JsonPath.read(body, "$.id");
+        movimentar(token, cafeId, "SAIDA", "400", diasAtras(5)).andExpect(status().isCreated());
+
+        String filtro = "$[?(@.produtoId == '" + cafeId + "')]";
+        getJson(token, "/api/analises/reposicao")
+                .andExpect(jsonPath(filtro + ".estoqueAtual", contains(100)))
+                .andExpect(jsonPath(filtro + ".totalConsumido", contains(400.0)))
+                .andExpect(jsonPath(filtro + ".consumoMedioDiario", contains(13.333)))
+                .andExpect(jsonPath(filtro + ".consumoBaseDiario", contains(26.667)))
+                .andExpect(jsonPath(filtro + ".tendencia", contains("ALTA")))
+                .andExpect(jsonPath(filtro + ".estoqueSeguranca", contains(186.669)))
+                .andExpect(jsonPath(filtro + ".pontoPedido", contains(373.338)))
+                .andExpect(jsonPath(filtro + ".quantidadeSugerida", contains(1074)))
+                .andExpect(jsonPath(filtro + ".custoEstimado", contains(27816.60)));
+    }
+
+    @Test
+    void semSaidasExplicitaAusenciaDeConsumoNaSugestao() throws Exception {
+        String semHistorico = criarProduto(token, "Sem consumo", "1", "5");
+        String filtro = "$[?(@.produtoId == '" + semHistorico + "')]";
+        getJson(token, "/api/analises/reposicao")
+                .andExpect(jsonPath(filtro + ".totalConsumido", contains(0)))
+                .andExpect(jsonPath(filtro + ".consumoBaseDiario", contains(0.0)))
+                .andExpect(jsonPath(filtro + ".quantidadeSugerida", contains(4)));
     }
 
     @Test

@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { StyleSheet, Text } from "react-native";
+import { StyleSheet } from "react-native";
 import { getApiErrorMessage } from "../api/errors";
 import type { Fornecedor } from "../api/types";
 import { useFornecedorMutations } from "../hooks/useIntellistockQueries";
 import { colors } from "../theme/colors";
 import { Button, FormModal, TextField } from "./ui";
+import { AppText as Text } from "./AppText";
 
 export function FornecedorFormModal({ visible, supplier, onClose, onSaved }: { visible: boolean; supplier?: Fornecedor | null; onClose: () => void; onSaved: (message: string) => void }) {
   const mutations = useFornecedorMutations();
