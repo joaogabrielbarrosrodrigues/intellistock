@@ -33,7 +33,9 @@ export function ProductFormModal({ visible, product, suppliers, onClose, onSaved
   async function save() {
     const minimo = numeric(estoqueMinimo); const valor = numeric(preco); const inicial = numeric(quantidadeInicial);
     if (!nome.trim()) return setError("Informe o nome do produto.");
+    if (!estoqueMinimo.trim()) return setError("Informe o estoque mínimo (use 0 se não houver).");
     if (!Number.isFinite(minimo) || minimo < 0) return setError("Informe um estoque mínimo válido.");
+    if (!preco.trim()) return setError("Informe o preço unitário.");
     if (!Number.isFinite(valor) || valor < 0) return setError("Informe um preço válido.");
     if (!product && quantidadeInicial && (!Number.isFinite(inicial) || inicial < 0)) return setError("Informe uma quantidade inicial válida.");
     setError(null);
