@@ -3,6 +3,7 @@
     "name": "InteliStock",
     "slug": "intellistock-mobile",
     "version": "0.1.0",
+    "icon": "./assets/brand/intelistock-logo.png",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "assetBundlePatterns": [
@@ -17,7 +18,8 @@
       }
     },
     "web": {
-      "bundler": "metro"
+      "bundler": "metro",
+      "favicon": "./assets/brand/intelistock-logo.png"
     },
     "plugins": [
       "expo-secure-store",

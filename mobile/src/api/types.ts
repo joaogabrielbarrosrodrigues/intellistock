@@ -30,4 +30,3 @@ export type ProdutoPayload = { nome: string; descricao?: string | null; quantida
 export type FornecedorPayload = { nome: string; cnpj?: string | null; telefone?: string | null; email?: string | null };
 export type ContaPayload = { fornecedorId: Id; descricao: string; valor: number; dataVencimento: string; observacao?: string | null };
 export type MovimentacaoPayload = { produtoId: Id; tipo: TipoMovimentacao; quantidade: number; observacao?: string | null };
-export type ApiErrorBody = { message?: string; fields?: Record<string, string> };

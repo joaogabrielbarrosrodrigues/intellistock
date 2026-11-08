@@ -45,6 +45,23 @@ class AuthIntegrationTest extends IntegrationTest {
     }
 
     @Test
+    void senhaMultibyteAcimaDoLimiteNaoCausaErroInterno() throws Exception {
+        String senha = "\u00e9".repeat(40);
+        mockMvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON).content("""
+                        {"nome": "Ana", "email": "ana@example.com", "senha": "%s"}
+                        """.formatted(senha)))
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.message").value("Senha muito longa. Reduza a quantidade de caracteres."));
+
+        mockMvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON).content(REGISTRO))
+                .andExpect(status().isCreated());
+        mockMvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON).content("""
+                        {"email": "joao@example.com", "senha": "%s"}
+                        """.formatted(senha)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void loginComSenhaErradaRetorna401() throws Exception {
         mockMvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON).content(REGISTRO))
                 .andExpect(status().isCreated());

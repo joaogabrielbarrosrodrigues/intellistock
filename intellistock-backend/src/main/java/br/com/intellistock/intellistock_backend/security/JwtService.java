@@ -48,7 +48,7 @@ public class JwtService {
     }
 
     public UUID validateAndGetUserId(String token) {
-        String[] parts = token.split("\\.");
+        String[] parts = token.split("\\.", -1);
         if (parts.length != 3) {
             throw new IllegalArgumentException("Token invalido.");
         }

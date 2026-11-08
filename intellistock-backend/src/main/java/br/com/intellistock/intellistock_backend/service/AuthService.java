@@ -7,8 +7,12 @@ import br.com.intellistock.intellistock_backend.dto.UserResponse;
 import br.com.intellistock.intellistock_backend.entity.User;
 import br.com.intellistock.intellistock_backend.security.JwtService;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Locale;
 
 @Service
 public class AuthService {
@@ -28,7 +32,10 @@ public class AuthService {
     }
 
     public AuthResponse login(LoginRequest request) {
-        String email = request.email().trim().toLowerCase();
+        if (request.senha().getBytes(StandardCharsets.UTF_8).length > 72) {
+            throw new BadCredentialsException("Credenciais invalidas.");
+        }
+        String email = request.email().trim().toLowerCase(Locale.ROOT);
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, request.senha()));
         User user = userService.findByEmail(email);
         return new AuthResponse(jwtService.generateToken(user), "Bearer", UserResponse.from(user));

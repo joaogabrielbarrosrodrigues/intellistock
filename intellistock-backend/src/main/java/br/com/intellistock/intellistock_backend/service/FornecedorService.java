@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 @Service
@@ -87,7 +88,7 @@ public class FornecedorService {
         fornecedor.setCnpj(cnpj);
         fornecedor.setTelefone(blankToNull(request.telefone()));
         String email = blankToNull(request.email());
-        fornecedor.setEmail(email == null ? null : email.toLowerCase());
+        fornecedor.setEmail(email == null ? null : email.toLowerCase(Locale.ROOT));
     }
 
     private String validarCnpj(String cnpj) {

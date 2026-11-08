@@ -1,5 +1,6 @@
 package br.com.intellistock.intellistock_backend.util;
 
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 /**
@@ -22,7 +23,7 @@ public final class CnpjUtils {
         if (cnpj == null) {
             return null;
         }
-        String normalized = cnpj.replaceAll("[.\\-/\\s]", "").toUpperCase();
+        String normalized = cnpj.replaceAll("[.\\-/\\s]", "").toUpperCase(Locale.ROOT);
         return normalized.isEmpty() ? null : normalized;
     }
 

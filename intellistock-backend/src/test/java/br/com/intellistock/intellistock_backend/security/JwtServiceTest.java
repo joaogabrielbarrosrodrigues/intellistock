@@ -29,4 +29,15 @@ class JwtServiceTest {
 
         assertEquals(user.getId(), service.validateAndGetUserId(service.generateToken(user)));
     }
+
+    @Test
+    void rejeitaTokenComSegmentoExtraVazio() {
+        JwtService service = new JwtService("a".repeat(32), 10);
+        User user = new User();
+        user.setId(UUID.randomUUID());
+        user.setEmail("usuario@example.com");
+
+        String token = service.generateToken(user);
+        assertThrows(IllegalArgumentException.class, () -> service.validateAndGetUserId(token + "."));
+    }
 }

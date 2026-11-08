@@ -22,6 +22,7 @@ import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 @Service
@@ -50,7 +51,7 @@ public class ProdutoService {
                 predicates.add(cb.isTrue(root.get("ativo")));
             }
             if (busca != null && !busca.isBlank()) {
-                predicates.add(cb.like(cb.lower(root.get("nome")), "%" + busca.trim().toLowerCase() + "%"));
+                predicates.add(cb.like(cb.lower(root.get("nome")), "%" + busca.trim().toLowerCase(Locale.ROOT) + "%"));
             }
             if (fornecedorId != null) {
                 predicates.add(cb.equal(root.get("fornecedor").get("id"), fornecedorId));

@@ -1,10 +1,8 @@
-import axios from "axios";
+import axios, { AxiosHeaders } from "axios";
 import { appConfig } from "../config/env";
 
-export const API_URL = appConfig.apiUrl;
-
 export const api = axios.create({
-  baseURL: API_URL,
+  baseURL: appConfig.apiUrl,
   timeout: appConfig.requestTimeoutMs,
   headers: {
     "Content-Type": "application/json"
@@ -16,7 +14,12 @@ let unauthorizedHandler: (() => void) | undefined;
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) unauthorizedHandler?.();
+    const currentAuthorization = api.defaults.headers.common.Authorization;
+    const requestAuthorization = AxiosHeaders.from(error.config?.headers).get("Authorization");
+    // Uma resposta atrasada de outra sessão não deve encerrar o login atual.
+    if (error.response?.status === 401 && currentAuthorization && requestAuthorization === currentAuthorization) {
+      unauthorizedHandler?.();
+    }
     return Promise.reject(error);
   }
 );

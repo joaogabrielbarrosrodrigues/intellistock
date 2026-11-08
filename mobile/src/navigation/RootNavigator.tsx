@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useEffect, useRef } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { BrandLogo } from "../components/BrandLogo";
 import { colors } from "../theme/colors";
 import { typography } from "../theme/typography";
 import { useAuth } from "../contexts/AuthContext";
@@ -107,7 +108,8 @@ export function RootNavigator() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.background }}>
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 28, backgroundColor: colors.surface }}>
+        <BrandLogo width={180} />
         <ActivityIndicator color={colors.primary} size="large" />
       </View>
     );

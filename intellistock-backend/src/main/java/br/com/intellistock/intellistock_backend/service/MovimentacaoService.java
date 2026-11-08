@@ -29,6 +29,8 @@ import java.util.UUID;
 @Service
 public class MovimentacaoService {
 
+    private static final BigDecimal QUANTIDADE_MAXIMA = new BigDecimal("999999999999.999");
+
     private final MovimentacaoRepository movimentacaoRepository;
     private final ProdutoRepository produtoRepository;
     private final UserRepository userRepository;
@@ -68,6 +70,9 @@ public class MovimentacaoService {
             novoSaldo = saldoAtual.add(request.quantidade());
         }
 
+        if (novoSaldo.compareTo(QUANTIDADE_MAXIMA) > 0) {
+            throw new BusinessException("A entrada ultrapassa o limite de quantidade em estoque.");
+        }
         produto.setQuantidade(novoSaldo);
 
         Movimentacao movimentacao = new Movimentacao();

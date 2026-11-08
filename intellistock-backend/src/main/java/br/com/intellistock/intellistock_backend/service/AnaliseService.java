@@ -325,14 +325,7 @@ public class AnaliseService {
             buckets.merge(inicioDoBucket(data, agrupamento), item.quantidade(), BigDecimal::add);
         }
 
-        List<ConsumoSerieResponse.Ponto> pontos = new ArrayList<>();
-        buckets.forEach((bucket, quantidade) -> {
-            LocalDate inicioPonto = bucket.isBefore(inicio) ? inicio : bucket;
-            LocalDate fimBucket = proximoBucket(bucket, agrupamento).minusDays(1);
-            LocalDate fimPonto = fimBucket.isAfter(fim) ? fim : fimBucket;
-            pontos.add(new ConsumoSerieResponse.Ponto(inicioPonto, fimPonto, escala(quantidade)));
-        });
-        return pontos;
+        return pontosDosBuckets(buckets, inicio, fim, agrupamento);
     }
 
     private Map<LocalDate, BigDecimal> bucketsMensais(LocalDate inicio, LocalDate fim) {

@@ -26,6 +26,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
+import java.util.Locale;
 
 @Configuration
 public class SecurityConfig {
@@ -68,7 +69,7 @@ public class SecurityConfig {
 
     @Bean
     public UserDetailsService userDetailsService(UserRepository userRepository) {
-        return username -> userRepository.findByEmail(username.toLowerCase())
+        return username -> userRepository.findByEmail(username.toLowerCase(Locale.ROOT))
                 .map(user -> new org.springframework.security.core.userdetails.User(
                         user.getEmail(),
                         user.getSenha(),

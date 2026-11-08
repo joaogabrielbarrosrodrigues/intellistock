@@ -1,54 +1,64 @@
-import { useEffect, useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { StyleSheet, View } from "react-native";
 import { getApiErrorMessage } from "../api/errors";
 import type { ContaPagar, Fornecedor } from "../api/types";
 import { useContaMutations } from "../hooks/useIntellistockQueries";
 import { colors } from "../theme/colors";
-import { radius, spacing } from "../theme/tokens";
-import { isValidIsoDate, todayIsoLocal } from "../utils";
-import { Button, FormModal, TextField } from "./ui";
+import { spacing } from "../theme/tokens";
+import { formatDate, formatDateInput, parseDateInput, parseDecimalInput, todayIsoLocal } from "../utils";
+import { Button, Choice, FormModal, TextField } from "./ui";
 import { AppText as Text } from "./AppText";
+import { StateView } from "./StateView";
 
 type Props = {
   visible: boolean;
   conta?: ContaPagar | null;
   suppliers: Fornecedor[];
+  suppliersLoading?: boolean;
+  suppliersError?: string | null;
+  onRetrySuppliers?: () => void;
   onClose: () => void;
   onSaved: (message: string) => void;
 };
 
-export function ContaFormModal({ visible, conta, suppliers, onClose, onSaved }: Props) {
+export function ContaFormModal({ visible, conta, suppliers, suppliersLoading, suppliersError, onRetrySuppliers, onClose, onSaved }: Props) {
   const mutations = useContaMutations();
   const [fornecedorId, setFornecedorId] = useState("");
   const [descricao, setDescricao] = useState("");
   const [valor, setValor] = useState("");
-  const [vencimento, setVencimento] = useState(todayIsoLocal());
+  const [vencimento, setVencimento] = useState(() => formatDate(todayIsoLocal()));
   const [observacao, setObservacao] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const submitting = useRef(false);
 
   useEffect(() => {
     if (!visible) return;
     setFornecedorId(conta?.fornecedor?.id ?? "");
     setDescricao(conta?.descricao ?? "");
     setValor(conta ? String(conta.valor) : "");
-    setVencimento(conta?.dataVencimento ?? todayIsoLocal());
+    setVencimento(formatDate(conta?.dataVencimento ?? todayIsoLocal()));
     setObservacao(conta?.observacao ?? "");
     setError(null);
   }, [conta, visible]);
 
   async function save() {
-    const amount = Number(valor.replace(",", "."));
+    if (submitting.current) return;
+    const amount = parseDecimalInput(valor, 2);
+    const dataVencimento = parseDateInput(vencimento);
     if (!fornecedorId) return setError("Selecione o fornecedor.");
     if (!descricao.trim()) return setError("Informe a descrição.");
-    if (!Number.isFinite(amount) || amount <= 0) return setError("Informe um valor maior que zero.");
-    if (!isValidIsoDate(vencimento)) return setError("Informe uma data válida no formato AAAA-MM-DD.");
+    if (!Number.isFinite(amount) || amount <= 0) return setError("Informe um valor maior que zero, com até 2 casas decimais.");
+    if (amount >= 10_000_000_000_000) return setError("O valor deve ter no máximo 13 dígitos antes da vírgula.");
+    if (!dataVencimento) return setError("Informe uma data válida no formato DD/MM/AAAA.");
 
+    submitting.current = true;
+    setError(null);
     try {
       const payload = {
         fornecedorId,
         descricao: descricao.trim(),
         valor: amount,
-        dataVencimento: vencimento,
+        dataVencimento,
         observacao: observacao.trim() || null
       };
       if (conta) await mutations.update.mutateAsync({ id: conta.id, payload });
@@ -57,34 +67,36 @@ export function ContaFormModal({ visible, conta, suppliers, onClose, onSaved }: 
       onSaved(conta ? "Conta atualizada com sucesso." : "Conta cadastrada com sucesso.");
     } catch (requestError) {
       setError(getApiErrorMessage(requestError, "Não foi possível salvar a conta."));
+    } finally {
+      submitting.current = false;
     }
   }
 
   const saving = mutations.create.isPending || mutations.update.isPending;
   return (
-    <FormModal onClose={onClose} title={conta ? "Editar conta" : "Nova conta"} visible={visible}>
+    <FormModal busy={saving} onClose={() => { if (!submitting.current) onClose(); }} title={conta ? "Editar conta" : "Nova conta"} visible={visible}>
       <View style={styles.field}>
         <Text style={styles.label}>Fornecedor</Text>
+        <StateView error={suppliersError} loading={suppliersLoading} onRetry={onRetrySuppliers} />
         <View style={styles.suppliers}>
           {suppliers.map((supplier) => (
-            <Pressable
+            <Choice
+              disabled={saving}
               key={supplier.id}
-              accessibilityRole="button"
+              label={supplier.nome}
               onPress={() => setFornecedorId(supplier.id)}
-              style={[styles.supplier, fornecedorId === supplier.id && styles.supplierSelected]}
-            >
-              <Text numberOfLines={1} style={[styles.supplierText, fornecedorId === supplier.id && styles.supplierTextSelected]}>{supplier.nome}</Text>
-            </Pressable>
+              selected={fornecedorId === supplier.id}
+            />
           ))}
         </View>
-        {suppliers.length === 0 ? <Text style={styles.help}>Cadastre um fornecedor antes de criar uma conta.</Text> : null}
+        {!suppliersLoading && !suppliersError && suppliers.length === 0 ? <Text style={styles.help}>Cadastre um fornecedor antes de criar uma conta.</Text> : null}
       </View>
-      <TextField label="Descrição" onChangeText={setDescricao} placeholder="Ex.: Boleto de compra" value={descricao} />
+      <TextField editable={!saving} label="Descrição" maxLength={255} onChangeText={setDescricao} placeholder="Ex.: Boleto de compra" value={descricao} />
       <View style={styles.row}>
-        <View style={styles.flex}><TextField keyboardType="decimal-pad" label="Valor" onChangeText={setValor} placeholder="0,00" value={valor} /></View>
-        <View style={styles.flex}><TextField label="Vencimento" onChangeText={setVencimento} placeholder="AAAA-MM-DD" value={vencimento} /></View>
+        <View style={styles.flex}><TextField editable={!saving} keyboardType="decimal-pad" label="Valor" onChangeText={setValor} placeholder="0,00" value={valor} /></View>
+        <View style={styles.flex}><TextField editable={!saving} keyboardType="number-pad" label="Vencimento" maxLength={10} onChangeText={(value) => setVencimento(formatDateInput(value))} placeholder="DD/MM/AAAA" value={vencimento} /></View>
       </View>
-      <TextField label="Observação" multiline onChangeText={setObservacao} placeholder="Opcional" value={observacao} />
+      <TextField editable={!saving} label="Observação" maxLength={500} multiline onChangeText={setObservacao} placeholder="Opcional" value={observacao} />
       {error ? <Text accessibilityRole="alert" style={styles.error}>{error}</Text> : null}
       <Button disabled={!suppliers.length} loading={saving} onPress={() => void save()} title={conta ? "Salvar alterações" : "Cadastrar conta"} />
     </FormModal>
@@ -95,10 +107,6 @@ const styles = StyleSheet.create({
   field: { gap: spacing.xs },
   label: { color: colors.textSecondary, fontSize: 14, fontWeight: "700" },
   suppliers: { flexDirection: "row", flexWrap: "wrap", gap: spacing.xs },
-  supplier: { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.pill, borderWidth: 1, maxWidth: "100%", paddingHorizontal: spacing.sm, paddingVertical: 8 },
-  supplierSelected: { backgroundColor: colors.primaryLight, borderColor: colors.primary },
-  supplierText: { color: colors.textSecondary, fontSize: 13, fontWeight: "700" },
-  supplierTextSelected: { color: colors.primaryDark },
   row: { flexDirection: "row", gap: spacing.sm },
   flex: { flex: 1 },
   error: { color: colors.danger, textAlign: "center" },

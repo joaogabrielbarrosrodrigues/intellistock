@@ -1,5 +1,5 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Linking, Pressable, StyleSheet, View } from "react-native";
 import { getApiErrorMessage } from "../api/errors";
 import type { ContaPagar, StatusConta } from "../api/types";
@@ -30,6 +30,7 @@ export function ContasScreen() {
   const [editing, setEditing] = useState<ContaPagar | null | undefined>(undefined);
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const submitting = useRef(false);
   const query = useContasQuery(filter === "TODAS" ? undefined : filter);
   const suppliers = useFornecedoresQuery();
   const mutations = useContaMutations();
@@ -46,7 +47,8 @@ export function ContasScreen() {
   }
 
   async function confirmAction() {
-    if (!pendingAction) return;
+    if (!pendingAction || submitting.current) return;
+    submitting.current = true;
     const { type, conta } = pendingAction;
 
     try {
@@ -58,6 +60,7 @@ export function ContasScreen() {
     } catch (error) {
       setFeedback({ message: getApiErrorMessage(error, fallbackMessage(type)), tone: "error" });
     } finally {
+      submitting.current = false;
       setPendingAction(null);
     }
   }
@@ -105,6 +108,9 @@ export function ContasScreen() {
         onClose={() => setEditing(undefined)}
         onSaved={(message) => setFeedback({ message, tone: "success" })}
         suppliers={suppliers.data ?? []}
+        suppliersError={suppliers.isError ? getApiErrorMessage(suppliers.error, "Não foi possível carregar os fornecedores.") : null}
+        suppliersLoading={suppliers.isLoading}
+        onRetrySuppliers={() => void suppliers.refetch()}
         visible={editing !== undefined}
       />
       <ConfirmationDialog

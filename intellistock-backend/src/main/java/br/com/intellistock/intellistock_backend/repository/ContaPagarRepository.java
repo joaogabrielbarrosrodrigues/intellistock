@@ -2,10 +2,12 @@ package br.com.intellistock.intellistock_backend.repository;
 
 import br.com.intellistock.intellistock_backend.entity.ContaPagar;
 import br.com.intellistock.intellistock_backend.entity.StatusConta;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
@@ -13,6 +15,7 @@ import org.springframework.data.jpa.domain.Specification;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface ContaPagarRepository extends JpaRepository<ContaPagar, UUID>, JpaSpecificationExecutor<ContaPagar> {
@@ -22,6 +25,10 @@ public interface ContaPagarRepository extends JpaRepository<ContaPagar, UUID>, J
     List<ContaPagar> findAll(Specification<ContaPagar> spec, Sort sort);
 
     boolean existsByFornecedorId(UUID fornecedorId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select c from ContaPagar c where c.id = :id")
+    Optional<ContaPagar> findByIdForUpdate(@Param("id") UUID id);
 
     @Query("""
             select c from ContaPagar c join fetch c.fornecedor

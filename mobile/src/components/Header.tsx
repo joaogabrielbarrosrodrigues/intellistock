@@ -4,6 +4,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { colors } from "../theme/colors";
 import { radius, spacing } from "../theme/tokens";
 import { AppText as Text } from "./AppText";
+import { BrandLogo } from "./BrandLogo";
 
 export type HeaderProps = { title: string; subtitle?: string };
 
@@ -12,6 +13,7 @@ export function Header({ title, subtitle }: HeaderProps) {
 
   return (
     <View style={styles.container}>
+      <View style={styles.brandMark}><BrandLogo variant="symbol" width={36} /></View>
       <View style={styles.textBlock}>
         <Text style={styles.title}>{title}</Text>
         {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
@@ -31,15 +33,20 @@ const styles = StyleSheet.create({
     gap: 12
   },
   textBlock: {
-    flex: 1
+    flex: 1,
+    flexShrink: 1,
+    minWidth: 0
   },
+  brandMark: { flexShrink: 0 },
   title: {
     color: colors.text,
+    flexShrink: 1,
     fontSize: 28,
     fontWeight: "800"
   },
   subtitle: {
     color: colors.muted,
+    flexShrink: 1,
     fontSize: 14,
     lineHeight: 20,
     marginTop: spacing.xxs
@@ -48,6 +55,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: colors.surfaceMuted,
     borderRadius: radius.md,
+    flexShrink: 0,
     height: 44,
     justifyContent: "center",
     width: 44

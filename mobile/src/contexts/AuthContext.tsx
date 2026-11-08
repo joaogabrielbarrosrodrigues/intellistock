@@ -47,12 +47,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(null);
     setUser(null);
     queryClient.clear();
-    try {
-      await cancelDueReminders();
-    } catch {
-      // A sessão deve ser encerrada mesmo se o sistema de notificações falhar.
-    }
-    await clearSession();
+    // Falhas do aparelho não podem impedir a saída nem gerar uma rejeição sem tratamento.
+    await Promise.allSettled([clearSession(), cancelDueReminders()]);
   }, [queryClient]);
 
   useEffect(() => onUnauthorized(() => void signOut()), [signOut]);
@@ -64,14 +60,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       async signIn(email, senha) {
         const response = await loginRequest(email.trim(), senha);
+        try {
+          await writeSession({ token: response.token, user: response.user });
+        } catch {
+          // O login continua válido em memória se o armazenamento estiver indisponível.
+        }
+        queryClient.clear();
         setAuthToken(response.token);
         setToken(response.token);
         setUser(response.user);
-        await writeSession({ token: response.token, user: response.user });
       },
       signOut
     }),
-    [loading, signOut, token, user]
+    [loading, queryClient, signOut, token, user]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

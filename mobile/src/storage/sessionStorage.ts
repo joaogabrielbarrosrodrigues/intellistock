@@ -3,6 +3,7 @@ import { Platform } from "react-native";
 import type { User } from "../api/types";
 
 const SESSION_KEY = "intellistock.session";
+let pendingWrite: Promise<unknown> = Promise.resolve();
 
 export type StoredSession = { token: string; user: User };
 
@@ -23,27 +24,37 @@ export async function readSession(): Promise<StoredSession | null> {
   }
 }
 
-export async function writeSession(session: StoredSession) {
-  const value = JSON.stringify(session);
-  if (Platform.OS === "web") {
-    getWebStorage()?.setItem(SESSION_KEY, value);
-    return;
-  }
+export function writeSession(session: StoredSession) {
+  return serializeWrite(async () => {
+    const value = JSON.stringify(session);
+    if (Platform.OS === "web") {
+      getWebStorage()?.setItem(SESSION_KEY, value);
+      return;
+    }
 
-  if (await SecureStore.isAvailableAsync()) {
-    await SecureStore.setItemAsync(SESSION_KEY, value);
-  }
+    if (await SecureStore.isAvailableAsync()) {
+      await SecureStore.setItemAsync(SESSION_KEY, value);
+    }
+  });
 }
 
-export async function clearSession() {
-  if (Platform.OS === "web") {
-    getWebStorage()?.removeItem(SESSION_KEY);
-    return;
-  }
+export function clearSession() {
+  return serializeWrite(async () => {
+    if (Platform.OS === "web") {
+      getWebStorage()?.removeItem(SESSION_KEY);
+      return;
+    }
 
-  if (await SecureStore.isAvailableAsync()) {
-    await SecureStore.deleteItemAsync(SESSION_KEY);
-  }
+    if (await SecureStore.isAvailableAsync()) {
+      await SecureStore.deleteItemAsync(SESSION_KEY);
+    }
+  });
+}
+
+function serializeWrite(operation: () => Promise<void>) {
+  const result = pendingWrite.then(operation, operation);
+  pendingWrite = result.catch(() => undefined);
+  return result;
 }
 
 async function readValue() {

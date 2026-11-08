@@ -19,7 +19,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const insets = useSafeAreaInsets();
 
   const hideToast = useCallback(() => {
-    Animated.timing(opacity, { duration: 180, toValue: 0, useNativeDriver: true }).start(() => setToast(null));
+    if (timeout.current) clearTimeout(timeout.current);
+    Animated.timing(opacity, { duration: 180, toValue: 0, useNativeDriver: true }).start(({ finished }) => {
+      if (finished) setToast(null);
+    });
   }, [opacity]);
 
   const showToast = useCallback((options: ToastOptions) => {
@@ -32,7 +35,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => () => {
     if (timeout.current) clearTimeout(timeout.current);
-  }, []);
+    opacity.stopAnimation();
+  }, [opacity]);
 
   const value = useMemo(() => ({ showToast }), [showToast]);
   const tone = toast?.tone ?? "warning";

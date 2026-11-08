@@ -92,7 +92,7 @@ public class ContaPagarService {
 
     @Transactional
     public ContaPagarResponse atualizar(UUID id, ContaPagarRequest request) {
-        ContaPagar conta = buscarEntidade(id);
+        ContaPagar conta = buscarParaAtualizar(id);
         exigirEmAberto(conta, "Somente contas em aberto podem ser editadas.");
         preencher(conta, request);
         return ContaPagarResponse.from(conta, hoje());
@@ -100,12 +100,12 @@ public class ContaPagarService {
 
     @Transactional
     public void excluir(UUID id) {
-        contaPagarRepository.delete(buscarEntidade(id));
+        contaPagarRepository.delete(buscarParaAtualizar(id));
     }
 
     @Transactional
     public ContaPagarResponse pagar(UUID id, PagamentoRequest request) {
-        ContaPagar conta = buscarEntidade(id);
+        ContaPagar conta = buscarParaAtualizar(id);
         exigirEmAberto(conta, "Somente contas em aberto podem ser pagas.");
         conta.setStatus(StatusConta.PAGA);
         conta.setDataPagamento(request == null || request.dataPagamento() == null ? hoje() : request.dataPagamento());
@@ -114,7 +114,7 @@ public class ContaPagarService {
 
     @Transactional
     public ContaPagarResponse cancelar(UUID id) {
-        ContaPagar conta = buscarEntidade(id);
+        ContaPagar conta = buscarParaAtualizar(id);
         exigirEmAberto(conta, "Somente contas em aberto podem ser canceladas.");
         conta.setStatus(StatusConta.CANCELADA);
         return ContaPagarResponse.from(conta, hoje());
@@ -125,7 +125,7 @@ public class ContaPagarService {
      */
     @Transactional
     public ContaPagarResponse reabrir(UUID id) {
-        ContaPagar conta = buscarEntidade(id);
+        ContaPagar conta = buscarParaAtualizar(id);
         if (conta.getStatus() == StatusConta.PENDENTE) {
             throw new BusinessException("A conta ja esta em aberto.");
         }
@@ -136,6 +136,12 @@ public class ContaPagarService {
 
     private ContaPagar buscarEntidade(UUID id) {
         return contaPagarRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Conta nao encontrada."));
+    }
+
+    // A segunda operacao deve ler o status ja confirmado pela primeira.
+    private ContaPagar buscarParaAtualizar(UUID id) {
+        return contaPagarRepository.findByIdForUpdate(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Conta nao encontrada."));
     }
 

@@ -1,5 +1,5 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Pressable, StyleSheet, TextInput, View } from "react-native";
 import { getApiErrorMessage } from "../api/errors";
 import type { Produto } from "../api/types";
@@ -25,6 +25,7 @@ export function ProdutosScreen() {
   const [editing, setEditing] = useState<Produto | null | undefined>(undefined);
   const [archiving, setArchiving] = useState<Produto | null>(null);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const submitting = useRef(false);
   const debouncedSearch = useDebouncedValue(search.trim());
   const query = useProdutosQuery(debouncedSearch || undefined);
   const suppliers = useFornecedoresQuery();
@@ -32,13 +33,15 @@ export function ProdutosScreen() {
   const products = query.data ?? [];
 
   async function archive() {
-    if (!archiving) return;
+    if (!archiving || submitting.current) return;
+    submitting.current = true;
     try {
       await mutations.archive.mutateAsync(archiving.id);
       setFeedback({ message: "Produto desativado. O histórico foi preservado.", tone: "success" });
     } catch (error) {
       setFeedback({ message: getApiErrorMessage(error, "Não foi possível desativar o produto."), tone: "error" });
     } finally {
+      submitting.current = false;
       setArchiving(null);
     }
   }
@@ -108,6 +111,9 @@ export function ProdutosScreen() {
         onSaved={(message) => setFeedback({ message, tone: "success" })}
         product={editing}
         suppliers={suppliers.data ?? []}
+        suppliersError={suppliers.isError ? getApiErrorMessage(suppliers.error, "Não foi possível carregar os fornecedores.") : null}
+        suppliersLoading={suppliers.isLoading}
+        onRetrySuppliers={() => void suppliers.refetch()}
         visible={editing !== undefined}
       />
       <ConfirmationDialog

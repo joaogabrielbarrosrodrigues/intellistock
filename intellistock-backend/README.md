@@ -13,12 +13,13 @@ cd intellistock-backend
 ./mvnw test
 
 # aplicação (Linux/macOS)
-DB_PASSWORD=sua_senha JWT_SECRET=um-segredo-com-pelo-menos-32-caracteres ./mvnw spring-boot:run
+DB_USERNAME=postgres DB_PASSWORD=sua_senha JWT_SECRET=um-segredo-com-pelo-menos-32-caracteres SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run
 ```
 
 No PowerShell do Windows:
 
 ```powershell
+$env:DB_USERNAME="postgres"
 $env:DB_PASSWORD="sua_senha"
 $env:JWT_SECRET="um-segredo-com-pelo-menos-32-caracteres"
 $env:SPRING_PROFILES_ACTIVE="dev"
@@ -34,11 +35,11 @@ O perfil `dev` permite criar/atualizar o schema local (`ddl-auto=update`). Sem e
 | Variável                 | Padrão                                         | Descrição                                     |
 |--------------------------|------------------------------------------------|-----------------------------------------------|
 | `DB_URL`                 | `jdbc:postgresql://localhost:5432/intellistock` | URL JDBC do banco                             |
-| `DB_USERNAME`            | `postgres`                                     | Usuário do banco                              |
+| `DB_USERNAME`            | —                                              | Usuário do banco (obrigatório)                |
 | `DB_PASSWORD`            | —                                              | Senha do banco (obrigatória)                  |
-| `JWT_SECRET`             | segredo de desenvolvimento                     | **Troque em produção** (mín. 32 caracteres)   |
+| `JWT_SECRET`             | —                                              | Segredo obrigatório, com no mínimo 32 bytes  |
 | `JWT_EXPIRATION_MINUTES` | `120`                                          | Validade do token                             |
-| `CORS_ALLOWED_ORIGINS`   | `*`                                            | Origens liberadas, separadas por vírgula      |
+| `CORS_ALLOWED_ORIGINS`   | `http://localhost:8081,http://localhost:19006`   | Origens web liberadas, separadas por vírgula |
 | `SHOW_SQL`               | `false`                                        | Exibe o SQL gerado no log                     |
 
 Os parâmetros padrão da análise de reposição ficam em `application.properties` (`app.analise.*`).
@@ -277,7 +278,10 @@ Todos os erros, inclusive 401/403 do Spring Security, seguem o mesmo formato:
 | 400    | Validação, JSON mal formado, parâmetro inválido                         |
 | 401    | Sem token, token inválido/expirado, credenciais erradas                 |
 | 404    | Recurso ou endpoint inexistente                                         |
+| 405    | Método HTTP não permitido para o endpoint                               |
+| 406    | Formato solicitado no header Accept não suportado                       |
 | 409    | Duplicidade (e-mail, CNPJ), exclusão bloqueada por vínculo, edição concorrente |
+| 415    | Content-Type não suportado                                              |
 | 422    | Regra de negócio (estoque insuficiente, produto inativo, conta já paga) |
 
 ## Testes automatizados
@@ -286,8 +290,16 @@ Todos os erros, inclusive 401/403 do Spring Security, seguem o mesmo formato:
 .\mvnw.cmd test
 ```
 
-A suíte atual possui 38 testes e usa H2 em memória no modo de compatibilidade PostgreSQL. Ela não
+A suíte atual possui 48 testes e usa H2 em memória no modo de compatibilidade PostgreSQL. Ela não
 substitui uma validação separada contra PostgreSQL real.
+
+Para testar a API por HTTP com uma base temporária e isolada do PostgreSQL local:
+
+```powershell
+.\mvnw.cmd spring-boot:test-run '-Dspring-boot.run.profiles=test' '-Dspring-boot.run.arguments=--server.port=18080'
+```
+
+A base H2 desse comando é criada em memória e desaparece ao encerrar o processo.
 
 ## Testes manuais
 
@@ -303,4 +315,7 @@ Pendências de negócio do relatório inicial e como foram resolvidas (podem ser
 - **Fornecedor no produto:** opcional. Na conta a pagar é obrigatório.
 - **Parâmetros de reposição:** configuráveis por `application.properties` e por query params.
 - **Status de contas:** PENDENTE, PAGA e CANCELADA gravados; VENCIDA calculado pela data.
+- **Operações concorrentes:** movimentações bloqueiam a linha do produto, e alterações financeiras bloqueiam a conta até o fim da transação. Um cancelamento concorrente com um pagamento precisa aguardar e validar o status atualizado.
+- **Senha:** BCrypt usa no máximo 72 bytes por senha; caracteres acentuados podem ocupar mais de um byte. O cadastro recusa senhas que ultrapassem esse limite.
+- **Logs de autenticação:** os DTOs de login, cadastro e resposta de autenticação ocultam senha/token em `toString()`, inclusive quando o Spring registra objetos em DEBUG. A serialização JSON da API continua incluindo os campos necessários ao login.
 - **Perfis de usuário:** não implementados. Todos os usuários autenticados têm o mesmo acesso.

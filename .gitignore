@@ -10,4 +10,8 @@ intellistock-backend/target/
 mobile/node_modules/
 mobile/.expo/
 mobile/dist/
+mobile/dist-*/
+/tmp/
+/.logs/
+/output/
 *.log

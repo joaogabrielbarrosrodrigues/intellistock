@@ -3,6 +3,7 @@ package br.com.intellistock.intellistock_backend;
 import br.com.intellistock.intellistock_backend.support.IntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.MediaType;
 
 import java.time.OffsetDateTime;
 
@@ -12,6 +13,8 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.startsWith;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 class EstoqueIntegrationTest extends IntegrationTest {
 
@@ -124,6 +127,20 @@ class EstoqueIntegrationTest extends IntegrationTest {
     }
 
     @Test
+    void entradaQueUltrapassaLimiteDoSaldoERecusadaSemAlterarEstoque() throws Exception {
+        String produtoId = criarProduto(token, "Estoque no limite", "999999999999.999", "0", "KG");
+
+        movimentar(token, produtoId, "ENTRADA", "0.001", null)
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.message").value("A entrada ultrapassa o limite de quantidade em estoque."));
+
+        getJson(token, "/api/movimentacoes?produtoId={id}", produtoId)
+                .andExpect(jsonPath("$", hasSize(1)));
+        getJson(token, "/api/estoque/{id}", produtoId)
+                .andExpect(jsonPath("$.quantidade").value(999999999999.999));
+    }
+
+    @Test
     void saidaZeradaENegativaSaoInvalidasEDataFuturaERecusada() throws Exception {
         String produtoId = criarProduto(token, "Cafe", "3", "1");
 
@@ -204,5 +221,21 @@ class EstoqueIntegrationTest extends IntegrationTest {
 
         getJson(token, "/api/produtos/nao-e-uuid").andExpect(status().isBadRequest());
         getJson(token, "/api/rota-inexistente").andExpect(status().isNotFound());
+    }
+
+    @Test
+    void formatosHttpIncompativeisRetornamErroDeClienteEmJson() throws Exception {
+        mockMvc.perform(post("/api/produtos")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.TEXT_PLAIN)
+                        .content("{}"))
+                .andExpect(status().isUnsupportedMediaType())
+                .andExpect(jsonPath("$.status").value(415));
+
+        mockMvc.perform(get("/api/produtos")
+                        .header("Authorization", "Bearer " + token)
+                        .accept(MediaType.APPLICATION_XML))
+                .andExpect(status().isNotAcceptable())
+                .andExpect(jsonPath("$.status").value(406));
     }
 }

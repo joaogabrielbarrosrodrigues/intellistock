@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, TextInput, type TextInputProps, View } from "react-native";
+import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, TextInput, type TextInputProps, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors } from "../theme/colors";
 import { radius, shadow, spacing } from "../theme/tokens";
 import { typography } from "../theme/typography";
@@ -52,22 +53,31 @@ export function StatusBadge({ label, tone = "neutral" }: { label: string; tone?:
   return <View style={[styles.badge, styles[`badge_${tone}`]]}><Text style={[styles.badgeText, styles[`badgeText_${tone}`]]}>{label}</Text></View>;
 }
 
+export function Choice({ label, selected, onPress, disabled = false }: { label: string; selected: boolean; onPress: () => void; disabled?: boolean }) {
+  return (
+    <Pressable accessibilityRole="button" accessibilityState={{ selected, disabled }} disabled={disabled} onPress={onPress} style={[styles.choice, selected && styles.choiceSelected, disabled && styles.buttonDisabled]}>
+      <Text numberOfLines={1} style={[styles.choiceText, selected && styles.choiceTextSelected]}>{label}</Text>
+    </Pressable>
+  );
+}
+
 export function SectionTitle({ title, action }: { title: string; action?: ReactNode }) {
   return <View style={styles.sectionTitle}><Text style={styles.sectionTitleText}>{title}</Text>{action}</View>;
 }
 
-export function FormModal({ visible, title, onClose, children }: { visible: boolean; title: string; onClose: () => void; children: ReactNode }) {
+export function FormModal({ visible, title, onClose, children, busy = false }: { visible: boolean; title: string; onClose: () => void; children: ReactNode; busy?: boolean }) {
+  const insets = useSafeAreaInsets();
   return (
     <Modal animationType="slide" onRequestClose={onClose} transparent visible={visible}>
-      <View style={styles.modalBackdrop}>
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.modalBackdrop}>
         <View style={styles.modal}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>{title}</Text>
-            <Pressable accessibilityLabel="Fechar" accessibilityRole="button" onPress={onClose} style={styles.closeButton}><Text style={styles.closeText}>×</Text></Pressable>
+            <Pressable accessibilityLabel="Fechar" accessibilityRole="button" disabled={busy} onPress={onClose} style={[styles.closeButton, busy && styles.buttonDisabled]}><Text style={styles.closeText}>×</Text></Pressable>
           </View>
-          <ScrollView contentContainerStyle={styles.modalContent} keyboardShouldPersistTaps="handled">{children}</ScrollView>
+          <ScrollView contentContainerStyle={[styles.modalContent, { paddingBottom: spacing.xxl + insets.bottom }]} keyboardShouldPersistTaps="handled">{children}</ScrollView>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -83,13 +93,13 @@ export function ConfirmationDialog({ visible, title, message, confirmLabel = "Co
   loading?: boolean;
 }) {
   return (
-    <Modal animationType="fade" onRequestClose={onCancel} transparent visible={visible}>
+    <Modal animationType="fade" onRequestClose={() => { if (!loading) onCancel(); }} transparent visible={visible}>
       <View style={styles.dialogBackdrop}>
         <View style={styles.dialog}>
           <Text style={styles.dialogTitle}>{title}</Text>
           <Text style={styles.dialogMessage}>{message}</Text>
           <View style={styles.dialogActions}>
-            <View style={styles.dialogAction}><Button compact title="Cancelar" variant="secondary" onPress={onCancel} /></View>
+            <View style={styles.dialogAction}><Button compact disabled={loading} title="Cancelar" variant="secondary" onPress={onCancel} /></View>
             <View style={styles.dialogAction}><Button compact title={confirmLabel} variant={confirmVariant} loading={loading} onPress={onConfirm} /></View>
           </View>
         </View>
@@ -126,6 +136,10 @@ const styles = StyleSheet.create({
   badge_danger: { backgroundColor: colors.dangerLight }, badgeText_danger: { color: colors.danger },
   badge_neutral: { backgroundColor: colors.surfaceMuted }, badgeText_neutral: { color: colors.textSecondary },
   badge_primary: { backgroundColor: colors.primaryLight }, badgeText_primary: { color: colors.primaryDark },
+  choice: { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.pill, borderWidth: 1, maxWidth: "100%", paddingHorizontal: spacing.sm, paddingVertical: 8 },
+  choiceSelected: { backgroundColor: colors.primaryLight, borderColor: colors.primary },
+  choiceText: { color: colors.textSecondary, fontSize: 13, fontWeight: "700" },
+  choiceTextSelected: { color: colors.primaryDark },
   sectionTitle: { alignItems: "center", flexDirection: "row", justifyContent: "space-between", marginTop: spacing.xs },
   sectionTitleText: { color: colors.text, fontSize: 18, fontWeight: "800" },
   modalBackdrop: { backgroundColor: colors.overlay, flex: 1, justifyContent: "flex-end" },
@@ -136,9 +150,9 @@ const styles = StyleSheet.create({
   closeText: { color: colors.textSecondary, fontSize: 26, fontWeight: "400", lineHeight: 30 },
   modalContent: { gap: spacing.md, padding: spacing.lg, paddingBottom: spacing.xxl },
   dialogBackdrop: { alignItems: "center", backgroundColor: colors.overlay, flex: 1, justifyContent: "center", padding: spacing.lg },
-  dialog: { backgroundColor: colors.surface, borderRadius: radius.lg, gap: spacing.sm, padding: spacing.lg, width: "100%", ...shadow.card },
+  dialog: { backgroundColor: colors.surface, borderRadius: radius.lg, gap: spacing.sm, maxWidth: 520, padding: spacing.lg, width: "100%", ...shadow.card },
   dialogTitle: { color: colors.text, fontSize: 19, fontWeight: "800" },
   dialogMessage: { color: colors.textSecondary, lineHeight: 21 },
-  dialogActions: { flexDirection: "row", gap: spacing.sm, justifyContent: "flex-end", marginTop: spacing.sm },
-  dialogAction: { minWidth: 110 }
+  dialogActions: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm, justifyContent: "flex-end", marginTop: spacing.sm },
+  dialogAction: { flexGrow: 1, minWidth: 110 }
 });

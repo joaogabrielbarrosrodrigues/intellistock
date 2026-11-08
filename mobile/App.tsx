@@ -13,6 +13,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthProvider } from "./src/contexts/AuthContext";
 import { ToastProvider } from "./src/contexts/ToastContext";
 import { AppErrorBoundary } from "./src/components/AppErrorBoundary";
+import { BrandLogo } from "./src/components/BrandLogo";
 import { CustomFontsProvider } from "./src/components/AppText";
 import { RootNavigator } from "./src/navigation/RootNavigator";
 import { colors } from "./src/theme/colors";
@@ -41,6 +42,7 @@ export default function App() {
     return (
       <View style={styles.loading}>
         <StatusBar style="dark" />
+        <BrandLogo width={180} />
         <ActivityIndicator color={colors.primary} size="large" />
       </View>
     );
@@ -69,8 +71,9 @@ export default function App() {
 const styles = StyleSheet.create({
   loading: {
     alignItems: "center",
-    backgroundColor: colors.background,
+    backgroundColor: colors.surface,
     flex: 1,
+    gap: 28,
     justifyContent: "center"
   }
 });

@@ -11,4 +11,9 @@ public record LoginRequest(
         @NotBlank(message = "Senha e obrigatoria.")
         String senha
 ) {
+
+    @Override
+    public String toString() {
+        return "LoginRequest[email=" + email + ", senha=<redigida>]";
+    }
 }
