@@ -62,6 +62,9 @@ export function ProductFormModal({
     const valor = parseDecimalInput(preco, 2);
     const inicial = parseDecimalInput(quantidadeInicial);
     if (!nome.trim()) return setError("Informe o nome do produto.");
+    // Campo vazio seria lido como 0; estoque mínimo e preço precisam ser informados de propósito.
+    if (!estoqueMinimo.trim()) return setError("Informe o estoque mínimo. Use 0 se não houver.");
+    if (!preco.trim()) return setError("Informe o preço unitário.");
     if (!Number.isFinite(minimo) || minimo < 0)
       return setError("Informe um estoque mínimo válido, com até 3 casas decimais.");
     if (minimo >= 1_000_000_000_000)
