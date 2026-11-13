@@ -16,6 +16,7 @@ import { AppErrorBoundary } from "./src/components/AppErrorBoundary";
 import { BrandLogo } from "./src/components/BrandLogo";
 import { CustomFontsProvider } from "./src/components/AppText";
 import { RootNavigator } from "./src/navigation/RootNavigator";
+import { linking } from "./src/navigation/linking";
 import { colors } from "./src/theme/colors";
 import { typography } from "./src/theme/typography";
 
@@ -55,7 +56,7 @@ export default function App() {
           <SafeAreaProvider>
             <AuthProvider>
               <ToastProvider>
-                <NavigationContainer>
+                <NavigationContainer linking={linking}>
                   <StatusBar style="dark" />
                   <RootNavigator />
                 </NavigationContainer>

@@ -26,13 +26,14 @@ consultas e mutações de estoque; login e cadastro chamam as funções da API d
 | Parte | Arquivos principais | Responsabilidade |
 | --- | --- | --- |
 | Inicialização | `mobile/App.tsx` | Carrega fontes e instala os provedores de sessão, cache, área segura e mensagens. |
-| Navegação | `mobile/src/navigation/RootNavigator.tsx` | Mostra login ou as cinco abas, conforme a sessão. |
+| Navegação | `mobile/src/navigation/RootNavigator.tsx`, `types.ts` e `linking.ts` | Mostra login ou as cinco abas; a aba Mais tem uma pilha de menu, fornecedores e análises. Na web, sincroniza as rotas com a URL. |
 | Interface | `mobile/src/screens/` e `components/` | Exibe dados, coleta campos e apresenta carregamento, sucesso ou erro. |
 | Consultas | `mobile/src/hooks/useIntellistockQueries.ts` | Consulta/cacheia dados e invalida consultas afetadas após uma gravação. |
 | Atualização de dados | `mobile/src/hooks/queryInvalidation.ts` | Agrupa as consultas que devem ser atualizadas quando estoque, fornecedor ou conta mudam. |
 | HTTP | `mobile/src/api/client.ts` e `intellistock.ts` | Configura endereço/timeout/token e chama os endpoints. |
 | Sessão | `AuthContext.tsx` e `storage/sessionStorage.ts` | Faz login/logout e restaura a sessão persistida. |
 | Lembretes | `mobile/src/notifications/` | Planeja e agenda notificações locais de contas. |
+| Análise e reposição | `AnaliseService.java` e `CalculoReposicao.java` | O serviço consulta e monta as respostas; o cálculo puro aplica as fórmulas de reposição e é compartilhado pela contagem do dashboard. |
 | Entrada da API | `intellistock-backend/src/main/java/br/com/intellistock/intellistock_backend/` | Contém controllers, services, repositories, entidades e DTOs. |
 
 No backend, uma **entity** representa uma tabela e seus relacionamentos. Um **DTO**
@@ -108,6 +109,12 @@ no Java e duas casas decimais; quantidades de estoque usam três.
 
 ## Consumo e reposição
 
+No aplicativo, `AnalisesScreen.tsx` exibe consumo e sugestões; `ReposicaoCard.tsx`
+apresenta cada sugestão. `MaisScreen.tsx` mantém apenas o menu, e
+`FornecedoresScreen.tsx` concentra a manutenção de fornecedores.
+Os parâmetros padrão da análise são validados na inicialização da API: janela e
+cobertura de 1 a 365 dias, entrega e segurança de 0 a 365 e limiar de tendência positivo.
+
 Consumo considera apenas **saídas**, dentro da janela consultada (30 dias por padrão).
 A média diária divide o total pelos dias; a semanal multiplica por 7 e a mensal por 30.
 A tendência compara as médias da metade recente e da metade antiga da janela.
@@ -148,6 +155,8 @@ Na web, o fluxo de notificações locais não está disponível.
 Na tela Contas, **Testar avisos** consulta todas as contas e programa em cinco segundos
 um resumo de vencidas, vencendo hoje e a vencer. Ele exclui contas pagas e canceladas;
 esse teste não altera os horários dos lembretes automáticos.
+Ao sair, o aplicativo cancela avisos automáticos e de teste. Solicitações de teste
+que ainda estavam buscando contas são invalidadas para não agendar um aviso depois da saída.
 
 ## Perguntas para a apresentação
 

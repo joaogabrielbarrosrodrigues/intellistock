@@ -7,7 +7,6 @@ import br.com.intellistock.intellistock_backend.dto.ConsumoSerieResponse;
 import br.com.intellistock.intellistock_backend.dto.ConsumoSerieResponse.Agrupamento;
 import br.com.intellistock.intellistock_backend.dto.FornecedorResumo;
 import br.com.intellistock.intellistock_backend.dto.ReposicaoResponse;
-import br.com.intellistock.intellistock_backend.dto.ReposicaoResponse.Prioridade;
 import br.com.intellistock.intellistock_backend.dto.Tendencia;
 import br.com.intellistock.intellistock_backend.entity.Produto;
 import br.com.intellistock.intellistock_backend.entity.TipoMovimentacao;
@@ -90,7 +89,7 @@ public class AnaliseService {
                 ? produtoRepository.findByAtivoTrueOrderByNomeAsc()
                 : List.of(produtoService.buscarEntidade(produtoId));
 
-        Totais totais = totais(janela);
+        Totais totais = totais(janela, produtoId);
         return produtos.stream()
                 .map(produto -> {
                     Consumo consumo = calcularConsumo(produto.getId(), janela, totais);
@@ -179,7 +178,7 @@ public class AnaliseService {
         int diasSeguranca = valor(parametros.diasSeguranca(), properties.diasSeguranca());
         Janela janela = janela(valor(parametros.dias(), properties.diasAnalise()));
 
-        Totais totais = totais(janela);
+        Totais totais = totais(janela, null);
         return produtoRepository.findByAtivoTrueOrderByNomeAsc().stream()
                 .map(produto -> calcularReposicao(produto, calcularConsumo(produto.getId(), janela, totais),
                         janela.dias(), diasCobertura, prazoEntrega, diasSeguranca))
@@ -192,31 +191,20 @@ public class AnaliseService {
 
     @Transactional(readOnly = true)
     public long contarSugestoesReposicao() {
-        return reposicao(ParametrosReposicao.padrao(), false).size();
+        Janela janela = janela(properties.diasAnalise());
+        Totais totais = totais(janela, null);
+        return produtoRepository.findAtivosParaAnalise().stream()
+                .filter(produto -> calcularReposicao(produto, calcularConsumo(produto.getId(), janela, totais),
+                        properties.diasCobertura(), properties.prazoEntregaDias(), properties.diasSeguranca())
+                        .precisaRepor())
+                .count();
     }
 
     private ReposicaoResponse calcularReposicao(Produto produto, Consumo consumo, int periodoAnaliseDias,
                                                 int diasCobertura, int prazoEntrega, int diasSeguranca) {
         BigDecimal estoqueAtual = produto.getQuantidade();
-        BigDecimal base = consumo.tendencia() == Tendencia.ALTA
-                ? consumo.mediaDiaria().max(consumo.mediaRecente())
-                : consumo.mediaDiaria();
-
-        BigDecimal minimoCalculado = escala(base.multiply(BigDecimal.valueOf(diasSeguranca)));
-        BigDecimal seguranca = produto.getEstoqueMinimo().max(minimoCalculado);
-        BigDecimal pontoPedido = escala(base.multiply(BigDecimal.valueOf(prazoEntrega)).add(seguranca));
-        BigDecimal necessidade = base.multiply(BigDecimal.valueOf((long) diasCobertura + prazoEntrega))
-                .add(seguranca)
-                .subtract(estoqueAtual)
-                .max(BigDecimal.ZERO);
-
-        boolean precisaRepor = estoqueAtual.compareTo(pontoPedido) <= 0 && necessidade.signum() > 0;
-        BigDecimal sugerida = precisaRepor
-                ? arredondarQuantidadeSugerida(necessidade, produto.getUnidadeMedida())
-                : BigDecimal.ZERO;
-        BigDecimal diasRestantes = base.signum() > 0
-                ? estoqueAtual.divide(base, 1, RoundingMode.HALF_UP)
-                : null;
+        CalculoReposicao calculo = calcularReposicao(produto, consumo, diasCobertura, prazoEntrega, diasSeguranca);
+        BigDecimal sugerida = calculo.quantidadeSugerida(produto.getUnidadeMedida());
 
         return new ReposicaoResponse(
                 produto.getId(),
@@ -226,16 +214,16 @@ public class AnaliseService {
                 estoqueAtual,
                 produto.getEstoqueMinimo(),
                 consumo.mediaDiaria(),
-                escala(base),
+                escala(calculo.consumoBase()),
                 consumo.tendencia(),
-                minimoCalculado,
-                seguranca,
-                pontoPedido,
-                diasRestantes,
-                precisaRepor,
+                calculo.minimoCalculado(),
+                calculo.estoqueSeguranca(),
+                calculo.pontoPedido(),
+                calculo.diasRestantes(estoqueAtual),
+                calculo.precisaRepor(),
                 sugerida,
                 sugerida.multiply(produto.getPreco()).setScale(2, RoundingMode.HALF_UP),
-                prioridade(precisaRepor, estoqueAtual, seguranca, diasRestantes, prazoEntrega),
+                calculo.prioridade(estoqueAtual, prazoEntrega),
                 consumo.total(),
                 periodoAnaliseDias,
                 diasCobertura,
@@ -244,20 +232,11 @@ public class AnaliseService {
         );
     }
 
-    private Prioridade prioridade(boolean precisaRepor, BigDecimal estoqueAtual, BigDecimal seguranca,
-                                  BigDecimal diasRestantes, int prazoEntrega) {
-        if (!precisaRepor) {
-            return Prioridade.NENHUMA;
-        }
-        // Vai faltar produto antes de a reposicao chegar.
-        if (estoqueAtual.signum() == 0
-                || (diasRestantes != null && diasRestantes.compareTo(BigDecimal.valueOf(prazoEntrega)) <= 0)) {
-            return Prioridade.ALTA;
-        }
-        if (estoqueAtual.compareTo(seguranca) <= 0) {
-            return Prioridade.MEDIA;
-        }
-        return Prioridade.BAIXA;
+    private CalculoReposicao calcularReposicao(Produto produto, Consumo consumo,
+                                               int diasCobertura, int prazoEntrega, int diasSeguranca) {
+        return CalculoReposicao.calcular(produto.getQuantidade(), produto.getEstoqueMinimo(),
+                consumo.mediaDiaria(), consumo.mediaRecente(), consumo.tendencia(),
+                diasCobertura, prazoEntrega, diasSeguranca);
     }
 
     private Consumo calcularConsumo(UUID produtoId, Janela janela, Totais totais) {
@@ -296,7 +275,14 @@ public class AnaliseService {
         return new Consumo(total, mediaDiaria, mediaRecente, tendencia, variacao);
     }
 
-    private Totais totais(Janela janela) {
+    private Totais totais(Janela janela, UUID produtoId) {
+        if (produtoId != null) {
+            return new Totais(
+                    Map.of(produtoId, movimentacaoRepository.sumQuantidadeDoProduto(produtoId, TipoMovimentacao.SAIDA,
+                            janela.inicioTs(), janela.meioTs())),
+                    Map.of(produtoId, movimentacaoRepository.sumQuantidadeDoProduto(produtoId, TipoMovimentacao.SAIDA,
+                            janela.meioTs(), janela.fimTs())));
+        }
         return new Totais(
                 porProduto(movimentacaoRepository.sumPorProduto(TipoMovimentacao.SAIDA, janela.inicioTs(), janela.meioTs())),
                 porProduto(movimentacaoRepository.sumPorProduto(TipoMovimentacao.SAIDA, janela.meioTs(), janela.fimTs()))
@@ -393,19 +379,6 @@ public class AnaliseService {
 
     private static BigDecimal escala(BigDecimal valor) {
         return valor.setScale(ESCALA_QUANTIDADE, RoundingMode.HALF_UP);
-    }
-
-    /**
-     * Embalagens e itens contáveis são comprados em números inteiros. Medidas contínuas
-     * preservam até três casas decimais, que é a precisão aceita pelo domínio e pelo banco.
-     * CEILING evita sugerir uma quantidade inferior à necessidade calculada.
-     */
-    private static BigDecimal arredondarQuantidadeSugerida(BigDecimal valor, UnidadeMedida unidade) {
-        int escala = switch (unidade) {
-            case UN, CX, PCT, FD -> 0;
-            case KG, G, L, ML, M -> ESCALA_QUANTIDADE;
-        };
-        return valor.setScale(escala, RoundingMode.CEILING);
     }
 
     private static int valor(Integer informado, int padrao) {

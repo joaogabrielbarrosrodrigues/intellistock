@@ -68,10 +68,10 @@ export function useFornecedoresQuery(busca?: string) {
     ...defaultQueryOptions
   });
 }
-export function useMovimentacoesQuery(produtoId?: Id) {
+export function useMovimentacoesQuery(produtoId?: Id, limite = 100) {
   return useQuery({
-    queryKey: [...queryKeys.movimentacoes, produtoId ?? ""],
-    queryFn: ({ signal }) => getMovimentacoes(produtoId, signal),
+    queryKey: [...queryKeys.movimentacoes, produtoId ?? "", limite],
+    queryFn: ({ signal }) => getMovimentacoes(produtoId, signal, limite),
     ...defaultQueryOptions
   });
 }

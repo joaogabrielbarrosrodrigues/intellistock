@@ -12,6 +12,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.OffsetDateTime;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -34,6 +35,13 @@ public interface MovimentacaoRepository extends JpaRepository<Movimentacao, UUID
     List<TotalPorProduto> sumPorProduto(@Param("tipo") TipoMovimentacao tipo,
                                         @Param("inicio") OffsetDateTime inicio,
                                         @Param("fim") OffsetDateTime fim);
+
+    @Query("""
+            select coalesce(sum(m.quantidade), 0) from Movimentacao m
+            where m.produto.id = :produtoId and m.tipo = :tipo and m.data >= :inicio and m.data < :fim
+            """)
+    BigDecimal sumQuantidadeDoProduto(@Param("produtoId") UUID produtoId, @Param("tipo") TipoMovimentacao tipo,
+                                      @Param("inicio") OffsetDateTime inicio, @Param("fim") OffsetDateTime fim);
 
     @Query("""
             select new br.com.intellistock.intellistock_backend.repository.QuantidadePorUnidadeNaData(

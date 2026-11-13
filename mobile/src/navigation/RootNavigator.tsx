@@ -15,26 +15,29 @@ import { EstoqueScreen } from "../screens/EstoqueScreen";
 import { LoginScreen } from "../screens/LoginScreen";
 import { RegisterScreen } from "../screens/RegisterScreen";
 import { MaisScreen } from "../screens/MaisScreen";
+import { FornecedoresScreen } from "../screens/FornecedoresScreen";
+import { AnalisesScreen } from "../screens/AnalisesScreen";
 import { ProdutosScreen } from "../screens/ProdutosScreen";
 import { useEstoqueQuery } from "../hooks/useIntellistockQueries";
 import { DueReminderProvider } from "../notifications/DueReminderProvider";
 import { formatQuantity } from "../utils";
+import type { AppTabParamList, AuthStackParamList, MaisStackParamList } from "./types";
 
-export type AuthStackParamList = {
-  Login: { email?: string; cadastroConcluido?: boolean } | undefined;
-  Register: undefined;
-};
-
-export type AppTabParamList = {
-  Dashboard: undefined;
-  Produtos: undefined;
-  Estoque: undefined;
-  Contas: undefined;
-  Mais: undefined;
-};
+export type { AppTabParamList, AuthStackParamList } from "./types";
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 const Tab = createBottomTabNavigator<AppTabParamList>();
+const MaisStack = createNativeStackNavigator<MaisStackParamList>();
+
+function MaisNavigator() {
+  return (
+    <MaisStack.Navigator screenOptions={{ headerShown: false }}>
+      <MaisStack.Screen name="Menu" component={MaisScreen} />
+      <MaisStack.Screen name="Fornecedores" component={FornecedoresScreen} />
+      <MaisStack.Screen name="Analises" component={AnalisesScreen} />
+    </MaisStack.Navigator>
+  );
+}
 
 function AppTabs() {
   const insets = useSafeAreaInsets();
@@ -67,7 +70,7 @@ function AppTabs() {
       <Tab.Screen name="Produtos" component={ProdutosScreen} />
       <Tab.Screen name="Estoque" component={EstoqueScreen} />
       <Tab.Screen name="Contas" component={ContasScreen} />
-      <Tab.Screen name="Mais" component={MaisScreen} />
+      <Tab.Screen name="Mais" component={MaisNavigator} />
     </Tab.Navigator>
   );
 }

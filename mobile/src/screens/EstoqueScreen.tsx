@@ -17,7 +17,7 @@ import { formatCurrency, formatDate, formatQuantity } from "../utils";
 type Filter = "TODOS" | "BAIXO" | "ZERADO";
 export function EstoqueScreen() {
   const query = useEstoqueQuery();
-  const movements = useMovimentacoesQuery();
+  const movements = useMovimentacoesQuery(undefined, 8);
   const [filter, setFilter] = useState<Filter>("TODOS");
   const [launch, setLaunch] = useState<{ item: EstoqueItem; type: TipoMovimentacao } | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);

@@ -1,6 +1,6 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useRef, useState } from "react";
-import { Pressable, StyleSheet, TextInput, View } from "react-native";
+import { useMemo, useRef, useState } from "react";
+import { FlatList, Pressable, StyleSheet, TextInput, View } from "react-native";
 import { getApiErrorMessage } from "../api/errors";
 import type { Produto } from "../api/types";
 import { EmptyState } from "../components/EmptyState";
@@ -30,7 +30,10 @@ export function ProdutosScreen() {
   const query = useProdutosQuery();
   const suppliers = useFornecedoresQuery();
   const mutations = useProdutoMutations();
-  const products = (query.data ?? []).filter((product) => matchesSearch(product.nome, debouncedSearch));
+  const products = useMemo(
+    () => (query.data ?? []).filter((product) => matchesSearch(product.nome, debouncedSearch)),
+    [query.data, debouncedSearch]
+  );
 
   async function archive() {
     if (!archiving || submitting.current) return;
@@ -47,64 +50,76 @@ export function ProdutosScreen() {
   }
 
   return (
-    <Screen refreshing={query.isRefetching} onRefresh={() => void query.refetch()}>
-      <Header subtitle={`${products.length} item(ns) ativo(s)`} title="Produtos" />
-      <View style={styles.toolbar}>
-        <View style={styles.search}>
-          <Ionicons color={colors.muted} name="search-outline" size={20} />
-          <TextInput
-            accessibilityLabel="Buscar produtos"
-            autoCapitalize="none"
-            onChangeText={setSearch}
-            placeholder="Buscar por nome"
-            placeholderTextColor={colors.muted}
-            style={styles.searchInput}
-            value={search}
+    <Screen scroll={false}>
+      <FlatList
+        data={products}
+        keyExtractor={(product) => product.id}
+        keyboardShouldPersistTaps="handled"
+        refreshing={query.isRefetching}
+        onRefresh={() => void query.refetch()}
+        contentContainerStyle={styles.list}
+        ListHeaderComponent={
+          <View style={styles.listHeader}>
+            <Header subtitle={`${products.length} item(ns) ativo(s)`} title="Produtos" />
+            <View style={styles.toolbar}>
+              <View style={styles.search}>
+                <Ionicons color={colors.muted} name="search-outline" size={20} />
+                <TextInput
+                  accessibilityLabel="Buscar produtos"
+                  autoCapitalize="none"
+                  onChangeText={setSearch}
+                  placeholder="Buscar por nome"
+                  placeholderTextColor={colors.muted}
+                  style={styles.searchInput}
+                  value={search}
+                />
+              </View>
+              <Pressable accessibilityLabel="Adicionar produto" accessibilityRole="button" onPress={() => setEditing(null)} style={styles.add}>
+                <Ionicons color={colors.white} name="add" size={24} />
+              </Pressable>
+            </View>
+
+            <FeedbackBanner message={feedback?.message} tone={feedback?.tone} />
+            <StateView
+              error={query.isError ? getApiErrorMessage(query.error, "Não foi possível carregar os produtos.") : null}
+              loading={query.isLoading}
+              onRetry={() => void query.refetch()}
+            />
+
+          </View>
+        }
+        ListEmptyComponent={!query.isLoading && !query.isError ? (
+          <EmptyState
+            message={search ? "Tente outra busca ou cadastre um produto." : "Cadastre seu primeiro produto para começar."}
+            title={search ? "Nenhum produto encontrado" : "Seu catálogo está vazio"}
           />
-        </View>
-        <Pressable accessibilityLabel="Adicionar produto" accessibilityRole="button" onPress={() => setEditing(null)} style={styles.add}>
-          <Ionicons color={colors.white} name="add" size={24} />
-        </Pressable>
-      </View>
+        ) : undefined}
 
-      <FeedbackBanner message={feedback?.message} tone={feedback?.tone} />
-      <StateView
-        error={query.isError ? getApiErrorMessage(query.error, "Não foi possível carregar os produtos.") : null}
-        loading={query.isLoading}
-        onRetry={() => void query.refetch()}
+        renderItem={({ item: product }) => (
+          <View key={product.id} style={styles.card}>
+            <Pressable accessibilityHint="Abre a edição do produto" accessibilityRole="button" onPress={() => setEditing(product)} style={styles.cardPress}>
+              <View style={styles.cardHeader}>
+                <Text numberOfLines={1} style={styles.title}>{product.nome}</Text>
+                <StatusBadge label={product.estoqueBaixo ? "Estoque baixo" : "Em dia"} tone={product.estoqueBaixo ? "warning" : "success"} />
+              </View>
+              <Text numberOfLines={1} style={styles.subtitle}>{product.fornecedor?.nome ?? product.descricao ?? "Sem fornecedor informado"}</Text>
+              <View style={styles.metaRow}>
+                <View>
+                  <Text style={styles.metaLabel}>Disponível</Text>
+                  <Text style={styles.quantity}>{formatQuantity(product.quantidade, product.unidadeMedida)}</Text>
+                </View>
+                <View style={styles.priceBlock}>
+                  <Text style={styles.metaLabel}>Preço unitário</Text>
+                  <Text style={styles.price}>{formatCurrency(product.preco)}</Text>
+                </View>
+              </View>
+            </Pressable>
+            <Pressable accessibilityLabel={`Desativar ${product.nome}`} accessibilityRole="button" onPress={() => setArchiving(product)} style={styles.archive}>
+              <Text style={styles.archiveText}>Desativar</Text>
+            </Pressable>
+          </View>
+        )}
       />
-
-      {!query.isLoading && !query.isError && products.length === 0 ? (
-        <EmptyState
-          message={search ? "Tente outra busca ou cadastre um produto." : "Cadastre seu primeiro produto para começar."}
-          title={search ? "Nenhum produto encontrado" : "Seu catálogo está vazio"}
-        />
-      ) : null}
-
-      {products.map((product) => (
-        <View key={product.id} style={styles.card}>
-          <Pressable accessibilityHint="Abre a edição do produto" accessibilityRole="button" onPress={() => setEditing(product)} style={styles.cardPress}>
-            <View style={styles.cardHeader}>
-              <Text numberOfLines={1} style={styles.title}>{product.nome}</Text>
-              <StatusBadge label={product.estoqueBaixo ? "Estoque baixo" : "Em dia"} tone={product.estoqueBaixo ? "warning" : "success"} />
-            </View>
-            <Text numberOfLines={1} style={styles.subtitle}>{product.fornecedor?.nome ?? product.descricao ?? "Sem fornecedor informado"}</Text>
-            <View style={styles.metaRow}>
-              <View>
-                <Text style={styles.metaLabel}>Disponível</Text>
-                <Text style={styles.quantity}>{formatQuantity(product.quantidade, product.unidadeMedida)}</Text>
-              </View>
-              <View style={styles.priceBlock}>
-                <Text style={styles.metaLabel}>Preço unitário</Text>
-                <Text style={styles.price}>{formatCurrency(product.preco)}</Text>
-              </View>
-            </View>
-          </Pressable>
-          <Pressable accessibilityLabel={`Desativar ${product.nome}`} accessibilityRole="button" onPress={() => setArchiving(product)} style={styles.archive}>
-            <Text style={styles.archiveText}>Desativar</Text>
-          </Pressable>
-        </View>
-      ))}
 
       <ProductFormModal
         onClose={() => setEditing(undefined)}
@@ -130,6 +145,8 @@ export function ProdutosScreen() {
 }
 
 const styles = StyleSheet.create({
+  list: { gap: spacing.md, paddingBottom: spacing.md },
+  listHeader: { gap: spacing.md },
   toolbar: { flexDirection: "row", gap: spacing.sm },
   search: { alignItems: "center", backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.md, borderWidth: 1, flex: 1, flexDirection: "row", gap: spacing.xs, minHeight: 48, paddingHorizontal: spacing.sm },
   searchInput: { color: colors.text, flex: 1, fontFamily: typography.body, fontSize: 16 },

@@ -7,6 +7,9 @@ import org.junit.jupiter.api.Test;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
@@ -43,6 +46,37 @@ class AnaliseIntegrationTest extends IntegrationTest {
                 .andExpect(jsonPath("$[0].mediaDiariaRecente").value(6.0))
                 .andExpect(jsonPath("$[0].tendencia").value("ALTA"))
                 .andExpect(jsonPath("$[0].variacaoPercentual").value(200.0));
+    }
+
+    @Test
+    void consumoDeUmProdutoNaoIncluiSaidasDeOutrosESemSaidasRetornaZero() throws Exception {
+        String outro = criarProduto(token, "Arroz", "1000", "0");
+        movimentar(token, outro, "SAIDA", "500", diasAtras(2)).andExpect(status().isCreated());
+        getJson(token, "/api/analises/consumo?produtoId={id}&dias=30", produtoId)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].totalConsumido").value(120.0));
+        String semSaidas = criarProduto(token, "Sem saidas", "10", "0");
+        getJson(token, "/api/analises/consumo?produtoId={id}&dias=30", semSaidas)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].totalConsumido").value(0));
+    }
+
+    @Test
+    void contagemDoDashboardCorrespondeAsSugestoesSemContarProdutosInativos() throws Exception {
+        criarProduto(token, "Abaixo do minimo", "1", "5");
+        criarProduto(token, "No minimo sem consumo", "5", "5");
+        criarProduto(token, "Estoque suficiente", "1000", "5");
+        String inativo = criarProduto(token, "Inativo", "0", "10");
+        deleteJson(token, "/api/produtos/{id}", inativo).andExpect(status().isNoContent());
+
+        String sugestoes = getJson(token, "/api/analises/reposicao")
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        String dashboard = getJson(token, "/api/dashboard")
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        List<?> lista = com.jayway.jsonpath.JsonPath.read(sugestoes, "$");
+        Number contagem = com.jayway.jsonpath.JsonPath.read(dashboard, "$.sugestoesReposicao");
+        assertEquals(2, lista.size());
+        assertEquals(lista.size(), contagem.intValue());
     }
 
     @Test

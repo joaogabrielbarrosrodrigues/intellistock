@@ -62,10 +62,10 @@ export async function getFornecedores(busca?: string, signal?: AbortSignal) {
     })
   ).data;
 }
-export async function getMovimentacoes(produtoId?: Id, signal?: AbortSignal) {
+export async function getMovimentacoes(produtoId?: Id, signal?: AbortSignal, limite = 100) {
   return (
     await api.get<Movimentacao[]>("/api/movimentacoes", {
-      params: produtoId ? { produtoId } : undefined,
+      params: { produtoId, limite },
       signal
     })
   ).data;

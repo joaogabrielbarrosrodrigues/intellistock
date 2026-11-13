@@ -14,7 +14,7 @@ import { StateView } from "../components/StateView";
 import { Card, ConfirmationDialog, StatusBadge } from "../components/ui";
 import { useContaMutations, useContasQuery, useFornecedoresQuery } from "../hooks/useIntellistockQueries";
 import { useDueReminderStatus } from "../notifications/DueReminderProvider";
-import { sendTestDueReminder } from "../notifications/dueReminderScheduler";
+import { getDueReminderGeneration, sendTestDueReminder } from "../notifications/dueReminderScheduler";
 import { colors } from "../theme/colors";
 import { radius, shadow, spacing } from "../theme/tokens";
 import { formatCurrency, formatDate } from "../utils";
@@ -44,9 +44,11 @@ export function ContasScreen() {
     if (testingReminder.current) return;
     testingReminder.current = true;
     setTesting(true);
+    const generation = getDueReminderGeneration();
     try {
       const allAccounts = await getContas();
-      await sendTestDueReminder(allAccounts);
+      const scheduled = await sendTestDueReminder(allAccounts, generation);
+      if (!scheduled) return;
       setFeedback({ message: "Aviso de teste programado para aparecer em alguns segundos.", tone: "success" });
     } catch (error) {
       setFeedback({ message: getApiErrorMessage(error, "Não foi possível enviar o aviso de teste neste aparelho."), tone: "error" });

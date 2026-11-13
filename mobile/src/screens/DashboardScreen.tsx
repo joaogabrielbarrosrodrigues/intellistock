@@ -15,11 +15,9 @@ import { formatCurrency, formatDate, formatQuantity } from "../utils";
 export function DashboardScreen() {
   const query = useDashboardQuery();
   const dashboard = query.data;
-  const consumoMensal = Array.isArray(dashboard?.consumoMensal) ? dashboard.consumoMensal : [];
-  const movimentacoes = Array.isArray(dashboard?.movimentacoesRecentes) ? dashboard.movimentacoesRecentes : [];
-  const proximosVencimentos = Array.isArray(dashboard?.contasProximasVencimento)
-    ? dashboard.contasProximasVencimento
-    : [];
+  const consumoMensal = dashboard?.consumoMensal ?? [];
+  const movimentacoes = dashboard?.movimentacoesRecentes ?? [];
+  const proximosVencimentos = dashboard?.contasProximasVencimento ?? [];
 
   return (
     <Screen refreshing={query.isRefetching} onRefresh={() => void query.refetch()}>

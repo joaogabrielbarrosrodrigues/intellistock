@@ -40,13 +40,18 @@ e inicie novamente com `--clear`.
 | `src/contexts` | Login/logout, restauração de sessão e mensagens temporárias. |
 | `src/hooks` | Consultas React Query, cache e invalidação após alterações. |
 | `src/components` | Interface compartilhada e formulários. |
-| `src/screens` | Login, dashboard, produtos, estoque, contas e menu Mais. |
-| `src/navigation` | Login ou abas conforme a sessão. |
+| `src/screens` | Login, cadastro, dashboard, produtos, estoque, contas, menu Mais, fornecedores e análises. |
+| `src/navigation` | Login ou abas conforme a sessão; pilha das subseções de Mais e URLs web. |
 | `src/notifications` | Planejamento e agendamento local dos avisos de contas. |
 | `src/theme` | Cores, espaçamentos e fontes Montserrat/Inter. |
 
 Fornecedores e análise de consumo/reposição ficam no menu **Mais**.
+Cada subseção possui uma rota própria e volta ao menu pela navegação.
+Na web, os endereços são `/mais/fornecedores` e `/mais/analises`.
+Uma hospedagem do export web precisa encaminhar as rotas da aplicação para `index.html`.
 O dashboard apresenta consumo separado por unidade de medida.
+Produtos usa lista virtualizada e pesquisa local com ou sem acentos sobre o catálogo completo.
+O histórico recente de estoque consulta apenas os oito movimentos apresentados na tela.
 Os formulários validam os campos e bloqueiam reenvios simultâneos;
 a API continua sendo a responsável por validar as regras e gravar os dados.
 
@@ -60,6 +65,8 @@ O aviso de teste consulta todas as contas e resume as vencidas, as que vencem ho
 que ainda vão vencer, independentemente do filtro selecionado na tela. Contas pagas e
 canceladas não entram no resumo. Quando há muitas contas, são exibidos até dois nomes
 por grupo e a quantidade das demais.
+Sair da conta cancela os avisos automáticos e de teste, incluindo o agendamento
+de testes cuja consulta de contas ainda estava em andamento.
 
 Contas pagas, canceladas ou excluídas deixam de ter avisos futuros na sincronização.
 Alterações feitas em outro aparelho dependem de nova consulta neste aparelho.
@@ -77,7 +84,8 @@ npx expo-doctor
 npx expo export --platform all --output-dir dist
 ```
 
-`npm test` cobre lembretes, tratamento de 401, decimais e datas. O comando
+`npm test` cobre planejamento/cancelamento de lembretes, rotas e retorno da navegação,
+tratamento de 401, pesquisa com acentos, decimais e datas. O comando
 `npm run test:reminders` continua disponível para executar só os lembretes.
 TypeScript também verifica imports e parâmetros sem uso.
 

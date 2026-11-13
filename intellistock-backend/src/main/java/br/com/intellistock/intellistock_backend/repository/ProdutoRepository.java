@@ -29,6 +29,10 @@ public interface ProdutoRepository extends JpaRepository<Produto, UUID>, JpaSpec
     @EntityGraph(attributePaths = "fornecedor")
     List<Produto> findByAtivoTrueOrderByNomeAsc();
 
+    // A contagem analitica nao precisa de ordenacao nem de fornecedores.
+    @Query("select p from Produto p where p.ativo = true")
+    List<Produto> findAtivosParaAnalise();
+
     @Override
     @EntityGraph(attributePaths = "fornecedor")
     List<Produto> findAll(Specification<Produto> spec, Sort sort);
