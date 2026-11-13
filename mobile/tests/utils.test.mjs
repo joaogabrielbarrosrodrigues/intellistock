@@ -1,6 +1,14 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { formatDate, isValidIsoDate, parseDecimalInput } from "../src/utils.ts";
+import { formatDate, isValidIsoDate, matchesSearch, parseDecimalInput } from "../src/utils.ts";
+
+test("busca nomes com ou sem acentos e sem diferenciar maiúsculas", () => {
+  assert.equal(matchesSearch("Café torrado", "cafe"), true);
+  assert.equal(matchesSearch("Cafe torrado", "CAFÉ"), true);
+  assert.equal(matchesSearch("Açúcar", "acuc"), true);
+  assert.equal(matchesSearch("Café", "chá"), false);
+  assert.equal(matchesSearch("Café", "  "), true);
+});
 
 test("aceita decimais em português e respeita a precisão de cada campo", () => {
   assert.equal(parseDecimalInput(" 12,345 ", 3), 12.345);

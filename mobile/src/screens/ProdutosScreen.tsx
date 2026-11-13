@@ -16,7 +16,7 @@ import { useFornecedoresQuery, useProdutoMutations, useProdutosQuery } from "../
 import { colors } from "../theme/colors";
 import { radius, shadow, spacing } from "../theme/tokens";
 import { typography } from "../theme/typography";
-import { formatCurrency, formatQuantity } from "../utils";
+import { formatCurrency, formatQuantity, matchesSearch } from "../utils";
 
 type Feedback = { message: string; tone: FeedbackTone };
 
@@ -27,10 +27,10 @@ export function ProdutosScreen() {
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const submitting = useRef(false);
   const debouncedSearch = useDebouncedValue(search.trim());
-  const query = useProdutosQuery(debouncedSearch || undefined);
+  const query = useProdutosQuery();
   const suppliers = useFornecedoresQuery();
   const mutations = useProdutoMutations();
-  const products = query.data ?? [];
+  const products = (query.data ?? []).filter((product) => matchesSearch(product.nome, debouncedSearch));
 
   async function archive() {
     if (!archiving || submitting.current) return;

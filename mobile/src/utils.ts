@@ -1,3 +1,8 @@
+export function matchesSearch(text: string, search: string) {
+  const normalize = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  return normalize(text).includes(normalize(search.trim()));
+}
+
 export function formatCurrency(value: number | string | null | undefined) {
   const numeric = Number(value ?? 0);
   return numeric.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });

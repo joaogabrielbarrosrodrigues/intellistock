@@ -1,15 +1,18 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { useAuth } from "../contexts/AuthContext";
 import { colors } from "../theme/colors";
 import { radius, spacing } from "../theme/tokens";
 import { AppText as Text } from "./AppText";
 import { BrandLogo } from "./BrandLogo";
+import { ConfirmationDialog } from "./ui";
 
 export type HeaderProps = { title: string; subtitle?: string };
 
 export function Header({ title, subtitle }: HeaderProps) {
   const { signOut } = useAuth();
+  const [confirmingExit, setConfirmingExit] = useState(false);
 
   return (
     <View style={styles.container}>
@@ -18,9 +21,18 @@ export function Header({ title, subtitle }: HeaderProps) {
         <Text style={styles.title}>{title}</Text>
         {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
       </View>
-      <Pressable accessibilityHint="Encerra a sessão neste dispositivo" accessibilityLabel="Sair" accessibilityRole="button" style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]} onPress={() => void signOut()}>
+      <Pressable accessibilityHint="Abre a confirmação para sair" accessibilityLabel="Sair" accessibilityRole="button" style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]} onPress={() => setConfirmingExit(true)}>
         <Ionicons name="log-out-outline" size={22} color={colors.primaryDark} />
       </Pressable>
+      <ConfirmationDialog
+        visible={confirmingExit}
+        title="Sair da conta?"
+        message="Deseja encerrar a sessão neste dispositivo?"
+        confirmLabel="Sair"
+        confirmVariant="primary"
+        onCancel={() => setConfirmingExit(false)}
+        onConfirm={() => { setConfirmingExit(false); void signOut(); }}
+      />
     </View>
   );
 }
