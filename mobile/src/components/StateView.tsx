@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs
   },
   buttonText: {
-    color: "#FFFFFF",
+    color: colors.white,
     fontWeight: "700"
   }
 });

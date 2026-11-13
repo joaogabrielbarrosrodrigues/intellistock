@@ -15,11 +15,10 @@ import { formatCurrency, formatDate, formatQuantity } from "../utils";
 export function DashboardScreen() {
   const query = useDashboardQuery();
   const dashboard = query.data;
-  const consumoMensal = Array.isArray(dashboard?.consumoMensal) ? dashboard.consumoMensal : [];
-  const movimentacoes = Array.isArray(dashboard?.movimentacoesRecentes) ? dashboard.movimentacoesRecentes : [];
-  const proximosVencimentos = Array.isArray(dashboard?.contasProximasVencimento)
-    ? dashboard.contasProximasVencimento
-    : [];
+  // getDashboard já garante que as três listas são arrays.
+  const consumoMensal = dashboard?.consumoMensal ?? [];
+  const movimentacoes = dashboard?.movimentacoesRecentes ?? [];
+  const proximosVencimentos = dashboard?.contasProximasVencimento ?? [];
 
   return (
     <Screen refreshing={query.isRefetching} onRefresh={() => void query.refetch()}>
@@ -120,7 +119,7 @@ export function DashboardScreen() {
 }
 
 function ConsumptionCard({ serie }: { serie: ConsumoMensalPorUnidade }) {
-  const points = Array.isArray(serie.pontos) ? serie.pontos : [];
+  const points = serie.pontos;
   const max = Math.max(...points.map((point) => Number(point.quantidade)), 1);
 
   return (

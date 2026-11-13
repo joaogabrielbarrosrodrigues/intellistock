@@ -8,15 +8,13 @@ import { NavigationContainer } from "@react-navigation/native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
 import { StatusBar } from "expo-status-bar";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthProvider } from "./src/contexts/AuthContext";
 import { ToastProvider } from "./src/contexts/ToastContext";
 import { AppErrorBoundary } from "./src/components/AppErrorBoundary";
-import { BrandLogo } from "./src/components/BrandLogo";
 import { CustomFontsProvider } from "./src/components/AppText";
+import { LoadingScreen } from "./src/components/LoadingScreen";
 import { RootNavigator } from "./src/navigation/RootNavigator";
-import { colors } from "./src/theme/colors";
 import { typography } from "./src/theme/typography";
 
 const queryClient = new QueryClient({
@@ -40,11 +38,10 @@ export default function App() {
 
   if (!fontsLoaded && !fontError) {
     return (
-      <View style={styles.loading}>
+      <>
         <StatusBar style="dark" />
-        <BrandLogo width={180} />
-        <ActivityIndicator color={colors.primary} size="large" />
-      </View>
+        <LoadingScreen />
+      </>
     );
   }
 
@@ -67,13 +64,3 @@ export default function App() {
     </CustomFontsProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  loading: {
-    alignItems: "center",
-    backgroundColor: colors.surface,
-    flex: 1,
-    gap: 28,
-    justifyContent: "center"
-  }
-});

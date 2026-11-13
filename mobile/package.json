@@ -9,8 +9,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test tests/*.test.mjs",
-    "test:reminders": "node --experimental-strip-types --test tests/dueReminderPlan.test.mjs"
+    "test": "node --experimental-strip-types --test tests/*.test.mjs"
   },
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",

@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Pressable, StyleSheet, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { getApiErrorMessage } from "../api/errors";
 import type { Fornecedor } from "../api/types";
 import { EmptyState } from "../components/EmptyState";
@@ -11,6 +11,7 @@ import { FeedbackBanner, type FeedbackTone } from "../components/FeedbackBanner"
 import { Header } from "../components/Header";
 import { ReposicaoCard } from "../components/ReposicaoCard";
 import { Screen } from "../components/Screen";
+import { SearchBar } from "../components/SearchBar";
 import { Card, ConfirmationDialog, SectionTitle, StatusBadge } from "../components/ui";
 import { StateView } from "../components/StateView";
 import {
@@ -22,7 +23,6 @@ import {
 import { useDebouncedValue } from "../hooks/useDebouncedValue";
 import { colors } from "../theme/colors";
 import { radius, shadow, spacing } from "../theme/tokens";
-import { typography } from "../theme/typography";
 import { formatQuantity } from "../utils";
 
 type Section = "menu" | "fornecedores" | "analises";
@@ -142,27 +142,14 @@ function FornecedoresView({ onBack }: { onBack: () => void }) {
   return (
     <Screen refreshing={query.isRefetching} onRefresh={() => void query.refetch()}>
       <BackHeader onBack={onBack} subtitle="Cadastre e mantenha parceiros" title="Fornecedores" />
-      <View style={styles.tools}>
-        <View style={styles.search}>
-          <Ionicons color={colors.muted} name="search-outline" size={19} />
-          <TextInput
-            accessibilityLabel="Buscar fornecedores"
-            onChangeText={setSearch}
-            placeholder="Buscar fornecedor"
-            placeholderTextColor={colors.muted}
-            style={styles.searchInput}
-            value={search}
-          />
-        </View>
-        <Pressable
-          accessibilityLabel="Adicionar fornecedor"
-          accessibilityRole="button"
-          onPress={() => setEditing(null)}
-          style={styles.add}
-        >
-          <Ionicons color={colors.white} name="add" size={23} />
-        </Pressable>
-      </View>
+      <SearchBar
+        addLabel="Adicionar fornecedor"
+        onAdd={() => setEditing(null)}
+        onChangeText={setSearch}
+        placeholder="Buscar fornecedor"
+        searchLabel="Buscar fornecedores"
+        value={search}
+      />
       <FeedbackBanner message={feedback?.message} tone={feedback?.tone} />
       <StateView
         error={
@@ -335,27 +322,6 @@ const styles = StyleSheet.create({
   note: { backgroundColor: colors.primaryLight },
   noteTitle: { color: colors.primaryDark, fontSize: 16, fontWeight: "800" },
   noteText: { color: colors.textSecondary, lineHeight: 20, marginTop: 5 },
-  tools: { flexDirection: "row", gap: spacing.sm },
-  search: {
-    alignItems: "center",
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    flex: 1,
-    flexDirection: "row",
-    gap: spacing.xs,
-    minHeight: 48,
-    paddingHorizontal: spacing.sm
-  },
-  searchInput: { color: colors.text, flex: 1, fontFamily: typography.body },
-  add: {
-    alignItems: "center",
-    backgroundColor: colors.primary,
-    borderRadius: radius.md,
-    justifyContent: "center",
-    width: 48
-  },
   supplierCard: {
     alignItems: "center",
     backgroundColor: colors.surface,

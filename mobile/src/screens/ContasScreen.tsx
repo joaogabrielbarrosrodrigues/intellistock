@@ -8,6 +8,7 @@ import { ContaFormModal } from "../components/ContaFormModal";
 import { AppText as Text } from "../components/AppText";
 import { EmptyState } from "../components/EmptyState";
 import { FeedbackBanner, type FeedbackTone } from "../components/FeedbackBanner";
+import { FilterChips } from "../components/FilterChips";
 import { Header } from "../components/Header";
 import { Screen } from "../components/Screen";
 import { StateView } from "../components/StateView";
@@ -24,7 +25,13 @@ type Action = "pay" | "cancel" | "reopen" | "remove";
 type PendingAction = { type: Action; conta: ContaPagar };
 type Feedback = { message: string; tone: FeedbackTone };
 
-const filters: Filter[] = ["TODAS", "PENDENTE", "VENCIDA", "PAGA", "CANCELADA"];
+const filters: { value: Filter; label: string }[] = [
+  { value: "TODAS", label: "Todas" },
+  { value: "PENDENTE", label: "Pendente" },
+  { value: "VENCIDA", label: "Vencida" },
+  { value: "PAGA", label: "Paga" },
+  { value: "CANCELADA", label: "Cancelada" }
+];
 
 export function ContasScreen() {
   const [filter, setFilter] = useState<Filter>("TODAS");
@@ -80,13 +87,7 @@ export function ContasScreen() {
   return (
     <Screen refreshing={query.isRefetching} onRefresh={() => void query.refetch()}>
       <Header subtitle="Compromissos e vencimentos" title="Contas a pagar" />
-      <View style={styles.filters}>
-        {filters.map((value) => (
-          <Pressable key={value} accessibilityRole="button" onPress={() => setFilter(value)} style={[styles.filter, filter === value && styles.filterSelected]}>
-            <Text style={[styles.filterText, filter === value && styles.filterTextSelected]}>{filterLabel(value)}</Text>
-          </Pressable>
-        ))}
-      </View>
+      <FilterChips onChange={setFilter} options={filters} value={filter} />
       <Pressable accessibilityLabel="Cadastrar conta" accessibilityRole="button" onPress={() => setEditing(null)} style={styles.newButton}>
         <Ionicons color={colors.white} name="add" size={21} />
         <Text style={styles.newText}>Nova conta</Text>
@@ -192,11 +193,6 @@ function dueLabel(conta: ContaPagar) {
   return `Vence em ${formatDate(conta.dataVencimento)}`;
 }
 
-function filterLabel(filter: Filter) {
-  if (filter === "TODAS") return "Todas";
-  return filter[0] + filter.slice(1).toLowerCase();
-}
-
 function actionDialog(action: PendingAction) {
   const amount = formatCurrency(action.conta.valor);
   if (action.type === "pay") return { title: "Confirmar pagamento", message: `Registrar o pagamento de ${amount}?`, confirmLabel: "Registrar" };
@@ -231,11 +227,6 @@ const styles = StyleSheet.create({
   reminderCard: { gap: spacing.xs },
   reminderText: { color: colors.textSecondary, fontSize: 13, lineHeight: 19 },
   reminderAction: { color: colors.primary, fontSize: 13, fontWeight: "800", paddingVertical: spacing.xs },
-  filters: { flexDirection: "row", flexWrap: "wrap", gap: spacing.xs },
-  filter: { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.pill, borderWidth: 1, paddingHorizontal: spacing.sm, paddingVertical: 8 },
-  filterSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
-  filterText: { color: colors.textSecondary, fontSize: 13, fontWeight: "800" },
-  filterTextSelected: { color: colors.white },
   newButton: { alignItems: "center", backgroundColor: colors.primary, borderRadius: radius.md, flexDirection: "row", gap: 6, justifyContent: "center", minHeight: 48 },
   newText: { color: colors.white, fontSize: 15, fontWeight: "800" },
   card: { backgroundColor: colors.surface, borderRadius: radius.lg, overflow: "hidden", ...shadow.card },

@@ -1,6 +1,5 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRef, useState } from "react";
-import { Pressable, StyleSheet, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { getApiErrorMessage } from "../api/errors";
 import type { Produto } from "../api/types";
 import { EmptyState } from "../components/EmptyState";
@@ -9,13 +8,13 @@ import { FeedbackBanner, type FeedbackTone } from "../components/FeedbackBanner"
 import { Header } from "../components/Header";
 import { ProductFormModal } from "../components/ProductFormModal";
 import { Screen } from "../components/Screen";
+import { SearchBar } from "../components/SearchBar";
 import { StateView } from "../components/StateView";
 import { ConfirmationDialog, StatusBadge } from "../components/ui";
 import { useDebouncedValue } from "../hooks/useDebouncedValue";
 import { useFornecedoresQuery, useProdutoMutations, useProdutosQuery } from "../hooks/useIntellistockQueries";
 import { colors } from "../theme/colors";
 import { radius, shadow, spacing } from "../theme/tokens";
-import { typography } from "../theme/typography";
 import { formatCurrency, formatQuantity, matchesSearch } from "../utils";
 
 type Feedback = { message: string; tone: FeedbackTone };
@@ -49,23 +48,14 @@ export function ProdutosScreen() {
   return (
     <Screen refreshing={query.isRefetching} onRefresh={() => void query.refetch()}>
       <Header subtitle={`${products.length} item(ns) ativo(s)`} title="Produtos" />
-      <View style={styles.toolbar}>
-        <View style={styles.search}>
-          <Ionicons color={colors.muted} name="search-outline" size={20} />
-          <TextInput
-            accessibilityLabel="Buscar produtos"
-            autoCapitalize="none"
-            onChangeText={setSearch}
-            placeholder="Buscar por nome"
-            placeholderTextColor={colors.muted}
-            style={styles.searchInput}
-            value={search}
-          />
-        </View>
-        <Pressable accessibilityLabel="Adicionar produto" accessibilityRole="button" onPress={() => setEditing(null)} style={styles.add}>
-          <Ionicons color={colors.white} name="add" size={24} />
-        </Pressable>
-      </View>
+      <SearchBar
+        addLabel="Adicionar produto"
+        onAdd={() => setEditing(null)}
+        onChangeText={setSearch}
+        placeholder="Buscar por nome"
+        searchLabel="Buscar produtos"
+        value={search}
+      />
 
       <FeedbackBanner message={feedback?.message} tone={feedback?.tone} />
       <StateView
@@ -130,10 +120,6 @@ export function ProdutosScreen() {
 }
 
 const styles = StyleSheet.create({
-  toolbar: { flexDirection: "row", gap: spacing.sm },
-  search: { alignItems: "center", backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.md, borderWidth: 1, flex: 1, flexDirection: "row", gap: spacing.xs, minHeight: 48, paddingHorizontal: spacing.sm },
-  searchInput: { color: colors.text, flex: 1, fontFamily: typography.body, fontSize: 16 },
-  add: { alignItems: "center", backgroundColor: colors.primary, borderRadius: radius.md, justifyContent: "center", width: 48 },
   card: { backgroundColor: colors.surface, borderRadius: radius.lg, overflow: "hidden", ...shadow.card },
   cardPress: { gap: spacing.xs, padding: spacing.md },
   cardHeader: { alignItems: "center", flexDirection: "row", gap: spacing.xs, justifyContent: "space-between" },

@@ -2,9 +2,8 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useEffect, useRef } from "react";
-import { ActivityIndicator, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { BrandLogo } from "../components/BrandLogo";
+import { LoadingScreen } from "../components/LoadingScreen";
 import { colors } from "../theme/colors";
 import { typography } from "../theme/typography";
 import { useAuth } from "../contexts/AuthContext";
@@ -97,8 +96,7 @@ function AuthenticatedApp() {
     const extra = newlyLow.length > 2 ? ` e mais ${newlyLow.length - 2}` : "";
     showToast({
       title: "Alerta de estoque",
-      message: `${names.join(", ")}${extra} atingiu o estoque mínimo.`,
-      tone: "warning"
+      message: `${names.join(", ")}${extra} atingiu o estoque mínimo.`
     });
   }, [estoqueQuery.data, estoqueQuery.isSuccess, showToast]);
 
@@ -108,14 +106,7 @@ function AuthenticatedApp() {
 export function RootNavigator() {
   const { token, loading } = useAuth();
 
-  if (loading) {
-    return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 28, backgroundColor: colors.surface }}>
-        <BrandLogo width={180} />
-        <ActivityIndicator color={colors.primary} size="large" />
-      </View>
-    );
-  }
+  if (loading) return <LoadingScreen />;
 
   if (!token) {
     return (

@@ -4,6 +4,8 @@ import { getApiErrorMessage } from "../api/errors";
 import type { EstoqueItem, TipoMovimentacao } from "../api/types";
 import { EmptyState } from "../components/EmptyState";
 import { AppText as Text } from "../components/AppText";
+import { FeedbackBanner } from "../components/FeedbackBanner";
+import { FilterChips } from "../components/FilterChips";
 import { Header } from "../components/Header";
 import { MovimentacaoModal } from "../components/MovimentacaoModal";
 import { Screen } from "../components/Screen";
@@ -15,6 +17,13 @@ import { radius, shadow, spacing } from "../theme/tokens";
 import { formatCurrency, formatDate, formatQuantity } from "../utils";
 
 type Filter = "TODOS" | "BAIXO" | "ZERADO";
+
+const filters: { value: Filter; label: string }[] = [
+  { value: "TODOS", label: "Todos" },
+  { value: "BAIXO", label: "Baixo" },
+  { value: "ZERADO", label: "Zerado" }
+];
+
 export function EstoqueScreen() {
   const query = useEstoqueQuery();
   const movements = useMovimentacoesQuery();
@@ -47,25 +56,8 @@ export function EstoqueScreen() {
           <Text style={styles.summaryLabel}>sem estoque</Text>
         </Card>
       </View>
-      <View style={styles.filters}>
-        {(["TODOS", "BAIXO", "ZERADO"] as Filter[]).map((value) => (
-          <Pressable
-            key={value}
-            accessibilityRole="button"
-            onPress={() => setFilter(value)}
-            style={[styles.filter, filter === value && styles.filterSelected]}
-          >
-            <Text style={[styles.filterText, filter === value && styles.filterTextSelected]}>
-              {value === "TODOS" ? "Todos" : value === "BAIXO" ? "Baixo" : "Zerado"}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
-      {feedback ? (
-        <Text accessibilityRole="alert" style={styles.feedback}>
-          {feedback}
-        </Text>
-      ) : null}
+      <FilterChips onChange={setFilter} options={filters} value={filter} />
+      <FeedbackBanner message={feedback} />
       <StateView
         error={
           query.isError
@@ -182,25 +174,6 @@ const styles = StyleSheet.create({
   summaryCard: { flex: 1 },
   summaryValue: { color: colors.warning, fontSize: 24, fontWeight: "900" },
   summaryLabel: { color: colors.muted, fontSize: 13, marginTop: 2 },
-  filters: { flexDirection: "row", gap: spacing.xs },
-  filter: {
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 8
-  },
-  filterSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
-  filterText: { color: colors.textSecondary, fontSize: 13, fontWeight: "800" },
-  filterTextSelected: { color: colors.white },
-  feedback: {
-    backgroundColor: colors.successLight,
-    borderRadius: radius.sm,
-    color: colors.success,
-    fontWeight: "700",
-    padding: spacing.sm
-  },
   card: {
     backgroundColor: colors.surface,
     borderRadius: radius.lg,

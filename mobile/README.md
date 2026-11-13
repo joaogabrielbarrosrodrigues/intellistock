@@ -77,8 +77,7 @@ npx expo-doctor
 npx expo export --platform all --output-dir dist
 ```
 
-`npm test` cobre lembretes, tratamento de 401, decimais e datas. O comando
-`npm run test:reminders` continua disponível para executar só os lembretes.
+`npm test` cobre lembretes, tratamento de 401, decimais e datas.
 TypeScript também verifica imports e parâmetros sem uso.
 
 O [guia do código](../docs/GUIA_DO_CODIGO.md) explica o fluxo completo. Use o

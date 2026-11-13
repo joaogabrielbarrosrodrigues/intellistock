@@ -62,13 +62,8 @@ export async function getFornecedores(busca?: string, signal?: AbortSignal) {
     })
   ).data;
 }
-export async function getMovimentacoes(produtoId?: Id, signal?: AbortSignal) {
-  return (
-    await api.get<Movimentacao[]>("/api/movimentacoes", {
-      params: produtoId ? { produtoId } : undefined,
-      signal
-    })
-  ).data;
+export async function getMovimentacoes(signal?: AbortSignal) {
+  return (await api.get<Movimentacao[]>("/api/movimentacoes", { signal })).data;
 }
 export async function getConsumo(signal?: AbortSignal) {
   return (await api.get<ConsumoItem[]>("/api/analises/consumo", { signal })).data;

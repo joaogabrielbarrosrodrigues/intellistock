@@ -1,4 +1,5 @@
 import { Image, StyleSheet, View } from "react-native";
+import { colors } from "../theme/colors";
 
 const logoSource = require("../../assets/brand/intelistock-logo.png");
 const sourceSize = 1254;
@@ -42,5 +43,5 @@ export function BrandLogo({ variant = "full", width = 240 }: Props) {
 }
 
 const styles = StyleSheet.create({
-  frame: { backgroundColor: "#FFFFFF", flexShrink: 0, overflow: "hidden" }
+  frame: { backgroundColor: colors.white, flexShrink: 0, overflow: "hidden" }
 });

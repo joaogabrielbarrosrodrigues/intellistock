@@ -8,7 +8,7 @@ export type KpiCardProps = {
   label: string;
   value: string;
   tone?: "primary" | "warning" | "danger";
-  icon?: "cube-outline" | "alert-circle-outline" | "wallet-outline" | "trending-down-outline" | "card-outline" | "analytics-outline" | "calendar-outline";
+  icon?: "cube-outline" | "alert-circle-outline" | "wallet-outline" | "card-outline" | "calendar-outline";
   detail?: string;
 };
 

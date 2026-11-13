@@ -6,7 +6,7 @@ import { radius, shadow, spacing } from "../theme/tokens";
 import { typography } from "../theme/typography";
 import { AppText as Text } from "./AppText";
 
-export type ButtonVariant = "primary" | "secondary" | "danger" | "ghost";
+export type ButtonVariant = "primary" | "secondary" | "danger";
 
 export function Button({ title, onPress, variant = "primary", loading = false, disabled = false, compact = false }: {
   title: string;
@@ -24,7 +24,7 @@ export function Button({ title, onPress, variant = "primary", loading = false, d
       onPress={onPress}
       style={({ pressed }) => [styles.button, styles[`button_${variant}`], compact && styles.buttonCompact, inactive && styles.buttonDisabled, pressed && !inactive && styles.buttonPressed]}
     >
-      {loading ? <ActivityIndicator color={variant === "secondary" || variant === "ghost" ? colors.primary : colors.white} /> : <Text style={[styles.buttonText, styles[`buttonText_${variant}`]]}>{title}</Text>}
+      {loading ? <ActivityIndicator color={variant === "secondary" ? colors.primary : colors.white} /> : <Text style={[styles.buttonText, styles[`buttonText_${variant}`]]}>{title}</Text>}
     </Pressable>
   );
 }
@@ -33,7 +33,7 @@ export function Card({ children, style }: { children: ReactNode; style?: object 
   return <View style={[styles.card, style]}>{children}</View>;
 }
 
-export function TextField({ label, error, multiline, style, ...props }: TextInputProps & { label: string; error?: string; style?: object }) {
+export function TextField({ label, multiline, style, ...props }: TextInputProps & { label: string; style?: object }) {
   return (
     <View style={styles.field}>
       <Text style={styles.fieldLabel}>{label}</Text>
@@ -41,10 +41,9 @@ export function TextField({ label, error, multiline, style, ...props }: TextInpu
         accessibilityLabel={label}
         multiline={multiline}
         placeholderTextColor={colors.muted}
-        style={[styles.input, multiline && styles.inputMultiline, error && styles.inputError, style]}
+        style={[styles.input, multiline && styles.inputMultiline, style]}
         {...props}
       />
-      {error ? <Text accessibilityRole="alert" style={styles.fieldError}>{error}</Text> : null}
     </View>
   );
 }
@@ -61,8 +60,8 @@ export function Choice({ label, selected, onPress, disabled = false }: { label: 
   );
 }
 
-export function SectionTitle({ title, action }: { title: string; action?: ReactNode }) {
-  return <View style={styles.sectionTitle}><Text style={styles.sectionTitleText}>{title}</Text>{action}</View>;
+export function SectionTitle({ title }: { title: string }) {
+  return <Text style={styles.sectionTitleText}>{title}</Text>;
 }
 
 export function FormModal({ visible, title, onClose, children, busy = false }: { visible: boolean; title: string; onClose: () => void; children: ReactNode; busy?: boolean }) {
@@ -114,21 +113,17 @@ const styles = StyleSheet.create({
   button_primary: { backgroundColor: colors.primary },
   button_secondary: { backgroundColor: colors.surfaceMuted, borderColor: colors.primary, borderWidth: 1 },
   button_danger: { backgroundColor: colors.danger },
-  button_ghost: { backgroundColor: "transparent" },
   buttonDisabled: { opacity: 0.58 },
   buttonPressed: { opacity: 0.82 },
   buttonText: { fontSize: 15, fontWeight: "800" },
   buttonText_primary: { color: colors.white },
   buttonText_secondary: { color: colors.primaryDark },
   buttonText_danger: { color: colors.white },
-  buttonText_ghost: { color: colors.primary },
   card: { backgroundColor: colors.surface, borderRadius: radius.lg, padding: spacing.md, ...shadow.card },
   field: { gap: spacing.xs },
   fieldLabel: { color: colors.textSecondary, fontSize: 14, fontWeight: "700" },
   input: { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.sm, borderWidth: 1, color: colors.text, fontFamily: typography.body, fontSize: 16, minHeight: 48, paddingHorizontal: spacing.sm },
   inputMultiline: { minHeight: 96, paddingTop: spacing.sm, textAlignVertical: "top" },
-  inputError: { borderColor: colors.danger },
-  fieldError: { color: colors.danger, fontSize: 12 },
   badge: { alignSelf: "flex-start", borderRadius: radius.pill, paddingHorizontal: spacing.xs, paddingVertical: 4 },
   badgeText: { fontSize: 11, fontWeight: "800", letterSpacing: 0.2 },
   badge_success: { backgroundColor: colors.successLight }, badgeText_success: { color: colors.success },
@@ -140,8 +135,7 @@ const styles = StyleSheet.create({
   choiceSelected: { backgroundColor: colors.primaryLight, borderColor: colors.primary },
   choiceText: { color: colors.textSecondary, fontSize: 13, fontWeight: "700" },
   choiceTextSelected: { color: colors.primaryDark },
-  sectionTitle: { alignItems: "center", flexDirection: "row", justifyContent: "space-between", marginTop: spacing.xs },
-  sectionTitleText: { color: colors.text, fontSize: 18, fontWeight: "800" },
+  sectionTitleText: { color: colors.text, fontSize: 18, fontWeight: "800", marginTop: spacing.xs },
   modalBackdrop: { backgroundColor: colors.overlay, flex: 1, justifyContent: "flex-end" },
   modal: { backgroundColor: colors.background, borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg, maxHeight: "91%" },
   modalHeader: { alignItems: "center", backgroundColor: colors.surface, borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg, flexDirection: "row", justifyContent: "space-between", paddingHorizontal: spacing.lg, paddingVertical: spacing.md },

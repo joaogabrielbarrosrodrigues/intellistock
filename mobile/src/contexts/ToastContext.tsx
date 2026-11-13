@@ -6,8 +6,9 @@ import { AppText as Text } from "../components/AppText";
 import { colors } from "../theme/colors";
 import { radius, shadow, spacing } from "../theme/tokens";
 
-type ToastTone = "warning" | "success" | "error";
-type ToastOptions = { title: string; message: string; tone?: ToastTone; duration?: number };
+const TOAST_DURATION_MS = 6000;
+
+type ToastOptions = { title: string; message: string };
 type ToastContextValue = { showToast: (options: ToastOptions) => void };
 
 const ToastContext = createContext<ToastContextValue | null>(null);
@@ -30,7 +31,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     setToast(options);
     opacity.setValue(0);
     Animated.timing(opacity, { duration: 180, toValue: 1, useNativeDriver: true }).start();
-    timeout.current = setTimeout(hideToast, options.duration ?? 6000);
+    timeout.current = setTimeout(hideToast, TOAST_DURATION_MS);
   }, [hideToast, opacity]);
 
   useEffect(() => () => {
@@ -39,17 +40,14 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   }, [opacity]);
 
   const value = useMemo(() => ({ showToast }), [showToast]);
-  const tone = toast?.tone ?? "warning";
-  const icon = tone === "error" ? "alert-circle" : tone === "success" ? "checkmark-circle" : "warning";
-  const toneStyle = tone === "error" ? styles.error : tone === "success" ? styles.success : styles.warning;
 
   return (
     <ToastContext.Provider value={value}>
       {children}
       {toast ? (
         <Animated.View pointerEvents="box-none" style={[styles.host, { opacity, paddingTop: insets.top + spacing.sm }]}>
-          <Pressable accessibilityRole="alert" onPress={hideToast} style={[styles.toast, toneStyle]}>
-            <Ionicons color={tone === "warning" ? colors.warning : tone === "error" ? colors.danger : colors.success} name={icon} size={23} />
+          <Pressable accessibilityRole="alert" onPress={hideToast} style={styles.toast}>
+            <Ionicons color={colors.warning} name="warning" size={23} />
             <View style={styles.textBlock}>
               <Text style={styles.title}>{toast.title}</Text>
               <Text style={styles.message}>{toast.message}</Text>
@@ -70,10 +68,7 @@ export function useToast() {
 
 const styles = StyleSheet.create({
   host: { left: 0, paddingHorizontal: spacing.md, position: "absolute", right: 0, top: 0, zIndex: 20 },
-  toast: { alignItems: "center", borderRadius: radius.md, borderWidth: 1, flexDirection: "row", gap: spacing.sm, padding: spacing.sm, ...shadow.card },
-  warning: { backgroundColor: colors.warningLight, borderColor: "#F4C98A" },
-  success: { backgroundColor: colors.successLight, borderColor: colors.primaryLight },
-  error: { backgroundColor: colors.dangerLight, borderColor: "#F2B8B5" },
+  toast: { alignItems: "center", backgroundColor: colors.warningLight, borderColor: "#F4C98A", borderRadius: radius.md, borderWidth: 1, flexDirection: "row", gap: spacing.sm, padding: spacing.sm, ...shadow.card },
   textBlock: { flex: 1, gap: 2 },
   title: { color: colors.text, fontWeight: "900" },
   message: { color: colors.textSecondary, lineHeight: 18 }
