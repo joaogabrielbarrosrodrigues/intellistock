@@ -35,7 +35,6 @@ public class JwtService {
         String header = "{\"alg\":\"HS256\",\"typ\":\"JWT\"}";
         String payload = "{"
                 + "\"sub\":\"" + user.getId() + "\","
-                + "\"email\":\"" + escape(user.getEmail()) + "\","
                 + "\"iat\":" + now.getEpochSecond() + ","
                 + "\"exp\":" + now.plusSeconds(expirationMinutes * 60).getEpochSecond()
                 + "}";
@@ -98,9 +97,5 @@ public class JwtService {
             end = json.indexOf('}', start);
         }
         return json.substring(start, end);
-    }
-
-    private String escape(String value) {
-        return value.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 }

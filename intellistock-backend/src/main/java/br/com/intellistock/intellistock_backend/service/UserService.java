@@ -7,15 +7,17 @@ import br.com.intellistock.intellistock_backend.exception.BusinessException;
 import br.com.intellistock.intellistock_backend.exception.ConflictException;
 import br.com.intellistock.intellistock_backend.exception.ResourceNotFoundException;
 import br.com.intellistock.intellistock_backend.repository.UserRepository;
+import br.com.intellistock.intellistock_backend.util.TextoUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Locale;
 
 @Service
 public class UserService {
+
+    private static final int LIMITE_BYTES_SENHA = 72;
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -27,10 +29,9 @@ public class UserService {
 
     @Transactional
     public UserResponse register(RegisterRequest request) {
-        String email = request.email().trim().toLowerCase(Locale.ROOT);
+        String email = TextoUtils.normalizarEmail(request.email());
 
-        // BCrypt limita a senha em bytes, enquanto @Size conta caracteres.
-        if (request.senha().getBytes(StandardCharsets.UTF_8).length > 72) {
+        if (senhaExcedeLimite(request.senha())) {
             throw new BusinessException("Senha muito longa. Reduza a quantidade de caracteres.");
         }
 
@@ -48,7 +49,14 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public User findByEmail(String email) {
-        return userRepository.findByEmail(email.toLowerCase(Locale.ROOT))
+        return userRepository.findByEmail(TextoUtils.normalizarEmail(email))
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario nao encontrado."));
+    }
+
+    /**
+     * BCrypt limita a senha em bytes, enquanto @Size conta caracteres.
+     */
+    public static boolean senhaExcedeLimite(String senha) {
+        return senha.getBytes(StandardCharsets.UTF_8).length > LIMITE_BYTES_SENHA;
     }
 }

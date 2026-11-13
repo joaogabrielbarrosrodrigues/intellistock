@@ -8,6 +8,7 @@ import br.com.intellistock.intellistock_backend.entity.StatusConta;
 import br.com.intellistock.intellistock_backend.exception.BusinessException;
 import br.com.intellistock.intellistock_backend.exception.ResourceNotFoundException;
 import br.com.intellistock.intellistock_backend.repository.ContaPagarRepository;
+import br.com.intellistock.intellistock_backend.util.TextoUtils;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
@@ -73,7 +74,7 @@ public class ContaPagarService {
             return cb.and(predicates.toArray(new Predicate[0]));
         };
 
-        return contaPagarRepository.findAll(spec, Sort.by("dataVencimento", "descricao")).stream()
+        return contaPagarRepository.findAll(spec, Sort.by(ContaPagar::getDataVencimento, ContaPagar::getDescricao)).stream()
                 .map(conta -> ContaPagarResponse.from(conta, hoje))
                 .toList();
     }
@@ -156,8 +157,7 @@ public class ContaPagarService {
         conta.setDescricao(request.descricao().trim());
         conta.setValor(request.valor());
         conta.setDataVencimento(request.dataVencimento());
-        conta.setObservacao(request.observacao() == null || request.observacao().isBlank()
-                ? null : request.observacao().trim());
+        conta.setObservacao(TextoUtils.blankToNull(request.observacao()));
     }
 
     private LocalDate hoje() {

@@ -52,6 +52,20 @@ public class Movimentacao {
     @JoinColumn(name = "usuario_id")
     private User usuario;
 
+    public static Movimentacao of(Produto produto, TipoMovimentacao tipo, BigDecimal quantidade,
+                                  BigDecimal saldoResultante, OffsetDateTime data, String observacao,
+                                  User usuario) {
+        Movimentacao movimentacao = new Movimentacao();
+        movimentacao.produto = produto;
+        movimentacao.tipo = tipo;
+        movimentacao.quantidade = quantidade;
+        movimentacao.saldoResultante = saldoResultante;
+        movimentacao.data = data;
+        movimentacao.observacao = observacao;
+        movimentacao.usuario = usuario;
+        return movimentacao;
+    }
+
     public UUID getId() {
         return id;
     }
@@ -64,55 +78,27 @@ public class Movimentacao {
         return produto;
     }
 
-    public void setProduto(Produto produto) {
-        this.produto = produto;
-    }
-
     public TipoMovimentacao getTipo() {
         return tipo;
-    }
-
-    public void setTipo(TipoMovimentacao tipo) {
-        this.tipo = tipo;
     }
 
     public BigDecimal getQuantidade() {
         return quantidade;
     }
 
-    public void setQuantidade(BigDecimal quantidade) {
-        this.quantidade = quantidade;
-    }
-
     public BigDecimal getSaldoResultante() {
         return saldoResultante;
-    }
-
-    public void setSaldoResultante(BigDecimal saldoResultante) {
-        this.saldoResultante = saldoResultante;
     }
 
     public OffsetDateTime getData() {
         return data;
     }
 
-    public void setData(OffsetDateTime data) {
-        this.data = data;
-    }
-
     public String getObservacao() {
         return observacao;
     }
 
-    public void setObservacao(String observacao) {
-        this.observacao = observacao;
-    }
-
     public User getUsuario() {
         return usuario;
-    }
-
-    public void setUsuario(User usuario) {
-        this.usuario = usuario;
     }
 }

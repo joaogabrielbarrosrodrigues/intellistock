@@ -11,6 +11,7 @@ import br.com.intellistock.intellistock_backend.exception.ResourceNotFoundExcept
 import br.com.intellistock.intellistock_backend.repository.MovimentacaoRepository;
 import br.com.intellistock.intellistock_backend.repository.ProdutoRepository;
 import br.com.intellistock.intellistock_backend.repository.UserRepository;
+import br.com.intellistock.intellistock_backend.util.TextoUtils;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
@@ -59,7 +60,7 @@ public class ProdutoService {
             return cb.and(predicates.toArray(new Predicate[0]));
         };
 
-        return produtoRepository.findAll(spec, Sort.by("nome")).stream()
+        return produtoRepository.findAll(spec, Sort.by(Produto::getNome)).stream()
                 .map(ProdutoResponse::from)
                 .toList();
     }
@@ -79,15 +80,14 @@ public class ProdutoService {
         if (quantidadeInicial != null && quantidadeInicial.signum() > 0) {
             produto.setQuantidade(quantidadeInicial);
 
-            Movimentacao movimentacao = new Movimentacao();
-            movimentacao.setProduto(produto);
-            movimentacao.setTipo(TipoMovimentacao.ENTRADA);
-            movimentacao.setQuantidade(quantidadeInicial);
-            movimentacao.setSaldoResultante(quantidadeInicial);
-            movimentacao.setData(OffsetDateTime.now(clock));
-            movimentacao.setObservacao("Estoque inicial");
-            movimentacao.setUsuario(usuario == null ? null : userRepository.getReferenceById(usuario.getId()));
-            movimentacaoRepository.save(movimentacao);
+            movimentacaoRepository.save(Movimentacao.of(
+                    produto,
+                    TipoMovimentacao.ENTRADA,
+                    quantidadeInicial,
+                    quantidadeInicial,
+                    OffsetDateTime.now(clock),
+                    "Estoque inicial",
+                    usuario == null ? null : userRepository.getReferenceById(usuario.getId())));
         }
 
         return ProdutoResponse.from(produto);
@@ -135,8 +135,7 @@ public class ProdutoService {
 
     private void preencher(Produto produto, ProdutoRequest request) {
         produto.setNome(request.nome().trim());
-        produto.setDescricao(request.descricao() == null || request.descricao().isBlank()
-                ? null : request.descricao().trim());
+        produto.setDescricao(TextoUtils.blankToNull(request.descricao()));
         produto.setEstoqueMinimo(request.estoqueMinimo());
         produto.setUnidadeMedida(request.unidadeMedida());
         produto.setPreco(request.preco());

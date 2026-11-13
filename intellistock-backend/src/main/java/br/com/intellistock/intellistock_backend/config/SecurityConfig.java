@@ -3,6 +3,7 @@ package br.com.intellistock.intellistock_backend.config;
 import br.com.intellistock.intellistock_backend.repository.UserRepository;
 import br.com.intellistock.intellistock_backend.security.JsonSecurityErrorHandler;
 import br.com.intellistock.intellistock_backend.security.JwtAuthenticationFilter;
+import br.com.intellistock.intellistock_backend.util.TextoUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,7 +27,6 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
-import java.util.Locale;
 
 @Configuration
 public class SecurityConfig {
@@ -69,7 +69,7 @@ public class SecurityConfig {
 
     @Bean
     public UserDetailsService userDetailsService(UserRepository userRepository) {
-        return username -> userRepository.findByEmail(username.toLowerCase(Locale.ROOT))
+        return username -> userRepository.findByEmail(TextoUtils.normalizarEmail(username))
                 .map(user -> new org.springframework.security.core.userdetails.User(
                         user.getEmail(),
                         user.getSenha(),

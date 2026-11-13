@@ -11,6 +11,7 @@ import br.com.intellistock.intellistock_backend.exception.ResourceNotFoundExcept
 import br.com.intellistock.intellistock_backend.repository.MovimentacaoRepository;
 import br.com.intellistock.intellistock_backend.repository.ProdutoRepository;
 import br.com.intellistock.intellistock_backend.repository.UserRepository;
+import br.com.intellistock.intellistock_backend.util.TextoUtils;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -75,15 +76,14 @@ public class MovimentacaoService {
         }
         produto.setQuantidade(novoSaldo);
 
-        Movimentacao movimentacao = new Movimentacao();
-        movimentacao.setProduto(produto);
-        movimentacao.setTipo(request.tipo());
-        movimentacao.setQuantidade(request.quantidade());
-        movimentacao.setSaldoResultante(novoSaldo);
-        movimentacao.setData(request.data() == null ? OffsetDateTime.now(clock) : request.data());
-        movimentacao.setObservacao(request.observacao() == null || request.observacao().isBlank()
-                ? null : request.observacao().trim());
-        movimentacao.setUsuario(usuario == null ? null : userRepository.getReferenceById(usuario.getId()));
+        Movimentacao movimentacao = Movimentacao.of(
+                produto,
+                request.tipo(),
+                request.quantidade(),
+                novoSaldo,
+                request.data() == null ? OffsetDateTime.now(clock) : request.data(),
+                TextoUtils.blankToNull(request.observacao()),
+                usuario == null ? null : userRepository.getReferenceById(usuario.getId()));
 
         return MovimentacaoResponse.from(movimentacaoRepository.save(movimentacao));
     }
@@ -112,7 +112,7 @@ public class MovimentacaoService {
             return cb.and(predicates.toArray(new Predicate[0]));
         };
 
-        return movimentacaoRepository.findAll(spec, PageRequest.of(0, limite, Sort.by(Sort.Direction.DESC, "data")))
+        return movimentacaoRepository.findAll(spec, PageRequest.of(0, limite, Sort.by(Sort.Direction.DESC, Movimentacao::getData)))
                 .stream()
                 .map(MovimentacaoResponse::from)
                 .toList();

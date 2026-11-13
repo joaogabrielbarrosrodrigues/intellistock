@@ -1,0 +1,21 @@
+{
+  "properties": [
+    {
+      "name": "app.jwt.secret",
+      "type": "java.lang.String",
+      "description": "Segredo usado para assinar os tokens JWT (HS256). Use pelo menos 32 caracteres e troque o valor padrao em producao."
+    },
+    {
+      "name": "app.jwt.expiration-minutes",
+      "type": "java.lang.Long",
+      "description": "Tempo de validade do token JWT, em minutos.",
+      "defaultValue": 120
+    },
+    {
+      "name": "app.cors.allowed-origins",
+      "type": "java.util.List<java.lang.String>",
+      "description": "Origens liberadas para CORS, separadas por virgula. Use \"*\" apenas em desenvolvimento.",
+      "defaultValue": "*"
+    }
+  ]
+}

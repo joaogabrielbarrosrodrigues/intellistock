@@ -10,11 +10,11 @@ import br.com.intellistock.intellistock_backend.repository.ContaPagarRepository;
 import br.com.intellistock.intellistock_backend.repository.FornecedorRepository;
 import br.com.intellistock.intellistock_backend.repository.ProdutoRepository;
 import br.com.intellistock.intellistock_backend.util.CnpjUtils;
+import br.com.intellistock.intellistock_backend.util.TextoUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Locale;
 import java.util.UUID;
 
 @Service
@@ -86,9 +86,9 @@ public class FornecedorService {
     private void preencher(Fornecedor fornecedor, FornecedorRequest request, String cnpj) {
         fornecedor.setNome(request.nome().trim());
         fornecedor.setCnpj(cnpj);
-        fornecedor.setTelefone(blankToNull(request.telefone()));
-        String email = blankToNull(request.email());
-        fornecedor.setEmail(email == null ? null : email.toLowerCase(Locale.ROOT));
+        fornecedor.setTelefone(TextoUtils.blankToNull(request.telefone()));
+        String email = TextoUtils.blankToNull(request.email());
+        fornecedor.setEmail(email == null ? null : TextoUtils.normalizarEmail(email));
     }
 
     private String validarCnpj(String cnpj) {
@@ -97,9 +97,5 @@ public class FornecedorService {
             throw new BusinessException("CNPJ invalido.");
         }
         return normalized;
-    }
-
-    private String blankToNull(String value) {
-        return value == null || value.isBlank() ? null : value.trim();
     }
 }
