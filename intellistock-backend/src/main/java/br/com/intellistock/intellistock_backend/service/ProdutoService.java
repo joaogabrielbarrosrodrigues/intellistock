@@ -95,7 +95,7 @@ public class ProdutoService {
 
     @Transactional
     public ProdutoResponse atualizar(UUID id, ProdutoRequest request) {
-        Produto produto = buscarEntidade(id);
+        Produto produto = buscarParaAtualizar(id);
         if (produto.getUnidadeMedida() != request.unidadeMedida()
                 && movimentacaoRepository.existsByProdutoId(id)) {
             throw new BusinessException(
@@ -111,12 +111,12 @@ public class ProdutoService {
      */
     @Transactional
     public void excluir(UUID id) {
-        buscarEntidade(id).setAtivo(false);
+        buscarParaAtualizar(id).setAtivo(false);
     }
 
     @Transactional
     public ProdutoResponse reativar(UUID id) {
-        Produto produto = buscarEntidade(id);
+        Produto produto = buscarParaAtualizar(id);
         produto.setAtivo(true);
         return ProdutoResponse.from(produto);
     }
@@ -124,6 +124,12 @@ public class ProdutoService {
     @Transactional(readOnly = true)
     public Produto buscarEntidade(UUID id) {
         return produtoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Produto nao encontrado."));
+    }
+
+    // Usa o mesmo bloqueio das movimentacoes para revalidar unidade e estado apos o commit anterior.
+    private Produto buscarParaAtualizar(UUID id) {
+        return produtoRepository.findByIdForUpdate(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Produto nao encontrado."));
     }
 

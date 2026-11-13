@@ -3,6 +3,9 @@ package br.com.intellistock.intellistock_backend.repository;
 import br.com.intellistock.intellistock_backend.entity.Movimentacao;
 import br.com.intellistock.intellistock_backend.entity.TipoMovimentacao;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -15,6 +18,11 @@ import java.util.UUID;
 public interface MovimentacaoRepository extends JpaRepository<Movimentacao, UUID>, JpaSpecificationExecutor<Movimentacao> {
 
     boolean existsByProdutoId(UUID produtoId);
+
+    // A resposta inclui produto e usuario; carregue-os na consulta para evitar consultas extras por item.
+    @Override
+    @EntityGraph(attributePaths = {"produto", "usuario"})
+    Page<Movimentacao> findAll(Specification<Movimentacao> spec, Pageable pageable);
 
     @Query("""
             select new br.com.intellistock.intellistock_backend.repository.TotalPorProduto(

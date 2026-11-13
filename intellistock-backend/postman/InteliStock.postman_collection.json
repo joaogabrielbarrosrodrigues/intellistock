@@ -10,6 +10,7 @@
   },
   "variable": [
     { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "codigoCadastro", "value": "" },
     { "key": "token", "value": "" },
     { "key": "fornecedorId", "value": "" },
     { "key": "produtoId", "value": "" },
@@ -26,7 +27,7 @@
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "url": "{{baseUrl}}/api/auth/register",
-            "body": { "mode": "raw", "raw": "{\n  \"nome\": \"Joao Gabriel\",\n  \"email\": \"joao@example.com\",\n  \"senha\": \"senha1234\"\n}" }
+            "body": { "mode": "raw", "raw": "{\n  \"nome\": \"Joao Gabriel\",\n  \"email\": \"joao@example.com\",\n  \"senha\": \"senha1234\",\n  \"codigoAcesso\": \"{{codigoCadastro}}\"\n}" }
           }
         },
         {

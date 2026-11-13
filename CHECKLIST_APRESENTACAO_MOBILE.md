@@ -5,7 +5,7 @@ Marque cada item separadamente na **web**, no **iPhone** e no **Android**. Use u
 ## Preparação
 
 - [ ] A API e o PostgreSQL iniciam sem erro. O computador e os dois celulares estão na mesma rede Wi-Fi.
-- [ ] O `rodar-projeto.ps1` mostra `API para o celular: http://IP_DO_COMPUTADOR:8080`, com o IP correto. Pelo navegador do celular, um endpoint da API responde; uma resposta `401` em rota protegida já comprova acesso à rede.
+- [ ] `mobile/.env` contém `EXPO_PUBLIC_API_URL=http://IP_DO_COMPUTADOR:8080`, usando o IPv4 da rede atual. Pelo navegador do celular, um endpoint da API responde; uma resposta `401` em rota protegida já comprova acesso à rede.
 - [ ] O Expo Go compatível com SDK 58 (ou um build de desenvolvimento) abre o QR code. Confira a versão instalada no aparelho. O app abre sem tela vermelha ou erro de versão.
 - [ ] Na web, pressione `w` no terminal do Expo e abra `http://localhost:8081`. Confira login, atualização da página e saída. Se usar outra origem, inclua-a em `CORS_ALLOWED_ORIGINS` antes de iniciar a API.
 - [ ] O usuário e os dados de teste estão prontos. Anote previamente os totais esperados de produtos, alertas de estoque e contas.

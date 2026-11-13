@@ -16,11 +16,15 @@ public record RegisterRequest(
 
         @NotBlank(message = "Senha e obrigatoria.")
         @Size(min = 8, max = 72, message = "Senha deve ter entre 8 e 72 caracteres.")
-        String senha
+        String senha,
+
+        @NotBlank(message = "Codigo de acesso e obrigatorio.")
+        @Size(max = 128, message = "Codigo de acesso deve ter no maximo 128 caracteres.")
+        String codigoAcesso
 ) {
 
     @Override
     public String toString() {
-        return "RegisterRequest[nome=" + nome + ", email=" + email + ", senha=<redigida>]";
+        return "RegisterRequest[nome=" + nome + ", email=" + email + ", senha=<redigida>, codigoAcesso=<redigido>]";
     }
 }

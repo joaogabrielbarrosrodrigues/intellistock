@@ -13,6 +13,7 @@ import { ContasScreen } from "../screens/ContasScreen";
 import { DashboardScreen } from "../screens/DashboardScreen";
 import { EstoqueScreen } from "../screens/EstoqueScreen";
 import { LoginScreen } from "../screens/LoginScreen";
+import { RegisterScreen } from "../screens/RegisterScreen";
 import { MaisScreen } from "../screens/MaisScreen";
 import { ProdutosScreen } from "../screens/ProdutosScreen";
 import { useEstoqueQuery } from "../hooks/useIntellistockQueries";
@@ -20,7 +21,8 @@ import { DueReminderProvider } from "../notifications/DueReminderProvider";
 import { formatQuantity } from "../utils";
 
 export type AuthStackParamList = {
-  Login: undefined;
+  Login: { email?: string; cadastroConcluido?: boolean } | undefined;
+  Register: undefined;
 };
 
 export type AppTabParamList = {
@@ -119,6 +121,7 @@ export function RootNavigator() {
     return (
       <AuthStack.Navigator screenOptions={{ headerShown: false }}>
         <AuthStack.Screen name="Login" component={LoginScreen} />
+        <AuthStack.Screen name="Register" component={RegisterScreen} />
       </AuthStack.Navigator>
     );
   }

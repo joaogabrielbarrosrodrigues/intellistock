@@ -13,7 +13,7 @@ cd intellistock-backend
 ./mvnw test
 
 # aplicação (Linux/macOS)
-DB_USERNAME=postgres DB_PASSWORD=sua_senha JWT_SECRET=um-segredo-com-pelo-menos-32-caracteres SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run
+DB_USERNAME=postgres DB_PASSWORD=sua_senha JWT_SECRET=um-segredo-com-pelo-menos-32-caracteres CODIGO_CADASTRO=escolha-um-codigo-privado SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run
 ```
 
 No PowerShell do Windows:
@@ -22,6 +22,7 @@ No PowerShell do Windows:
 $env:DB_USERNAME="postgres"
 $env:DB_PASSWORD="sua_senha"
 $env:JWT_SECRET="um-segredo-com-pelo-menos-32-caracteres"
+$env:CODIGO_CADASTRO="escolha-um-codigo-privado"
 $env:SPRING_PROFILES_ACTIVE="dev"
 .\mvnw.cmd spring-boot:run
 ```
@@ -38,6 +39,7 @@ O perfil `dev` permite criar/atualizar o schema local (`ddl-auto=update`). Sem e
 | `DB_USERNAME`            | —                                              | Usuário do banco (obrigatório)                |
 | `DB_PASSWORD`            | —                                              | Senha do banco (obrigatória)                  |
 | `JWT_SECRET`             | —                                              | Segredo obrigatório, com no mínimo 32 bytes  |
+| `CODIGO_CADASTRO`        | —                                              | Código privado obrigatório para criar conta |
 | `JWT_EXPIRATION_MINUTES` | `120`                                          | Validade do token                             |
 | `CORS_ALLOWED_ORIGINS`   | `http://localhost:8081,http://localhost:19006`   | Origens web liberadas, separadas por vírgula |
 | `SHOW_SQL`               | `false`                                        | Exibe o SQL gerado no log                     |
@@ -75,11 +77,15 @@ Authorization: Bearer <token>
 
 ```json
 // POST /api/auth/register
-{ "nome": "Joao Gabriel", "email": "joao@example.com", "senha": "senha1234" }
+{ "nome": "Joao Gabriel", "email": "joao@example.com", "senha": "senha1234", "codigoAcesso": "escolha-um-codigo-privado" }
 
 // POST /api/auth/login  →  { "token": "...", "tokenType": "Bearer", "user": { ... } }
 { "email": "joao@example.com", "senha": "senha1234" }
 ```
+
+O cadastro exige o valor exato configurado em `CODIGO_CADASTRO`. O código fica na
+configuração da API, não no aplicativo. Para trocá-lo, atualize a configuração e
+reinicie a API. A troca não desativa contas existentes.
 
 ## Fornecedores
 
@@ -290,7 +296,7 @@ Todos os erros, inclusive 401/403 do Spring Security, seguem o mesmo formato:
 .\mvnw.cmd test
 ```
 
-A suíte atual possui 48 testes e usa H2 em memória no modo de compatibilidade PostgreSQL. Ela não
+A suíte usa H2 em memória no modo de compatibilidade PostgreSQL. Ela não
 substitui uma validação separada contra PostgreSQL real.
 
 Para testar a API por HTTP com uma base temporária e isolada do PostgreSQL local:
@@ -303,7 +309,8 @@ A base H2 desse comando é criada em memória e desaparece ao encerrar o process
 
 ## Testes manuais
 
-Importe [`postman/InteliStock.postman_collection.json`](postman/InteliStock.postman_collection.json) no Postman.
+Importe [`postman/InteliStock.postman_collection.json`](postman/InteliStock.postman_collection.json) no Postman
+e preencha a variável local `codigoCadastro` com o código configurado na API.
 A requisição de login salva o token automaticamente na variável `token`, e as de cadastro salvam os IDs criados.
 
 ## Decisões adotadas

@@ -14,7 +14,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class AuthIntegrationTest extends IntegrationTest {
 
     private static final String REGISTRO = """
-            {"nome": "Joao Gabriel", "email": "Joao@Example.com", "senha": "senha1234"}
+            {"nome": "Joao Gabriel", "email": "Joao@Example.com", "senha": "senha1234", "codigoAcesso": "codigo-de-teste"}
             """;
 
     @Test
@@ -23,6 +23,29 @@ class AuthIntegrationTest extends IntegrationTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.email").value("joao@example.com"))
                 .andExpect(jsonPath("$.senha").doesNotExist());
+    }
+
+    @Test
+    void cadastroSemCodigoRetorna400() throws Exception {
+        mockMvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON).content("""
+                        {"nome": "Ana", "email": "ana@example.com", "senha": "senha1234"}
+                        """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fields.codigoAcesso").exists());
+    }
+
+    @Test
+    void cadastroComCodigoInvalidoNaoCriaUsuario() throws Exception {
+        mockMvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON).content("""
+                        {"nome": "Ana", "email": "ana@example.com", "senha": "senha1234", "codigoAcesso": "errado"}
+                        """))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value("Codigo de acesso invalido."));
+
+        mockMvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON).content("""
+                        {"email": "ana@example.com", "senha": "senha1234"}
+                        """))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -38,7 +61,7 @@ class AuthIntegrationTest extends IntegrationTest {
     @Test
     void cadastroComSenhaCurtaRetorna400ComCampo() throws Exception {
         mockMvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON).content("""
-                        {"nome": "Ana", "email": "ana@example.com", "senha": "123"}
+                        {"nome": "Ana", "email": "ana@example.com", "senha": "123", "codigoAcesso": "codigo-de-teste"}
                         """))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.fields.senha").exists());
@@ -48,7 +71,7 @@ class AuthIntegrationTest extends IntegrationTest {
     void senhaMultibyteAcimaDoLimiteNaoCausaErroInterno() throws Exception {
         String senha = "\u00e9".repeat(40);
         mockMvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON).content("""
-                        {"nome": "Ana", "email": "ana@example.com", "senha": "%s"}
+                        {"nome": "Ana", "email": "ana@example.com", "senha": "%s", "codigoAcesso": "codigo-de-teste"}
                         """.formatted(senha)))
                 .andExpect(status().isUnprocessableContent())
                 .andExpect(jsonPath("$.message").value("Senha muito longa. Reduza a quantidade de caracteres."));

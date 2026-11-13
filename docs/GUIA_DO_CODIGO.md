@@ -18,7 +18,8 @@ flowchart LR
 
 O aplicativo roda com React Native e Expo em Android, iOS e web. O mesmo código de tela
 chama uma API HTTP em Java. Só a API acessa o banco. As respostas são JSON e os tipos
-TypeScript descrevem os contratos usados pelas telas.
+TypeScript descrevem os contratos usados pelas telas. O diagrama mostra o caminho das
+consultas e mutações de estoque; login e cadastro chamam as funções da API diretamente.
 
 ## Por onde começar a leitura
 
@@ -28,6 +29,7 @@ TypeScript descrevem os contratos usados pelas telas.
 | Navegação | `mobile/src/navigation/RootNavigator.tsx` | Mostra login ou as cinco abas, conforme a sessão. |
 | Interface | `mobile/src/screens/` e `components/` | Exibe dados, coleta campos e apresenta carregamento, sucesso ou erro. |
 | Consultas | `mobile/src/hooks/useIntellistockQueries.ts` | Consulta/cacheia dados e invalida consultas afetadas após uma gravação. |
+| Atualização de dados | `mobile/src/hooks/queryInvalidation.ts` | Agrupa as consultas que devem ser atualizadas quando estoque, fornecedor ou conta mudam. |
 | HTTP | `mobile/src/api/client.ts` e `intellistock.ts` | Configura endereço/timeout/token e chama os endpoints. |
 | Sessão | `AuthContext.tsx` e `storage/sessionStorage.ts` | Faz login/logout e restaura a sessão persistida. |
 | Lembretes | `mobile/src/notifications/` | Planeja e agenda notificações locais de contas. |
@@ -39,10 +41,20 @@ o **service** decide o que é permitido e o **repository** consulta ou grava os 
 O Spring injeta essas dependências pelos construtores. O JPA/Hibernate transforma as
 operações com entidades em SQL.
 
+Para estudar uma operação antes da apresentação, leiam estes arquivos nesta ordem:
+
+1. [EstoqueScreen.tsx](../mobile/src/screens/EstoqueScreen.tsx): abre o formulário de movimentação.
+2. [MovimentacaoModal.tsx](../mobile/src/components/MovimentacaoModal.tsx): coleta e valida a quantidade.
+3. [useIntellistockQueries.ts](../mobile/src/hooks/useIntellistockQueries.ts): executa a mutação e atualiza consultas relacionadas.
+4. [intellistock.ts](../mobile/src/api/intellistock.ts): envia o pedido HTTP à API.
+5. [MovimentacaoController.java](../intellistock-backend/src/main/java/br/com/intellistock/intellistock_backend/controller/MovimentacaoController.java): recebe e valida o pedido.
+6. [MovimentacaoService.java](../intellistock-backend/src/main/java/br/com/intellistock/intellistock_backend/service/MovimentacaoService.java): confere e altera o saldo.
+7. [MovimentacaoRepository.java](../intellistock-backend/src/main/java/br/com/intellistock/intellistock_backend/repository/MovimentacaoRepository.java): oferece acesso aos registros de movimentação.
+
 ## Exemplo completo: registrar uma saída
 
 1. `EstoqueScreen` abre `MovimentacaoModal` com o produto selecionado.
-2. O modal valida quantidade, unidade e saldo mostrado. Uma trava impede dois envios simultâneos.
+2. O modal mostra a unidade e o saldo e valida a quantidade informada. Uma trava impede dois envios simultâneos.
 3. `useMovimentacaoMutation` chama `createMovimentacao`, que envia `POST /api/movimentacoes`.
 4. O filtro JWT autentica a requisição; `MovimentacaoController` valida o DTO.
 5. `MovimentacaoService` abre uma transação e bloqueia a linha do produto durante a alteração.
@@ -51,8 +63,8 @@ operações com entidades em SQL.
 8. A resposta contém o saldo confirmado. O React Query invalida estoque, produtos, histórico,
    dashboard e análises; as telas afetadas buscam os novos dados.
 
-A validação da tela ajuda o usuário, mas a API repete as verificações porque requisições
-podem chegar de outros clientes e o saldo pode mudar enquanto o formulário está aberto.
+A validação da tela ajuda o usuário; a API também valida os dados recebidos e é responsável
+por verificar o saldo, que pode mudar enquanto o formulário está aberto.
 O bloqueio protege lançamentos concorrentes. Ainda não existe chave de idempotência:
 se uma conexão cair depois da gravação, confira o histórico antes de reenviar.
 
@@ -67,9 +79,13 @@ Se a persistência estiver indisponível, o login funciona enquanto o aplicativo
 aberto. Uma resposta 401 da sessão atual encerra o acesso; uma resposta atrasada de um
 login antigo não encerra uma sessão nova.
 
+`POST /api/auth/register` confere o código configurado em `CODIGO_CADASTRO` antes de
+criar a conta; a interface oferece cadastro e login. O código é compartilhado apenas
+com quem pode se cadastrar e não concede permissões diferentes.
+
 **Modelo atual:** os usuários autenticados compartilham o mesmo estoque e as mesmas contas.
-Não há separação por empresa ou permissões por cargo. O cadastro de usuário existe na API;
-a interface oferece login. Isso deve ficar claro ao apresentar o projeto.
+Não há separação por empresa ou permissões por cargo. Cada instalação representa uma
+empresa; instalações distintas precisam de APIs e bancos independentes.
 
 ## Estoque e histórico
 
@@ -129,6 +145,36 @@ vencimento às 9h do aparelho. A fila tem no máximo 60 avisos. Contas pagas/can
 deixam de ter avisos futuros na próxima sincronização. Não existe servidor enviando
 push: alterações feitas em outro aparelho só chegam quando este aplicativo atualiza os dados.
 Na web, o fluxo de notificações locais não está disponível.
+Na tela Contas, **Testar avisos** consulta todas as contas e programa em cinco segundos
+um resumo de vencidas, vencendo hoje e a vencer. Ele exclui contas pagas e canceladas;
+esse teste não altera os horários dos lembretes automáticos.
+
+## Perguntas para a apresentação
+
+**Por que existe um backend?** O aplicativo apresenta as telas e envia pedidos; a API
+centraliza validações, autenticação e acesso ao banco. Isso permite aplicar as mesmas
+regras mesmo quando mais de um aparelho usa o sistema.
+
+**Qual é a diferença entre controller, service e repository?** O controller recebe e
+responde ao pedido HTTP; o service aplica as regras da operação; o repository busca e
+grava entidades no banco. Um DTO define os dados que entram ou saem da API.
+
+**Como a senha é protegida?** O cadastro gera um hash BCrypt para comparação posterior.
+No login, a API verifica a senha e devolve um JWT; o aplicativo envia esse token nas
+requisições protegidas. O código de cadastro controla a criação de contas, mas não é a
+senha de cada usuário nem cria níveis diferentes de permissão.
+
+**Como o sistema evita estoque negativo?** Ao registrar uma saída, o backend bloqueia a
+linha do produto, confere o saldo e grava a movimentação junto com o novo saldo na mesma
+transação. Assim, duas saídas simultâneas não devem usar o mesmo saldo sem controle.
+
+**A sugestão de reposição usa inteligência artificial?** Não. Ela usa fórmulas e o
+histórico de saídas. Como o histórico pode ser curto ou não representar o futuro, a
+sugestão deve ser conferida antes de uma compra.
+
+**O que os testes comprovam?** Os testes automatizados verificam regras e fluxos em
+ambientes controlados. Eles não substituem o teste no celular, a conexão da rede nem
+uma avaliação de produção com PostgreSQL e múltiplos usuários.
 
 ## Como demonstrar que funciona
 

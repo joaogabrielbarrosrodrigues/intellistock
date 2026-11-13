@@ -1,4 +1,5 @@
-import { useRef, useState } from "react";
+import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { useEffect, useRef, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { getApiErrorMessage } from "../api/errors";
@@ -6,22 +7,35 @@ import { AppText as Text } from "../components/AppText";
 import { BrandLogo } from "../components/BrandLogo";
 import { Button, TextField } from "../components/ui";
 import { useAuth } from "../contexts/AuthContext";
+import type { AuthStackParamList } from "../navigation/RootNavigator";
 import { colors } from "../theme/colors";
 import { radius, shadow, spacing } from "../theme/tokens";
 
-export function LoginScreen() {
+export function LoginScreen({ navigation, route }: NativeStackScreenProps<AuthStackParamList, "Login">) {
   const { signIn } = useAuth();
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
   const submitting = useRef(false);
+
+  useEffect(() => {
+    if (route.params?.cadastroConcluido) {
+      setEmail(route.params.email ?? "");
+      setSenha("");
+      setError(null);
+      setSuccess(true);
+      navigation.setParams({ cadastroConcluido: false });
+    }
+  }, [navigation, route.params]);
 
   async function handleLogin() {
     if (submitting.current) return;
     if (!email.trim() || !senha) return setError("Informe seu e-mail e sua senha.");
     submitting.current = true;
     setError(null);
+    setSuccess(false);
     setLoading(true);
     try {
       await signIn(email.trim(), senha);
@@ -74,7 +88,9 @@ export function LoginScreen() {
                   {error}
                 </Text>
               ) : null}
+              {success ? <Text accessibilityRole="alert" style={styles.success}>Conta criada! Entre com seu e-mail e senha.</Text> : null}
               <Button loading={loading} onPress={() => void handleLogin()} title="Entrar" />
+              <Button disabled={loading} onPress={() => navigation.navigate("Register")} title="Criar conta" variant="secondary" />
             </View>
           </View>
         </ScrollView>
@@ -126,5 +142,6 @@ const styles = StyleSheet.create({
     color: colors.danger,
     padding: spacing.sm,
     textAlign: "center"
-  }
+  },
+  success: { backgroundColor: colors.successLight, borderRadius: radius.sm, color: colors.success, padding: spacing.sm, textAlign: "center" }
 });

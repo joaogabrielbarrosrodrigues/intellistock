@@ -41,7 +41,7 @@ public abstract class IntegrationTest {
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"nome": "Usuario Teste", "email": "%s", "senha": "senha1234"}
+                                {"nome": "Usuario Teste", "email": "%s", "senha": "senha1234", "codigoAcesso": "codigo-de-teste"}
                                 """.formatted(email)))
                 .andExpect(status().isCreated());
 

@@ -13,11 +13,15 @@ import type {
   MovimentacaoPayload,
   Produto,
   ProdutoPayload,
-  Reposicao
+  Reposicao,
+  User
 } from "./types";
 
 export async function login(email: string, senha: string, signal?: AbortSignal) {
   return (await api.post<AuthResponse>("/api/auth/login", { email, senha }, { signal })).data;
+}
+export async function register(payload: { nome: string; email: string; senha: string; codigoAcesso: string }) {
+  return (await api.post<User>("/api/auth/register", payload)).data;
 }
 export async function getDashboard(signal?: AbortSignal) {
   const { data } = await api.get<DashboardResponse>("/api/dashboard", { signal });

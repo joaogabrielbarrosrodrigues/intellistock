@@ -33,8 +33,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String authorization = request.getHeader("Authorization");
 
         if (authorization != null && authorization.startsWith("Bearer ")) {
-            try {
-                UUID userId = jwtService.validateAndGetUserId(authorization.substring(7));
+            UUID userId = validarToken(authorization.substring(7));
+            if (userId != null) {
                 User user = userRepository.findById(userId).orElse(null);
 
                 if (user != null && SecurityContextHolder.getContext().getAuthentication() == null) {
@@ -45,13 +45,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     );
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
-            } catch (RuntimeException ignored) {
-                // Token mal formado, adulterado ou expirado: segue sem autenticacao e o
-                // entry point responde 401 se o endpoint exigir login.
-                SecurityContextHolder.clearContext();
             }
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private UUID validarToken(String token) {
+        try {
+            return jwtService.validateAndGetUserId(token);
+        } catch (IllegalArgumentException | IndexOutOfBoundsException ignored) {
+            // Token invalido: endpoints protegidos responderao 401.
+            SecurityContextHolder.clearContext();
+            return null;
+        }
     }
 }

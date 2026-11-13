@@ -14,6 +14,36 @@ export type DueReminderPlan = {
   accountId: string;
 };
 
+export function buildTestReminderBody(accounts: ContaPagar[], now = new Date()): string {
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const groups: { overdue: ContaPagar[]; today: ContaPagar[]; upcoming: ContaPagar[] } = {
+    overdue: [], today: [], upcoming: []
+  };
+
+  for (const account of accounts) {
+    if (account.status !== "PENDENTE" && account.status !== "VENCIDA") continue;
+    const due = parseLocalDate(account.dataVencimento);
+    if (!due) continue;
+    const dueTime = new Date(due.year, due.month - 1, due.day).getTime();
+    const group = dueTime < today ? groups.overdue : dueTime === today ? groups.today : groups.upcoming;
+    group.push(account);
+  }
+
+  const describe = (accountsInGroup: ContaPagar[], singular: string, plural: string) => {
+    if (!accountsInGroup.length) return null;
+    const sorted = [...accountsInGroup].sort((a, b) => a.dataVencimento.localeCompare(b.dataVencimento));
+    const names = sorted.slice(0, 2).map((account) => account.descricao.slice(0, 40)).join(", ");
+    const remaining = sorted.length - 2;
+    return `${sorted.length} ${sorted.length === 1 ? singular : plural}: ${names}${remaining > 0 ? ` e mais ${remaining}` : ""}`;
+  };
+
+  return [
+    describe(groups.overdue, "vencida", "vencidas"),
+    describe(groups.today, "vence hoje", "vencem hoje"),
+    describe(groups.upcoming, "a vencer", "a vencer")
+  ].filter(Boolean).join(". ") || "Nenhuma conta em aberto para avisar.";
+}
+
 export function buildDueReminderPlan(accounts: ContaPagar[], userId: string, now = new Date()): DueReminderPlan[] {
   const plans: DueReminderPlan[] = [];
 

@@ -6,7 +6,8 @@ As dependências nativas seguem as versões indicadas pelo Expo.
 ## Executar
 
 Recomendado: Node.js 24 LTS. A API precisa estar em execução.
-Na raiz, `.\rodar-projeto.ps1` inicia API e Expo e configura o IP para o celular.
+Na raiz, `.\rodar-projeto.ps1` inicia API e Expo. Configure o IP do computador
+em `mobile/.env` ou na variável de ambiente antes de iniciar o Expo.
 Para iniciar somente o aplicativo:
 
 ```powershell
@@ -55,6 +56,10 @@ Em Android/iOS, após o login o app consulta contas e solicita permissão para a
 locais. Agenda os próximos 60 avisos, às 9h locais, em três momentos: 7 dias antes,
 3 dias antes e no vencimento. A aba Contas mostra a permissão e oferece **Testar avisos**,
 que agenda uma notificação para cinco segundos depois.
+O aviso de teste consulta todas as contas e resume as vencidas, as que vencem hoje e as
+que ainda vão vencer, independentemente do filtro selecionado na tela. Contas pagas e
+canceladas não entram no resumo. Quando há muitas contas, são exibidos até dois nomes
+por grupo e a quantidade das demais.
 
 Contas pagas, canceladas ou excluídas deixam de ter avisos futuros na sincronização.
 Alterações feitas em outro aparelho dependem de nova consulta neste aparelho.

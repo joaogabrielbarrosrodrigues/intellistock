@@ -1,6 +1,6 @@
 import { Platform } from "react-native";
 import type { ContaPagar } from "../api/types";
-import { buildDueReminderPlan, DUE_REMINDER_SOURCE } from "./dueReminderPlan";
+import { buildDueReminderPlan, buildTestReminderBody, DUE_REMINDER_SOURCE } from "./dueReminderPlan";
 
 const CHANNEL_ID = "contas-vencimento";
 let pendingOperation: Promise<unknown> = Promise.resolve();
@@ -99,13 +99,13 @@ export function cancelDueReminders() {
   });
 }
 
-export async function sendTestDueReminder() {
+export async function sendTestDueReminder(accounts: ContaPagar[]) {
   if (Platform.OS === "web") return;
   const Notifications = await getNotifications();
   await Notifications.scheduleNotificationAsync({
     content: {
       title: "Aviso de teste",
-      body: "Os lembretes de contas estão funcionando neste aparelho.",
+      body: buildTestReminderBody(accounts),
       sound: "default"
     },
     trigger: {

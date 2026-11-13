@@ -29,17 +29,9 @@ import type {
   MovimentacaoPayload,
   ProdutoPayload
 } from "../api/types";
+import { affectedQueries, invalidateRelatedQueries, queryKeys } from "./queryInvalidation";
 
-export const queryKeys = {
-  dashboard: ["dashboard"] as const,
-  produtos: ["produtos"] as const,
-  estoque: ["estoque"] as const,
-  contas: ["contas"] as const,
-  fornecedores: ["fornecedores"] as const,
-  movimentacoes: ["movimentacoes"] as const,
-  consumo: ["consumo"] as const,
-  reposicoes: ["reposicoes"] as const
-};
+export { queryKeys } from "./queryInvalidation";
 const defaultQueryOptions = { staleTime: 30_000 };
 export function useDashboardQuery() {
   return useQuery({
@@ -101,18 +93,11 @@ export function useReposicoesQuery() {
 function useInvalidate() {
   const client = useQueryClient();
   return (keys: readonly (readonly unknown[])[]) =>
-    Promise.all(keys.map((queryKey) => client.invalidateQueries({ queryKey })));
+    invalidateRelatedQueries(client, keys);
 }
 export function useProdutoMutations() {
   const invalidate = useInvalidate();
-  const keys = [
-    queryKeys.produtos,
-    queryKeys.estoque,
-    queryKeys.dashboard,
-    queryKeys.movimentacoes,
-    queryKeys.reposicoes,
-    queryKeys.consumo
-  ] as const;
+  const keys = affectedQueries.estoque;
   return {
     create: useMutation({
       mutationFn: (payload: ProdutoPayload) => createProduto(payload),
@@ -130,25 +115,12 @@ export function useMovimentacaoMutation() {
   const invalidate = useInvalidate();
   return useMutation({
     mutationFn: (payload: MovimentacaoPayload) => createMovimentacao(payload),
-    onSuccess: () =>
-      invalidate([
-        queryKeys.produtos,
-        queryKeys.estoque,
-        queryKeys.dashboard,
-        queryKeys.movimentacoes,
-        queryKeys.reposicoes,
-        queryKeys.consumo
-      ])
+    onSuccess: () => invalidate(affectedQueries.estoque)
   });
 }
 export function useFornecedorMutations() {
   const invalidate = useInvalidate();
-  const keys = [
-    queryKeys.fornecedores,
-    queryKeys.produtos,
-    queryKeys.contas,
-    queryKeys.dashboard
-  ] as const;
+  const keys = affectedQueries.fornecedor;
   return {
     create: useMutation({
       mutationFn: (payload: FornecedorPayload) => createFornecedor(payload),
@@ -164,7 +136,7 @@ export function useFornecedorMutations() {
 }
 export function useContaMutations() {
   const invalidate = useInvalidate();
-  const keys = [queryKeys.contas, queryKeys.dashboard] as const;
+  const keys = affectedQueries.conta;
   return {
     create: useMutation({
       mutationFn: (payload: ContaPayload) => createConta(payload),

@@ -13,8 +13,19 @@ Pré-requisitos: **Java 21**, **Node.js 24 LTS** com npm e **PostgreSQL** inicia
 O Maven é executado pelo wrapper incluído no repositório.
 
 1. Crie um banco PostgreSQL chamado `intellistock` (ou ajuste `DB_URL`).
-2. Copie `.env.example.ps1` para `.env.local.ps1` e informe usuário, senha do banco
-   e um segredo JWT de pelo menos 32 bytes. O arquivo local é ignorado pelo Git.
+2. Copie `.env.example.ps1` para `.env.local.ps1` e informe usuário, senha do banco,
+   um segredo JWT de pelo menos 32 bytes e o código de cadastro escolhido por vocês.
+   Se o arquivo local já existir, acrescente a linha abaixo sem apagar as outras configurações.
+   O arquivo local é ignorado pelo Git. Por exemplo:
+
+   ```powershell
+   $env:CODIGO_CADASTRO = 'escolha-um-codigo-privado'
+   ```
+
+   Compartilhe o código apenas com quem pode criar uma conta. Ele deve ser digitado
+   exatamente como configurado, incluindo letras maiúsculas e minúsculas. Para alterá-lo,
+   edite o arquivo e reinicie a API; contas já criadas continuam funcionando. A API não
+   inicia se o código não estiver definido, estiver em branco ou ultrapassar 128 caracteres.
 3. Na raiz do projeto, execute:
 
 ```powershell
@@ -29,14 +40,23 @@ A porta 8080 precisa estar disponível antes de iniciar.
 - **Web:** pressione `w` no terminal do Expo; o endereço padrão é `http://localhost:8081`.
 - **Celular:** conecte computador e aparelho à mesma rede Wi-Fi e leia o QR code em
   um Expo Go compatível com o SDK 58. Um build de desenvolvimento também pode ser usado.
-- **API:** `http://localhost:8080` no computador. O script detecta o IP local para o celular.
-  Se escolher a placa de rede errada, defina o endereço antes de iniciar:
+- **API:** `http://localhost:8080` no computador. Para usar no celular, coloque o IPv4
+  atual do computador no arquivo `mobile/.env` antes de iniciar o Expo:
+
+```ini
+EXPO_PUBLIC_API_URL=http://IP_DO_COMPUTADOR:8080
+```
+
+No Windows, use `ipconfig` para encontrar o IPv4 da rede conectada. Ao trocar de rede,
+confira o endereço, atualize o arquivo se necessário e reinicie o Expo. Outra opção é
+definir a variável no terminal antes de executar o script:
 
 ```powershell
 $env:EXPO_PUBLIC_API_URL = "http://IP_DO_COMPUTADOR:8080"
 .\rodar-projeto.ps1
 ```
 
+Uma variável já definida no terminal pode prevalecer sobre o arquivo `.env`.
 No celular, `localhost` aponta para o próprio aparelho. Se a API não responder,
 confira o IP e o acesso à porta 8080 na rede. Para acessar a versão web por outro
 endereço, inclua sua origem em `CORS_ALLOWED_ORIGINS` na configuração local.
@@ -61,20 +81,11 @@ npx expo start
 No front-end, pressione `w` para abrir a web ou leia o QR code no Expo Go.
 Para o celular, defina `EXPO_PUBLIC_API_URL` com o IP do computador antes de executar o Expo.
 
-## Dados de demonstração
+## Cadastro de usuários
 
-Com a API em execução, em outro PowerShell na raiz:
-
-```powershell
-.\popular-dados-teste.ps1
-```
-
-O script grava dados no banco configurado: um usuário, fornecedores, cinco produtos
-com unidades diferentes, saídas históricas/recentes e contas de exemplo. Use uma base de teste.
-O login criado é `teste@intellistock.local`, senha `Teste123!`.
-Reexecuções reaproveitam os cadastros e as movimentações dos meses já preenchidos;
-produtos arquivados são preservados. Os vencimentos existentes não são renovados
-automaticamente a cada execução.
+Na tela de login, selecione **Criar conta**, preencha seus dados e informe o código de
+cadastro configurado na API. Depois, entre com seu e-mail e sua senha. O código é
+compartilhado para liberar novos cadastros; a senha de cada usuário é individual.
 
 ## Organização e explicação do código
 
@@ -125,7 +136,9 @@ Veja os [resultados e limites desta revisão](docs/REVISAO_2026-11-06.md), o
 
 ## Escopo atual
 
-Todos os usuários autenticados compartilham a mesma base. Não há separação por empresa
-nem perfis de acesso. O cadastro de usuário está na API; o aplicativo oferece login.
+Todos os usuários autenticados compartilham a mesma base e têm as mesmas permissões.
+Cada instalação representa uma empresa; para separar empresas, use APIs e bancos
+independentes. O código de cadastro compartilhado não bloqueia contas já criadas e
+não substitui uma gestão de usuários.
 Movimentações não possuem chave de idempotência: após um timeout, consulte o histórico
 antes de reenviar. Os resultados atuais estão na documentação vinculada acima.

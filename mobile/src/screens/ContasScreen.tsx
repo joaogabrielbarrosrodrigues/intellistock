@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { Linking, Pressable, StyleSheet, View } from "react-native";
 import { getApiErrorMessage } from "../api/errors";
 import type { ContaPagar, StatusConta } from "../api/types";
+import { getContas } from "../api/intellistock";
 import { ContaFormModal } from "../components/ContaFormModal";
 import { AppText as Text } from "../components/AppText";
 import { EmptyState } from "../components/EmptyState";
@@ -31,6 +32,8 @@ export function ContasScreen() {
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const submitting = useRef(false);
+  const testingReminder = useRef(false);
+  const [testing, setTesting] = useState(false);
   const query = useContasQuery(filter === "TODAS" ? undefined : filter);
   const suppliers = useFornecedoresQuery();
   const mutations = useContaMutations();
@@ -38,11 +41,18 @@ export function ContasScreen() {
   const contas = query.data ?? [];
 
   async function testReminder() {
+    if (testingReminder.current) return;
+    testingReminder.current = true;
+    setTesting(true);
     try {
-      await sendTestDueReminder();
+      const allAccounts = await getContas();
+      await sendTestDueReminder(allAccounts);
       setFeedback({ message: "Aviso de teste programado para aparecer em alguns segundos.", tone: "success" });
-    } catch {
-      setFeedback({ message: "Não foi possível enviar o aviso de teste neste aparelho.", tone: "error" });
+    } catch (error) {
+      setFeedback({ message: getApiErrorMessage(error, "Não foi possível enviar o aviso de teste neste aparelho."), tone: "error" });
+    } finally {
+      testingReminder.current = false;
+      setTesting(false);
     }
   }
 
@@ -83,7 +93,7 @@ export function ContasScreen() {
       </Pressable>
 
       {reminderStatus === "enabled" ? (
-        <Card style={styles.reminderCard}><Text style={styles.reminderText}>Avisos ativados: 7 dias antes, 3 dias antes e no dia do vencimento, às 9h.</Text><Pressable accessibilityRole="button" onPress={() => void testReminder()}><Text style={styles.reminderAction}>Testar avisos</Text></Pressable></Card>
+        <Card style={styles.reminderCard}><Text style={styles.reminderText}>Avisos ativados: 7 dias antes, 3 dias antes e no dia do vencimento, às 9h.</Text><Pressable accessibilityRole="button" accessibilityState={{ disabled: testing }} disabled={testing} onPress={() => void testReminder()}><Text style={styles.reminderAction}>{testing ? "Preparando aviso..." : "Testar avisos"}</Text></Pressable></Card>
       ) : reminderStatus === "disabled" ? (
         <Card style={styles.reminderCard}><Text style={styles.reminderText}>Ative as notificações do app para receber lembretes de vencimento.</Text><Pressable accessibilityRole="button" onPress={() => void Linking.openSettings()}><Text style={styles.reminderAction}>Abrir configurações</Text></Pressable></Card>
       ) : reminderStatus === "error" ? (

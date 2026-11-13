@@ -32,6 +32,12 @@ public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
+    @ExceptionHandler(InvalidRegistrationCodeException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidRegistrationCode(InvalidRegistrationCodeException ex,
+                                                                       HttpServletRequest request) {
+        return build(HttpStatus.FORBIDDEN, "Codigo de acesso invalido.", request, null);
+    }
+
     @ExceptionHandler(ConflictException.class)
     public ResponseEntity<ErrorResponse> handleConflict(ConflictException ex, HttpServletRequest request) {
         return build(HttpStatus.CONFLICT, ex.getMessage(), request, null);

@@ -23,9 +23,11 @@ class SensitiveDtoTest {
     @Test
     void cadastroOmiteSenhaDoTextoEPreservaContratoJson() {
         String senha = "senha-secreta-do-cadastro";
-        RegisterRequest request = new RegisterRequest("Usuario", "usuario@example.com", senha);
+        String codigo = "codigo-secreto";
+        RegisterRequest request = new RegisterRequest("Usuario", "usuario@example.com", senha, codigo);
 
         assertFalse(request.toString().contains(senha));
+        assertFalse(request.toString().contains(codigo));
         assertEquals(request, mapper.readValue(mapper.writeValueAsString(request), RegisterRequest.class));
     }
 
