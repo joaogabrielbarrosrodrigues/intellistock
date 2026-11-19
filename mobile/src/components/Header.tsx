@@ -1,3 +1,7 @@
+/**
+ * Título: Cabeçalho das abas com botão Sair
+ * Explicação: Componente de cabeçalho das abas.
+ */
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
@@ -10,6 +14,12 @@ import { ConfirmationDialog } from "./ui";
 
 export type HeaderProps = { title: string; subtitle?: string };
 
+/**
+ * Título: Cabeçalho das abas com botão Sair (componente Header)
+ * Explicação: Mostra o símbolo do logotipo, o título e o subtítulo da tela. Botão de sair, que abre
+ *   uma confirmação e então chama signOut do AuthContext. Usado por ContasScreen, DashboardScreen,
+ *   EstoqueScreen, MaisScreen e ProdutosScreen.
+ */
 export function Header({ title, subtitle }: HeaderProps) {
   const { signOut } = useAuth();
   const [confirmingExit, setConfirmingExit] = useState(false);
@@ -21,9 +31,18 @@ export function Header({ title, subtitle }: HeaderProps) {
         <Text style={styles.title}>{title}</Text>
         {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
       </View>
+      {/*
+        Título: Botão Sair
+        Explicação: Chama setConfirmingExit(true), que só abre a janela de confirmação.
+      */}
       <Pressable accessibilityHint="Abre a confirmação para sair" accessibilityLabel="Sair" accessibilityRole="button" style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]} onPress={() => setConfirmingExit(true)}>
         <Ionicons name="log-out-outline" size={22} color={colors.primaryDark} />
       </Pressable>
+      {/*
+        Título: Confirmação de sair
+        Explicação: Confirmar chama signOut() do AuthContext, que tira o token do axios, apaga a sessão
+          salva e cancela os lembretes. O RootNavigator volta para o Login. Não chama o backend.
+      */}
       <ConfirmationDialog
         visible={confirmingExit}
         title="Sair da conta?"

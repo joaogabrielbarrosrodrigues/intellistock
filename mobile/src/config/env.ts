@@ -1,4 +1,8 @@
 /// <reference types="expo/types" />
+/**
+ * Título: Endereço do backend e tempo limite
+ * Explicação: Arquivo de configuração com o endereço do backend e o tempo limite das chamadas.
+ */
 
 const configuredApiUrl = process.env.EXPO_PUBLIC_API_URL?.trim();
 

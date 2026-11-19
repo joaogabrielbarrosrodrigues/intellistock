@@ -4,6 +4,10 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+/**
+ * Título: Dados recebidos pela API: Register
+ * Explicação: DTO de entrada com os dados do cadastro.
+ */
 public record RegisterRequest(
         @NotBlank(message = "Nome e obrigatorio.")
         @Size(max = 120, message = "Nome deve ter no maximo 120 caracteres.")
@@ -23,6 +27,10 @@ public record RegisterRequest(
         String codigoAcesso
 ) {
 
+    /**
+     * Título: Texto do objeto para logs
+     * Explicação: Monta o texto usado em logs escondendo dados sensíveis (senha, código ou token).
+     */
     @Override
     public String toString() {
         return "RegisterRequest[nome=" + nome + ", email=" + email + ", senha=<redigida>, codigoAcesso=<redigido>]";

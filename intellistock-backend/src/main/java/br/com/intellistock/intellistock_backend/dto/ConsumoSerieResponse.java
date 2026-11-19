@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.UUID;
 
 /**
+ * Título: Dados devolvidos pela API: ConsumoSerie
+ * Explicação: DTO de saída de uma série de consumo para gráficos.
+ *
  * Serie temporal de consumo, pronta para graficos.
  *
  * @param produtoId null quando a serie consolida produtos de uma mesma unidade de medida

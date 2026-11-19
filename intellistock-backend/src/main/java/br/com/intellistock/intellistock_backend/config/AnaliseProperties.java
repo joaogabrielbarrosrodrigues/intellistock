@@ -7,6 +7,11 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
 import org.springframework.validation.annotation.Validated;
 
 /**
+ * Título: Parâmetros padrão das análises de consumo e reposição
+ * Explicação: Classe de configuração (um record) que guarda os números usados nas análises de consumo e na
+ *   sugestão de compra. Existe para esses números ficarem no application.properties em vez de espalhados
+ *   pelo código.
+ *
  * Parametros padrao das analises de consumo e da sugestao de reposicao.
  * Janela, cobertura, entrega e seguranca podem ser sobrescritos por query params.
  *

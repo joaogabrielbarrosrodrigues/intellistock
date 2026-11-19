@@ -1,3 +1,7 @@
+/**
+ * Título: Aviso de lista vazia
+ * Explicação: Componente de lista vazia.
+ */
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { StyleSheet, View } from "react-native";
 import { colors } from "../theme/colors";
@@ -6,6 +10,11 @@ import { AppText as Text } from "./AppText";
 
 export type EmptyStateProps = { message: string; title?: string };
 
+/**
+ * Título: Aviso de lista vazia (componente EmptyState)
+ * Explicação: Mostra um ícone, um título (padrão "Nada por aqui") e uma mensagem explicando o que
+ *   fazer. Usado por AnalisesScreen, ContasScreen, EstoqueScreen, FornecedoresScreen e ProdutosScreen.
+ */
 export function EmptyState({ message, title = "Nada por aqui" }: EmptyStateProps) {
   return (
     <View style={styles.container}>

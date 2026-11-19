@@ -1,3 +1,7 @@
+/**
+ * Título: Tela de cadastro
+ * Explicação: Tela de criação de conta.
+ */
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useRef, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from "react-native";
@@ -11,6 +15,12 @@ import type { AuthStackParamList } from "../navigation/RootNavigator";
 import { colors } from "../theme/colors";
 import { radius, shadow, spacing } from "../theme/tokens";
 
+/**
+ * Título: Tela de cadastro (componente RegisterScreen)
+ * Explicação: Campos de nome, e-mail, senha, confirmação e código de acesso. handleRegister(): confere
+ *   se tudo foi preenchido, se a senha tem pelo menos 8 caracteres e se as duas senhas são iguais; envia
+ *   o cadastro e, se der certo, volta ao login com o e-mail preenchido. Usado por RootNavigator.
+ */
 export function RegisterScreen({ navigation }: NativeStackScreenProps<AuthStackParamList, "Register">) {
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
@@ -21,6 +31,12 @@ export function RegisterScreen({ navigation }: NativeStackScreenProps<AuthStackP
   const [error, setError] = useState<string | null>(null);
   const submitting = useRef(false);
 
+  /**
+   * Título: Valida e envia o cadastro
+   * Explicação: Confere campos vazios, senha com pelo menos 8 caracteres e confirmação igual; então
+   *   chama register() → POST /api/auth/register (AuthController.register). Com sucesso volta ao Login
+   *   (popTo) com o e-mail preenchido.
+   */
   async function handleRegister() {
     if (submitting.current) return;
     if (!nome.trim() || !email.trim() || !senha || !confirmacao || !codigoAcesso.trim()) {
@@ -59,13 +75,33 @@ export function RegisterScreen({ navigation }: NativeStackScreenProps<AuthStackP
             <View style={styles.form}>
               <Text style={styles.title}>Criar conta</Text>
               <Text style={styles.description}>Informe seus dados e o código de acesso fornecido pela empresa.</Text>
+              {/*
+                Título: Campos do cadastro
+                Explicação: Nome, e-mail, senha, confirmação e código de acesso; cada campo guarda o texto no seu
+                  estado. O código de acesso é conferido pelo backend (variável CODIGO_CADASTRO).
+              */}
               <TextField label="Nome" value={nome} onChangeText={setNome} editable={!loading} autoCapitalize="words" maxLength={120} returnKeyType="next" />
               <TextField label="E-mail" value={email} onChangeText={setEmail} editable={!loading} autoCapitalize="none" autoCorrect={false} keyboardType="email-address" maxLength={180} returnKeyType="next" />
               <TextField label="Senha" value={senha} onChangeText={setSenha} editable={!loading} secureTextEntry placeholder="Pelo menos 8 caracteres" returnKeyType="next" />
               <TextField label="Confirmar senha" value={confirmacao} onChangeText={setConfirmacao} editable={!loading} secureTextEntry returnKeyType="next" />
               <TextField label="Código de acesso" value={codigoAcesso} onChangeText={setCodigoAcesso} editable={!loading} secureTextEntry autoCapitalize="none" autoCorrect={false} onSubmitEditing={() => void handleRegister()} returnKeyType="go" />
+              {/*
+                Título: Mensagem de erro
+                Explicação: Aparece quando a validação da tela ou o backend recusam o envio; o texto vem de
+                  getApiErrorMessage().
+              */}
               {error ? <Text accessibilityRole="alert" style={styles.error}>{error}</Text> : null}
+              {/*
+                Título: Botão Criar conta
+                Explicação: Chama handleRegister(), que confere se tudo foi preenchido, se a senha tem 8 caracteres
+                  e se as senhas batem, e então chama register() → POST /api/auth/register (AuthController.register).
+                  Com sucesso, volta ao Login com o e-mail preenchido.
+              */}
               <Button title="Criar conta" loading={loading} onPress={() => void handleRegister()} />
+              {/*
+                Título: Botão Voltar para o login
+                Explicação: Chama navigation.goBack() e volta à tela de Login sem enviar nada.
+              */}
               <Button title="Voltar para o login" variant="secondary" disabled={loading} onPress={() => navigation.goBack()} />
             </View>
           </View>

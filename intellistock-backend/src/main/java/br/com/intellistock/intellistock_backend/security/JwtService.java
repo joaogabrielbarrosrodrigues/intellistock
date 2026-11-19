@@ -12,12 +12,23 @@ import java.time.Instant;
 import java.util.Base64;
 import java.util.UUID;
 
+/**
+ * Título: Geração e validação do token de login (JWT)
+ * Explicação: Serviço que cria e valida o token JWT, o "crachá digital" que o app recebe no login e envia
+ *   em todos os pedidos seguintes. O token é um texto em três partes (cabeçalho.conteúdo.assinatura)
+ *   assinado com o segredo JWT_SECRET.
+ */
 @Service
 public class JwtService {
 
     private final String secret;
     private final long expirationMinutes;
 
+    /**
+     * Título: Construtor
+     * Explicação: O Spring chama ao criar o objeto e entrega pronto o que ele precisa: secret (String) e
+     *   expirationMinutes (long).
+     */
     public JwtService(@Value("${app.jwt.secret}") String secret,
                       @Value("${app.jwt.expiration-minutes}") long expirationMinutes) {
         if (secret == null || secret.getBytes(StandardCharsets.UTF_8).length < 32) {
@@ -30,6 +41,12 @@ public class JwtService {
         this.expirationMinutes = expirationMinutes;
     }
 
+    /**
+     * Título: Monta o token
+     * Explicação: Recebe user (User). Monta o token com o id do usuário (sub), o e-mail, a data de criação
+     *   (iat) e a de expiração (exp, agora + 120 minutos), e assina com HMAC-SHA256. Devolve String. Chamado por
+     *   AuthService.
+     */
     public String generateToken(User user) {
         Instant now = Instant.now();
         String header = "{\"alg\":\"HS256\",\"typ\":\"JWT\"}";
@@ -47,6 +64,12 @@ public class JwtService {
         return unsignedToken + "." + sign(unsignedToken);
     }
 
+    /**
+     * Título: Confere um token recebido e devolve o id do usuário
+     * Explicação: Recebe token (String). Confere se o token tem 3 partes, recalcula a assinatura e compara (se
+     *   não bater, foi adulterado), confere se não venceu e devolve o id do usuário. Devolve UUID. Chamado por
+     *   JwtAuthenticationFilter.
+     */
     public UUID validateAndGetUserId(String token) {
         String[] parts = token.split("\\.", -1);
         if (parts.length != 3) {
@@ -68,6 +91,10 @@ public class JwtService {
         return UUID.fromString(extractJsonValue(payload, "sub"));
     }
 
+    /**
+     * Título: Calcula a assinatura HMAC-SHA256 do texto usando o segredo
+     * Explicação: Recebe value (String). Devolve String.
+     */
     private String sign(String value) {
         try {
             Mac mac = Mac.getInstance("HmacSHA256");
@@ -78,10 +105,18 @@ public class JwtService {
         }
     }
 
+    /**
+     * Título: Converte bytes em texto Base64 próprio para URL (o formato usado em JWT)
+     * Explicação: Recebe value (byte[]). Devolve String.
+     */
     private String base64Url(byte[] value) {
         return Base64.getUrlEncoder().withoutPadding().encodeToString(value);
     }
 
+    /**
+     * Título: Lê o valor de um campo do JSON do token sem biblioteca de JSON
+     * Explicação: Recebe json (String) e key (String). Devolve String.
+     */
     private String extractJsonValue(String json, String key) {
         String marker = "\"" + key + "\":";
         int start = json.indexOf(marker);
@@ -100,6 +135,10 @@ public class JwtService {
         return json.substring(start, end);
     }
 
+    /**
+     * Título: Protege aspas e barras do e-mail antes de colocá-lo no JSON do token
+     * Explicação: Recebe value (String). Devolve String.
+     */
     private String escape(String value) {
         return value.replace("\\", "\\\\").replace("\"", "\\\"");
     }

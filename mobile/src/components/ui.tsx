@@ -1,3 +1,7 @@
+/**
+ * Título: Peças visuais básicas (botão, campo, cartão, janelas)
+ * Explicação: Biblioteca de componentes básicos de interface usados em todo o app.
+ */
 import type { ReactNode } from "react";
 import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, TextInput, type TextInputProps, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -8,6 +12,11 @@ import { AppText as Text } from "./AppText";
 
 export type ButtonVariant = "primary" | "secondary" | "danger" | "ghost";
 
+/**
+ * Título: Botão com variantes de cor e estado de carregamento
+ * Explicação: Usado por AppErrorBoundary, ContaFormModal, FornecedorFormModal, MovimentacaoModal,
+ *   ProductFormModal e LoginScreen e outros.
+ */
 export function Button({ title, onPress, variant = "primary", loading = false, disabled = false, compact = false }: {
   title: string;
   onPress: () => void;
@@ -18,6 +27,9 @@ export function Button({ title, onPress, variant = "primary", loading = false, d
 }) {
   const inactive = disabled || loading;
   return (
+    // Título: Toque do botão
+    // Explicação: Chama o onPress recebido. Fica desativado com loading ou disabled e, carregando, mostra
+    //   a rodinha no lugar do texto.
     <Pressable
       accessibilityRole="button"
       disabled={inactive}
@@ -29,14 +41,29 @@ export function Button({ title, onPress, variant = "primary", loading = false, d
   );
 }
 
+/**
+ * Título: Caixa branca com cantos e sombra
+ * Explicação: Usado por ReposicaoCard, AnalisesScreen, ContasScreen, DashboardScreen, EstoqueScreen e
+ *   MaisScreen.
+ */
 export function Card({ children, style }: { children: ReactNode; style?: object }) {
   return <View style={[styles.card, style]}>{children}</View>;
 }
 
+/**
+ * Título: Campo de texto com rótulo
+ * Explicação: Usado por ContaFormModal, FornecedorFormModal, MovimentacaoModal, ProductFormModal,
+ *   LoginScreen e RegisterScreen.
+ */
 export function TextField({ label, error, multiline, style, ...props }: TextInputProps & { label: string; error?: string; style?: object }) {
   return (
     <View style={styles.field}>
       <Text style={styles.fieldLabel}>{label}</Text>
+      {/*
+        Título: Campo de texto nativo
+        Explicação: Repassa todas as props recebidas (value, onChangeText, teclado...) para o TextInput do
+          React Native.
+      */}
       <TextInput
         accessibilityLabel={label}
         multiline={multiline}
@@ -49,30 +76,55 @@ export function TextField({ label, error, multiline, style, ...props }: TextInpu
   );
 }
 
+/**
+ * Título: Etiqueta colorida
+ * Explicação: Usado por ReposicaoCard, AnalisesScreen, ContasScreen, DashboardScreen, EstoqueScreen e
+ *   ProdutosScreen.
+ */
 export function StatusBadge({ label, tone = "neutral" }: { label: string; tone?: "success" | "warning" | "danger" | "neutral" | "primary" }) {
   return <View style={[styles.badge, styles[`badge_${tone}`]]}><Text style={[styles.badgeText, styles[`badgeText_${tone}`]]}>{label}</Text></View>;
 }
 
+/**
+ * Título: Opção selecionável em formato de pílula
+ * Explicação: Usado por ContaFormModal, MovimentacaoModal e ProductFormModal.
+ */
 export function Choice({ label, selected, onPress, disabled = false }: { label: string; selected: boolean; onPress: () => void; disabled?: boolean }) {
   return (
+    // Título: Toque da opção
+    // Explicação: Chama o onPress recebido; a opção fica destacada quando selected é true.
     <Pressable accessibilityRole="button" accessibilityState={{ selected, disabled }} disabled={disabled} onPress={onPress} style={[styles.choice, selected && styles.choiceSelected, disabled && styles.buttonDisabled]}>
       <Text numberOfLines={1} style={[styles.choiceText, selected && styles.choiceTextSelected]}>{label}</Text>
     </Pressable>
   );
 }
 
+/**
+ * Título: Título de seção
+ * Explicação: Usado por AnalisesScreen, DashboardScreen e EstoqueScreen.
+ */
 export function SectionTitle({ title, action }: { title: string; action?: ReactNode }) {
   return <View style={styles.sectionTitle}><Text style={styles.sectionTitleText}>{title}</Text>{action}</View>;
 }
 
+/**
+ * Título: Janela de formulário que sobe de baixo
+ * Explicação: Usado por ContaFormModal, FornecedorFormModal, MovimentacaoModal e ProductFormModal.
+ */
 export function FormModal({ visible, title, onClose, children, busy = false }: { visible: boolean; title: string; onClose: () => void; children: ReactNode; busy?: boolean }) {
   const insets = useSafeAreaInsets();
   return (
+    // Título: Janela que sobe de baixo
+    // Explicação: O voltar do Android (onRequestClose) chama onClose.
     <Modal animationType="slide" onRequestClose={onClose} transparent visible={visible}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.modalBackdrop}>
         <View style={styles.modal}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>{title}</Text>
+            {/*
+              Título: Botão × para fechar
+              Explicação: Chama onClose; fica desativado enquanto busy (salvando).
+            */}
             <Pressable accessibilityLabel="Fechar" accessibilityRole="button" disabled={busy} onPress={onClose} style={[styles.closeButton, busy && styles.buttonDisabled]}><Text style={styles.closeText}>×</Text></Pressable>
           </View>
           <ScrollView contentContainerStyle={[styles.modalContent, { paddingBottom: spacing.xxl + insets.bottom }]} keyboardShouldPersistTaps="handled">{children}</ScrollView>
@@ -82,6 +134,10 @@ export function FormModal({ visible, title, onClose, children, busy = false }: {
   );
 }
 
+/**
+ * Título: Janela de confirmação com Cancelar e Confirmar
+ * Explicação: Usado por Header, ContasScreen, FornecedoresScreen e ProdutosScreen.
+ */
 export function ConfirmationDialog({ visible, title, message, confirmLabel = "Confirmar", confirmVariant = "danger", onCancel, onConfirm, loading = false }: {
   visible: boolean;
   title: string;
@@ -93,12 +149,19 @@ export function ConfirmationDialog({ visible, title, message, confirmLabel = "Co
   loading?: boolean;
 }) {
   return (
+    // Título: Janela de confirmação
+    // Explicação: O voltar do Android chama onCancel, se não estiver carregando.
     <Modal animationType="fade" onRequestClose={() => { if (!loading) onCancel(); }} transparent visible={visible}>
       <View style={styles.dialogBackdrop}>
         <View style={styles.dialog}>
           <Text style={styles.dialogTitle}>{title}</Text>
           <Text style={styles.dialogMessage}>{message}</Text>
           <View style={styles.dialogActions}>
+            {/*
+              Título: Botões Cancelar e Confirmar
+              Explicação: Cancelar chama onCancel; o outro chama onConfirm. A ação de verdade fica na tela que usa
+                o diálogo.
+            */}
             <View style={styles.dialogAction}><Button compact disabled={loading} title="Cancelar" variant="secondary" onPress={onCancel} /></View>
             <View style={styles.dialogAction}><Button compact title={confirmLabel} variant={confirmVariant} loading={loading} onPress={onConfirm} /></View>
           </View>

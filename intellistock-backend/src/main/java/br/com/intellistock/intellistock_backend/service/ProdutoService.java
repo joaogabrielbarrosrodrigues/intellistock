@@ -25,6 +25,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
+/**
+ * Título: Regras de negócio dos produtos
+ * Explicação: Service com as regras de negócio dos produtos.
+ */
 @Service
 public class ProdutoService {
 
@@ -34,6 +38,12 @@ public class ProdutoService {
     private final FornecedorService fornecedorService;
     private final Clock clock;
 
+    /**
+     * Título: Construtor
+     * Explicação: O Spring chama ao criar o objeto e entrega pronto o que ele precisa: produtoRepository
+     *   (ProdutoRepository), movimentacaoRepository (MovimentacaoRepository), userRepository (UserRepository),
+     *   fornecedorService (FornecedorService) e clock (Clock).
+     */
     public ProdutoService(ProdutoRepository produtoRepository, MovimentacaoRepository movimentacaoRepository,
                           UserRepository userRepository, FornecedorService fornecedorService, Clock clock) {
         this.produtoRepository = produtoRepository;
@@ -43,6 +53,12 @@ public class ProdutoService {
         this.clock = clock;
     }
 
+    /**
+     * Título: Monta a consulta com os filtros informados e devolve os produtos em ordem alfabética
+     * Explicação: Recebe busca (String), fornecedorId (UUID) e incluirInativos (boolean). Monta a consulta só
+     *   com os filtros enviados (ativos, nome, fornecedor) e ordena por nome. Devolve List<ProdutoResponse>.
+     *   Chamado por ProdutoController.
+     */
     @Transactional(readOnly = true)
     public List<ProdutoResponse> listar(String busca, UUID fornecedorId, boolean incluirInativos) {
         Specification<Produto> spec = (root, query, cb) -> {
@@ -64,11 +80,21 @@ public class ProdutoService {
                 .toList();
     }
 
+    /**
+     * Título: Devolve um produto como DTO
+     * Explicação: Recebe id (UUID). Devolve ProdutoResponse. Chamado por ProdutoController.
+     */
     @Transactional(readOnly = true)
     public ProdutoResponse buscar(UUID id) {
         return ProdutoResponse.from(buscarEntidade(id));
     }
 
+    /**
+     * Título: Grava o produto e, se houver quantidade inicial, a primeira movimentação
+     * Explicação: Recebe request (ProdutoRequest) e usuario (User). Grava o produto com saldo zero; se veio
+     *   quantidade inicial maior que zero, cria também uma movimentação de ENTRADA chamada "Estoque inicial" e
+     *   ajusta o saldo, tudo na mesma transação. Devolve ProdutoResponse. Chamado por ProdutoController.
+     */
     @Transactional
     public ProdutoResponse criar(ProdutoRequest request, User usuario) {
         Produto produto = new Produto();
@@ -93,6 +119,12 @@ public class ProdutoService {
         return ProdutoResponse.from(produto);
     }
 
+    /**
+     * Título: Edita o produto, bloqueando troca de unidade quando já há movimentações
+     * Explicação: Recebe id (UUID) e request (ProdutoRequest). Trava o produto e recusa (422) a troca de
+     *   unidade de medida se ele já tiver movimentações; senão atualiza os dados. O saldo nunca muda por aqui.
+     *   Devolve ProdutoResponse. Chamado por ProdutoController.
+     */
     @Transactional
     public ProdutoResponse atualizar(UUID id, ProdutoRequest request) {
         Produto produto = buscarParaAtualizar(id);
@@ -106,6 +138,10 @@ public class ProdutoService {
     }
 
     /**
+     * Título: Desativa o produto (exclusão lógica)
+     * Explicação: Recebe id (UUID). Exclusão lógica, só marca ativo = false; o histórico continua. Não devolve
+     *   nada. Chamado por ProdutoController.
+     *
      * Exclusao logica: o produto deixa de aparecer nas listagens e nao aceita novas
      * movimentacoes, mas o historico de movimentacoes e preservado.
      */
@@ -114,6 +150,11 @@ public class ProdutoService {
         buscarParaAtualizar(id).setAtivo(false);
     }
 
+    /**
+     * Título: Reativa o produto
+     * Explicação: Recebe id (UUID). Marca ativo = true. Devolve ProdutoResponse. Chamado por
+     *   ProdutoController.
+     */
     @Transactional
     public ProdutoResponse reativar(UUID id) {
         Produto produto = buscarParaAtualizar(id);
@@ -121,18 +162,32 @@ public class ProdutoService {
         return ProdutoResponse.from(produto);
     }
 
+    /**
+     * Título: Busca a entidade (usada por outros services)
+     * Explicação: Recebe id (UUID). Busca o produto para outros services (404 se não existir). Devolve
+     *   Produto. Chamado por AnaliseService e EstoqueService.
+     */
     @Transactional(readOnly = true)
     public Produto buscarEntidade(UUID id) {
         return produtoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Produto nao encontrado."));
     }
 
+    /**
+     * Título: Busca o produto travando a linha no banco
+     * Explicação: Recebe id (UUID). Busca travando a linha no banco (SELECT ... FOR UPDATE), a mesma trava das
+     *   movimentações. Devolve Produto.
+     */
     // Usa o mesmo bloqueio das movimentacoes para revalidar unidade e estado apos o commit anterior.
     private Produto buscarParaAtualizar(UUID id) {
         return produtoRepository.findByIdForUpdate(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Produto nao encontrado."));
     }
 
+    /**
+     * Título: Copia os dados do pedido para a entidade
+     * Explicação: Recebe produto (Produto) e request (ProdutoRequest). Não devolve nada.
+     */
     private void preencher(Produto produto, ProdutoRequest request) {
         produto.setNome(request.nome().trim());
         produto.setDescricao(request.descricao() == null || request.descricao().isBlank()

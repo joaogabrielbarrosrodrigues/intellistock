@@ -8,6 +8,10 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
+/**
+ * Título: Dados devolvidos pela API: Movimentacao
+ * Explicação: DTO de saída de uma movimentação.
+ */
 public record MovimentacaoResponse(
         UUID id,
         UUID produtoId,
@@ -21,6 +25,10 @@ public record MovimentacaoResponse(
         String usuarioNome
 ) {
 
+    /**
+     * Título: Converte a entidade neste DTO
+     * Explicação: Recebe movimentacao (Movimentacao). Devolve MovimentacaoResponse.
+     */
     public static MovimentacaoResponse from(Movimentacao movimentacao) {
         User usuario = movimentacao.getUsuario();
         return new MovimentacaoResponse(

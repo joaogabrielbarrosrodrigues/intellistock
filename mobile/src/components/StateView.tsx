@@ -1,3 +1,7 @@
+/**
+ * Título: Carregando e erro com Tentar novamente
+ * Explicação: Componente que mostra o estado de uma busca.
+ */
 import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 import { colors } from "../theme/colors";
 import { radius, spacing } from "../theme/tokens";
@@ -9,6 +13,13 @@ export type StateViewProps = {
   onRetry?: () => void;
 };
 
+/**
+ * Título: Carregando e erro com Tentar novamente (componente StateView)
+ * Explicação: Com loading, mostra o indicador e "Carregando dados...". Com error, mostra a mensagem e,
+ *   se receber onRetry, o botão "Tentar novamente". Sem nenhum dos dois, não mostra nada. Usado por
+ *   ContaFormModal, ProductFormModal, AnalisesScreen, ContasScreen, DashboardScreen e EstoqueScreen e
+ *   outros.
+ */
 export function StateView({ loading = false, error = null, onRetry }: StateViewProps) {
   if (loading) {
     return (
@@ -24,6 +35,8 @@ export function StateView({ loading = false, error = null, onRetry }: StateViewP
       <View style={styles.container}>
         <Text style={styles.error}>{error}</Text>
         {onRetry ? (
+          // Título: Botão Tentar novamente
+          // Explicação: Chama o onRetry recebido; nas telas é o refetch() da consulta que falhou.
           <Pressable accessibilityRole="button" style={styles.button} onPress={onRetry}>
             <Text style={styles.buttonText}>Tentar novamente</Text>
           </Pressable>

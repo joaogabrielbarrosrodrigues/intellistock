@@ -19,6 +19,10 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * Título: Montagem do resumo da tela inicial
+ * Explicação: Service que monta o resumo da tela inicial juntando informações de várias tabelas.
+ */
 @Service
 public class DashboardService {
 
@@ -32,6 +36,13 @@ public class DashboardService {
     private final AnaliseService analiseService;
     private final Clock clock;
 
+    /**
+     * Título: Construtor
+     * Explicação: O Spring chama ao criar o objeto e entrega pronto o que ele precisa: produtoRepository
+     *   (ProdutoRepository), fornecedorRepository (FornecedorRepository), movimentacaoRepository
+     *   (MovimentacaoRepository), contaPagarRepository (ContaPagarRepository), analiseService (AnaliseService) e
+     *   clock (Clock).
+     */
     public DashboardService(ProdutoRepository produtoRepository, FornecedorRepository fornecedorRepository,
                             MovimentacaoRepository movimentacaoRepository, ContaPagarRepository contaPagarRepository,
                             AnaliseService analiseService, Clock clock) {
@@ -44,6 +55,9 @@ public class DashboardService {
     }
 
     /**
+     * Título: Executa as consultas e monta o DashboardResponse
+     * Explicação: Recebe diasVencimento (int). Devolve DashboardResponse. Chamado por DashboardController.
+     *
      * @param diasVencimento janela (a partir de hoje) para considerar uma conta "proxima do vencimento"
      */
     @Transactional(readOnly = true)

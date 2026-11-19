@@ -1,3 +1,8 @@
+/**
+ * Título: Calcula quais lembretes agendar
+ * Explicação: Módulo de lógica pura que decide quais lembretes devem existir. Não fala com o celular,
+ *   por isso tem testes automáticos.
+ */
 import type { ContaPagar } from "../api/types";
 
 export const DUE_REMINDER_SOURCE = "intellistock.conta-vencimento";
@@ -14,6 +19,10 @@ export type DueReminderPlan = {
   accountId: string;
 };
 
+/**
+ * Título: Monta o texto do aviso de teste agrupando vencidas, de hoje e a vencer
+ * Explicação: Usado por dueReminderScheduler.
+ */
 export function buildTestReminderBody(accounts: ContaPagar[], now = new Date()): string {
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
   const groups: { overdue: ContaPagar[]; today: ContaPagar[]; upcoming: ContaPagar[] } = {
@@ -44,6 +53,10 @@ export function buildTestReminderBody(accounts: ContaPagar[], now = new Date()):
   ].filter(Boolean).join(". ") || "Nenhuma conta em aberto para avisar.";
 }
 
+/**
+ * Título: Lista os lembretes futuros, no máximo 60
+ * Explicação: Usado por dueReminderScheduler.
+ */
 export function buildDueReminderPlan(accounts: ContaPagar[], userId: string, now = new Date()): DueReminderPlan[] {
   const plans: DueReminderPlan[] = [];
 
@@ -75,6 +88,10 @@ export function buildDueReminderPlan(accounts: ContaPagar[], userId: string, now
     .slice(0, MAX_SCHEDULED_REMINDERS);
 }
 
+/**
+ * Título: Lê uma data AAAA-MM-DD e confere se ela existe
+ * Explicação: Usada só dentro deste arquivo, por buildTestReminderBody e buildDueReminderPlan.
+ */
 function parseLocalDate(value: string) {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
   if (!match) return null;

@@ -1,3 +1,7 @@
+/**
+ * Título: Tela de fornecedores
+ * Explicação: Tela de fornecedores, aberta pela aba Mais.
+ */
 import { useRef, useState } from "react";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -21,6 +25,12 @@ import { typography } from "../theme/typography";
 
 type Feedback = { message: string; tone: FeedbackTone };
 
+/**
+ * Título: Tela de fornecedores (componente FornecedoresScreen)
+ * Explicação: Busca com atraso de 300 ms; o filtro é feito pelo backend. Lista os fornecedores com
+ *   contato; tocar abre a edição. Botão + cadastra; lixeira pede confirmação e exclui (remove),
+ *   mostrando a mensagem do backend se o fornecedor tiver vínculos. Usado por RootNavigator.
+ */
 export function FornecedoresScreen({ navigation }: NativeStackScreenProps<MaisStackParamList, "Fornecedores">) {
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState<Fornecedor | null | undefined>(undefined);
@@ -32,6 +42,12 @@ export function FornecedoresScreen({ navigation }: NativeStackScreenProps<MaisSt
   const mutations = useFornecedorMutations();
   const suppliers = query.data ?? [];
 
+  /**
+   * Título: Exclui o fornecedor depois da confirmação
+   * Explicação: Roda quando o usuário confirma. Chama useFornecedorMutations().remove →
+   *   deleteFornecedor() → DELETE /api/fornecedores/{id} (FornecedorController.excluir). Se o fornecedor
+   *   tiver produto ou conta ligados, o backend responde 409 e a faixa de erro aparece.
+   */
   async function remove() {
     if (!removing || submitting.current) return;
     submitting.current = true;
@@ -54,10 +70,20 @@ export function FornecedoresScreen({ navigation }: NativeStackScreenProps<MaisSt
 
   return (
     <Screen refreshing={query.isRefetching} onRefresh={() => void query.refetch()}>
+      {/*
+        Título: Cabeçalho com voltar
+        Explicação: A seta chama navigation.goBack() e volta para o menu Mais.
+      */}
       <BackHeader onBack={() => navigation.goBack()} subtitle="Cadastre e mantenha parceiros" title="Fornecedores" />
       <View style={styles.tools}>
         <View style={styles.search}>
           <Ionicons color={colors.muted} name="search-outline" size={19} />
+          {/*
+            Título: Campo de busca de fornecedores
+            Explicação: Guarda o texto em search. Depois da pausa, useFornecedoresQuery(busca) chama
+              getFornecedores() → GET /api/fornecedores (FornecedorController.listar) com ?busca=...; aqui a busca
+              é feita no backend.
+          */}
           <TextInput
             accessibilityLabel="Buscar fornecedores"
             onChangeText={setSearch}
@@ -67,6 +93,12 @@ export function FornecedoresScreen({ navigation }: NativeStackScreenProps<MaisSt
             value={search}
           />
         </View>
+        {/*
+          Título: Botão + para cadastrar fornecedor
+          Explicação: Chama setEditing(null), que abre o FornecedorFormModal vazio. Ao salvar:
+            useFornecedorMutations().create → createFornecedor() → POST /api/fornecedores
+            (FornecedorController.criar).
+        */}
         <Pressable
           accessibilityLabel="Adicionar fornecedor"
           accessibilityRole="button"
@@ -76,7 +108,16 @@ export function FornecedoresScreen({ navigation }: NativeStackScreenProps<MaisSt
           <Ionicons color={colors.white} name="add" size={23} />
         </Pressable>
       </View>
+      {/*
+        Título: Faixa de sucesso ou erro
+        Explicação: Mostra a mensagem guardada em feedback depois de salvar, excluir ou quando algo falha.
+      */}
       <FeedbackBanner message={feedback?.message} tone={feedback?.tone} />
+      {/*
+        Título: Carregando / erro da lista de fornecedores
+        Explicação: Mostra o carregamento ou o erro de GET /api/fornecedores. O botão Tentar novamente chama
+          query.refetch(), que repete a chamada.
+      */}
       <StateView
         error={
           query.isError
@@ -87,6 +128,8 @@ export function FornecedoresScreen({ navigation }: NativeStackScreenProps<MaisSt
         onRetry={() => void query.refetch()}
       />
       {!query.isLoading && !query.isError && suppliers.length === 0 ? (
+        // Título: Aviso de lista vazia
+        // Explicação: Aparece quando não há fornecedores ou a busca não encontrou nada.
         <EmptyState
           message="Cadastre fornecedores para vinculá-los a produtos e contas."
           title="Nenhum fornecedor encontrado"
@@ -94,6 +137,12 @@ export function FornecedoresScreen({ navigation }: NativeStackScreenProps<MaisSt
       ) : null}
       {suppliers.map((supplier) => (
         <View key={supplier.id} style={styles.supplierCard}>
+          {/*
+            Título: Cartão do fornecedor (toque para editar)
+            Explicação: Chama setEditing(supplier), que abre o FornecedorFormModal preenchido. Ao salvar:
+              useFornecedorMutations().update → updateFornecedor() → PUT /api/fornecedores/{id}
+              (FornecedorController.atualizar).
+          */}
           <Pressable
             accessibilityHint="Abre a edição do fornecedor"
             accessibilityRole="button"
@@ -105,6 +154,10 @@ export function FornecedoresScreen({ navigation }: NativeStackScreenProps<MaisSt
               {supplier.email ?? supplier.telefone ?? supplier.cnpj ?? "Sem dados de contato"}
             </Text>
           </Pressable>
+          {/*
+            Título: Botão lixeira (excluir fornecedor)
+            Explicação: Chama setRemoving(supplier), que só abre a janela de confirmação.
+          */}
           <Pressable
             accessibilityLabel={`Excluir ${supplier.nome}`}
             accessibilityRole="button"
@@ -115,12 +168,23 @@ export function FornecedoresScreen({ navigation }: NativeStackScreenProps<MaisSt
           </Pressable>
         </View>
       ))}
+      {/*
+        Título: Formulário de cadastro e edição de fornecedor
+        Explicação: Visível quando editing não é undefined (null = novo; um fornecedor = edição). Fechar
+          chama setEditing(undefined).
+      */}
       <FornecedorFormModal
         onClose={() => setEditing(undefined)}
         onSaved={(message) => setFeedback({ message, tone: "success" })}
         supplier={editing}
         visible={editing !== undefined}
       />
+      {/*
+        Título: Confirmação de excluir fornecedor
+        Explicação: Excluir chama remove() → useFornecedorMutations().remove → deleteFornecedor() → DELETE
+          /api/fornecedores/{id} (FornecedorController.excluir). O backend recusa com 409 se houver produto ou
+          conta ligados ao fornecedor.
+      */}
       <ConfirmationDialog
         confirmLabel="Excluir"
         loading={mutations.remove.isPending}

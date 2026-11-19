@@ -3,6 +3,10 @@ package br.com.intellistock.intellistock_backend.dto;
 import java.math.BigDecimal;
 import java.util.List;
 
+/**
+ * Título: Dados devolvidos pela API: Dashboard
+ * Explicação: DTO de saída com o resumo da tela inicial.
+ */
 public record DashboardResponse(
         Estoque estoque,
         Financeiro financeiro,

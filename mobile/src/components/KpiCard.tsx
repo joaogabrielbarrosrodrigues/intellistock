@@ -1,3 +1,7 @@
+/**
+ * Título: Cartão de indicador da Visão geral
+ * Explicação: Componente de cartão de indicador do dashboard.
+ */
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { StyleSheet, View } from "react-native";
 import { colors } from "../theme/colors";
@@ -12,6 +16,11 @@ export type KpiCardProps = {
   detail?: string;
 };
 
+/**
+ * Título: Cartão de indicador da Visão geral (componente KpiCard)
+ * Explicação: Mostra um ícone, o valor em destaque (que diminui a fonte para caber), o rótulo e um
+ *   detalhe opcional. A cor muda conforme o tom: normal, alerta ou perigo. Usado por DashboardScreen.
+ */
 export function KpiCard({ label, value, tone = "primary", icon, detail }: KpiCardProps) {
   const valueColor = tone === "danger" ? colors.danger : tone === "warning" ? colors.warning : colors.primary;
 

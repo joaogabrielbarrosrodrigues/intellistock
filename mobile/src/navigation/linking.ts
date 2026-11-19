@@ -1,3 +1,7 @@
+/**
+ * Título: Endereços das telas na versão web
+ * Explicação: Configuração dos endereços de cada tela na versão web do app.
+ */
 import type { LinkingOptions } from "@react-navigation/native";
 import { Platform } from "react-native";
 import type { RootLinkParamList } from "./types";

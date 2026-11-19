@@ -1,3 +1,7 @@
+/**
+ * Título: Cores do app
+ * Explicação: Arquivo de tema com a paleta de cores.
+ */
 export const colors = {
   background: "#F5F7F6",
   surface: "#FFFFFF",

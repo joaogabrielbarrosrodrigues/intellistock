@@ -1,3 +1,8 @@
+/**
+ * Título: Sessão de login compartilhada por todo o app
+ * Explicação: Contexto React que guarda a sessão do usuário e a disponibiliza para todo o app pelo
+ *   hook useAuth().
+ */
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { login as loginRequest } from "../api/intellistock";
@@ -15,6 +20,10 @@ type AuthContextValue = {
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+/**
+ * Título: Componente que guarda token, usuário e carregamento e oferece signIn e signOut
+ * Explicação: Usado por App.
+ */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const [token, setToken] = useState<string | null>(null);
@@ -78,6 +87,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+/**
+ * Título: Atalho para as telas lerem a sessão
+ * Explicação: Usado por Header, RootNavigator, DueReminderProvider e LoginScreen.
+ */
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {

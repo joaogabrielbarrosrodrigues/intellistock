@@ -7,6 +7,10 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
+/**
+ * Título: Dados devolvidos pela API: Produto
+ * Explicação: DTO de saída com um produto.
+ */
 public record ProdutoResponse(
         UUID id,
         String nome,
@@ -22,6 +26,10 @@ public record ProdutoResponse(
         OffsetDateTime updatedAt
 ) {
 
+    /**
+     * Título: Converte a entidade neste DTO
+     * Explicação: Recebe produto (Produto). Devolve ProdutoResponse.
+     */
     public static ProdutoResponse from(Produto produto) {
         return new ProdutoResponse(
                 produto.getId(),

@@ -7,6 +7,9 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 /**
+ * Título: Dados devolvidos pela API: Consumo
+ * Explicação: DTO de saída da análise de consumo de um produto.
+ *
  * Consumo (soma das SAIDAS) de um produto em uma janela de dias.
  *
  * @param mediaDiaria        totalConsumido / periodoDias

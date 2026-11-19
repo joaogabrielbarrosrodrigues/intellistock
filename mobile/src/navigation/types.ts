@@ -1,3 +1,7 @@
+/**
+ * Título: Nomes e parâmetros das telas
+ * Explicação: Definições de tipos das rotas de navegação.
+ */
 import type { NavigatorScreenParams } from "@react-navigation/native";
 
 export type AuthStackParamList = {

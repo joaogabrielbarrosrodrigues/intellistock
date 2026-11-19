@@ -10,6 +10,10 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
+/**
+ * Título: Dados recebidos pela API: ContaPagar
+ * Explicação: DTO de entrada para criar ou editar conta.
+ */
 public record ContaPagarRequest(
         @NotNull(message = "Fornecedor e obrigatorio.")
         UUID fornecedorId,

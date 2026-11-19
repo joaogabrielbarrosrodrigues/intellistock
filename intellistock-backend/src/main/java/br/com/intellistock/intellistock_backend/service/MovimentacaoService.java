@@ -26,6 +26,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Título: Regras de entrada e saída de estoque
+ * Explicação: Service central do controle de estoque. É a única parte do sistema que altera o saldo de um
+ *   produto.
+ */
 @Service
 public class MovimentacaoService {
 
@@ -36,6 +41,12 @@ public class MovimentacaoService {
     private final UserRepository userRepository;
     private final Clock clock;
 
+    /**
+     * Título: Construtor
+     * Explicação: O Spring chama ao criar o objeto e entrega pronto o que ele precisa: movimentacaoRepository
+     *   (MovimentacaoRepository), produtoRepository (ProdutoRepository), userRepository (UserRepository) e clock
+     *   (Clock).
+     */
     public MovimentacaoService(MovimentacaoRepository movimentacaoRepository, ProdutoRepository produtoRepository,
                                UserRepository userRepository, Clock clock) {
         this.movimentacaoRepository = movimentacaoRepository;
@@ -45,6 +56,13 @@ public class MovimentacaoService {
     }
 
     /**
+     * Título: Valida, calcula o novo saldo, atualiza o produto e grava a movimentação
+     * Explicação: Recebe request (MovimentacaoRequest) e usuario (User). Busca o produto travando a linha no
+     *   banco; recusa produto desativado; numa saída, recusa quantidade maior que o saldo (422 "Estoque
+     *   insuficiente"); calcula o novo saldo (entrada soma, saída subtrai); recusa saldo acima do que cabe na
+     *   coluna; atualiza o produto e grava a movimentação com o saldo resultante, a data e o usuário, tudo numa
+     *   transação. Devolve MovimentacaoResponse. Chamado por MovimentacaoController.
+     *
      * Registra a movimentacao e atualiza o saldo do produto na mesma transacao.
      * A linha do produto fica bloqueada ate o commit, entao saidas concorrentes
      * sao processadas uma de cada vez e nunca deixam o estoque negativo.
@@ -88,6 +106,12 @@ public class MovimentacaoService {
         return MovimentacaoResponse.from(movimentacaoRepository.save(movimentacao));
     }
 
+    /**
+     * Título: Monta a consulta com os filtros e devolve as mais recentes primeiro
+     * Explicação: Recebe produtoId (UUID), tipo (TipoMovimentacao), inicio (LocalDate), fim (LocalDate) e
+     *   limite (int). Monta a consulta com os filtros enviados e devolve as mais recentes primeiro, limitadas a
+     *   limite itens. Devolve List<MovimentacaoResponse>. Chamado por MovimentacaoController.
+     */
     @Transactional(readOnly = true)
     public List<MovimentacaoResponse> listar(UUID produtoId, TipoMovimentacao tipo, LocalDate inicio, LocalDate fim,
                                              int limite) {
@@ -118,6 +142,11 @@ public class MovimentacaoService {
                 .toList();
     }
 
+    /**
+     * Título: Devolve uma movimentação pelo id
+     * Explicação: Recebe id (UUID). Devolve uma movimentação (404 se não existir). Devolve
+     *   MovimentacaoResponse. Chamado por MovimentacaoController.
+     */
     @Transactional(readOnly = true)
     public MovimentacaoResponse buscar(UUID id) {
         return movimentacaoRepository.findById(id)
@@ -125,6 +154,10 @@ public class MovimentacaoService {
                 .orElseThrow(() -> new ResourceNotFoundException("Movimentacao nao encontrada."));
     }
 
+    /**
+     * Título: Converte uma data no instante 00:00 daquele dia
+     * Explicação: Recebe data (LocalDate). Devolve OffsetDateTime.
+     */
     private OffsetDateTime inicioDoDia(LocalDate data) {
         return data.atStartOfDay(clock.getZone()).toOffsetDateTime();
     }

@@ -1,3 +1,7 @@
+/**
+ * Título: Cabeçalho com botão voltar
+ * Explicação: Componente de cabeçalho das telas internas da aba Mais.
+ */
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Pressable, StyleSheet, View } from "react-native";
 import { colors } from "../theme/colors";
@@ -5,6 +9,11 @@ import { radius, spacing } from "../theme/tokens";
 import { AppText as Text } from "./AppText";
 import { BrandLogo } from "./BrandLogo";
 
+/**
+ * Título: Cabeçalho com botão voltar (componente BackHeader)
+ * Explicação: Botão de voltar (chama a função recebida), título, subtítulo e o símbolo do logotipo.
+ *   Usado por AnalisesScreen e FornecedoresScreen.
+ */
 export function BackHeader({
   title,
   subtitle,
@@ -16,6 +25,10 @@ export function BackHeader({
 }) {
   return (
     <View style={styles.backHeader}>
+      {/*
+        Título: Botão voltar
+        Explicação: Chama o onBack recebido (nas telas, navigation.goBack()).
+      */}
       <Pressable
         accessibilityLabel="Voltar"
         accessibilityRole="button"

@@ -11,6 +11,9 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 /**
+ * Título: Dados recebidos pela API: Produto
+ * Explicação: DTO de entrada para criar ou editar produto.
+ *
  * @param quantidadeInicial usado apenas no cadastro; gera uma movimentacao de ENTRADA.
  *                          Na atualizacao e ignorado, pois o saldo so muda via movimentacoes.
  */
