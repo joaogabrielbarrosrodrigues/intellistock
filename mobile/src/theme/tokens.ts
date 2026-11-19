@@ -1,3 +1,7 @@
+/**
+ * Título: Espaçamentos, cantos e sombras
+ * Explicação: Arquivo de tema com as medidas padrão.
+ */
 export const spacing = {
   xxs: 4,
   xs: 8,

@@ -1,3 +1,8 @@
+/**
+ * Título: Formulário de cadastro e edição de produto
+ * Explicação: Componente de formulário de produto, que abre como janela sobre a tela (cadastro ou
+ *   edição).
+ */
 import { useEffect, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { getApiErrorMessage } from "../api/errors";
@@ -23,6 +28,14 @@ type Props = {
   onSaved: (message: string) => void;
 };
 
+/**
+ * Título: Formulário de cadastro e edição de produto (componente ProductFormModal)
+ * Explicação: Campos: nome, descrição, quantidade inicial (só no cadastro), estoque mínimo, preço,
+ *   unidade de medida e fornecedor. Ao abrir, preenche com os dados do produto em edição ou limpa para
+ *   um novo. save(): lê os números (aceita vírgula), confere limites e casas decimais, monta o envio e
+ *   chama criar ou editar; trava contra toque duplo; mostra o erro do backend se houver. Usado por
+ *   ProdutosScreen.
+ */
 export function ProductFormModal({
   visible,
   product,
@@ -56,6 +69,13 @@ export function ProductFormModal({
     setError(null);
   }, [product, visible]);
 
+  /**
+   * Título: Valida e salva
+   * Explicação: Valida nome, mínimo, preço e quantidade inicial e monta o corpo. Na edição chama
+   *   useProdutoMutations().update → updateProduto() → PUT /api/produtos/{id}
+   *   (ProdutoController.atualizar); no cadastro, create → createProduto() → POST /api/produtos
+   *   (ProdutoController.criar). Com sucesso fecha e avisa a tela (onSaved).
+   */
   async function save() {
     if (submitting.current) return;
     const minimo = parseDecimalInput(estoqueMinimo);
@@ -99,6 +119,9 @@ export function ProductFormModal({
 
   const saving = mutations.create.isPending || mutations.update.isPending;
   return (
+    // Título: Janela do formulário de produto
+    // Explicação: O × e o voltar do Android chamam onClose (bloqueado enquanto salva). O título muda entre
+    //   Novo produto e Editar produto.
     <FormModal
       busy={saving}
       onClose={() => {
@@ -107,6 +130,10 @@ export function ProductFormModal({
       title={product ? "Editar produto" : "Novo produto"}
       visible={visible}
     >
+      {/*
+        Título: Campo nome
+        Explicação: Guarda o texto em nome (obrigatório, até 150 caracteres).
+      */}
       <TextField
         autoCapitalize="words"
         editable={!saving}
@@ -116,6 +143,10 @@ export function ProductFormModal({
         placeholder="Ex.: Café em grãos"
         value={nome}
       />
+      {/*
+        Título: Campo descrição
+        Explicação: Guarda o texto em descricao (opcional).
+      */}
       <TextField
         editable={!saving}
         label="Descrição"
@@ -126,6 +157,9 @@ export function ProductFormModal({
         value={descricao}
       />
       {!product ? (
+        // Título: Campo quantidade inicial
+        // Explicação: Só aparece no cadastro. O backend usa esse valor para criar a primeira movimentação de
+        //   entrada do produto.
         <TextField
           editable={!saving}
           keyboardType="decimal-pad"
@@ -141,6 +175,11 @@ export function ProductFormModal({
       )}
       <View style={styles.row}>
         <View style={styles.flex}>
+          {/*
+            Título: Campo estoque mínimo
+            Explicação: Guarda em estoqueMinimo; com saldo menor ou igual a ele o produto aparece como estoque
+              baixo.
+          */}
           <TextField
             editable={!saving}
             keyboardType="decimal-pad"
@@ -151,6 +190,10 @@ export function ProductFormModal({
           />
         </View>
         <View style={styles.flex}>
+          {/*
+            Título: Campo preço unitário
+            Explicação: Guarda em preco; aceita vírgula e até 2 casas decimais.
+          */}
           <TextField
             editable={!saving}
             keyboardType="decimal-pad"
@@ -164,6 +207,10 @@ export function ProductFormModal({
       <View style={styles.field}>
         <Text style={styles.label}>Unidade de medida</Text>
         <View style={styles.chips}>
+          {/*
+            Título: Escolha da unidade de medida
+            Explicação: Cada opção chama setUnidadeMedida(unidade).
+          */}
           {unidades.map((unit) => (
             <Choice
               disabled={saving}
@@ -177,14 +224,26 @@ export function ProductFormModal({
       </View>
       <View style={styles.field}>
         <Text style={styles.label}>Fornecedor</Text>
+        {/*
+          Título: Carregando / erro dos fornecedores
+          Explicação: Mostra o estado de GET /api/fornecedores; Tentar novamente chama onRetrySuppliers.
+        */}
         <StateView error={suppliersError} loading={suppliersLoading} onRetry={onRetrySuppliers} />
         <View style={styles.chips}>
+          {/*
+            Título: Opção Sem fornecedor
+            Explicação: Chama setFornecedorId(null): o produto fica sem fornecedor.
+          */}
           <Choice
             disabled={saving}
             label="Sem fornecedor"
             onPress={() => setFornecedorId(null)}
             selected={!fornecedorId}
           />
+          {/*
+            Título: Opções de fornecedor
+            Explicação: Cada opção chama setFornecedorId(id do fornecedor).
+          */}
           {suppliers.map((supplier) => (
             <Choice
               disabled={saving}
@@ -196,11 +255,23 @@ export function ProductFormModal({
           ))}
         </View>
       </View>
+      {/*
+        Título: Mensagem de erro
+        Explicação: Aparece quando a validação da tela ou o backend recusam o envio; o texto vem de
+          getApiErrorMessage().
+      */}
       {error ? (
         <Text accessibilityRole="alert" style={styles.error}>
           {error}
         </Text>
       ) : null}
+      {/*
+        Título: Botão Cadastrar produto / Salvar alterações
+        Explicação: Chama save(), que valida os números e então: na edição, useProdutoMutations().update →
+          updateProduto() → PUT /api/produtos/{id} (ProdutoController.atualizar); no cadastro, create →
+          createProduto() → POST /api/produtos (ProdutoController.criar). Com sucesso fecha a janela e mostra
+          a faixa de sucesso.
+      */}
       <Button
         loading={saving}
         onPress={() => void save()}

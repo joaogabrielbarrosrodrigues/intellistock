@@ -12,6 +12,9 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 /**
+ * Título: Dados recebidos pela API: Movimentacao
+ * Explicação: DTO de entrada de um lançamento de estoque.
+ *
  * @param data opcional; quando omitida usa o momento atual. Permite lancar movimentacoes retroativas.
  */
 public record MovimentacaoRequest(

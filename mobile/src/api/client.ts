@@ -1,3 +1,8 @@
+/**
+ * Título: Cliente HTTP (axios) que conversa com o backend
+ * Explicação: O cliente HTTP do app, criado com a biblioteca axios. Toda chamada ao backend passa por
+ *   ele.
+ */
 import axios, { AxiosHeaders } from "axios";
 import { appConfig } from "../config/env";
 
@@ -24,6 +29,10 @@ api.interceptors.response.use(
   }
 );
 
+/**
+ * Título: Registra a função que deve rodar quando o backend responder 401
+ * Explicação: Usado por AuthContext.
+ */
 export function onUnauthorized(handler: () => void) {
   unauthorizedHandler = handler;
   return () => {
@@ -31,6 +40,10 @@ export function onUnauthorized(handler: () => void) {
   };
 }
 
+/**
+ * Título: Liga ou desliga o token em todas as chamadas
+ * Explicação: Usado por AuthContext.
+ */
 export function setAuthToken(token: string | null) {
   if (token) {
     api.defaults.headers.common.Authorization = `Bearer ${token}`;

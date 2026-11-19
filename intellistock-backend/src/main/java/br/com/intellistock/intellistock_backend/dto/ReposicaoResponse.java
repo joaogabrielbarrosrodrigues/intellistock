@@ -6,6 +6,9 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 /**
+ * Título: Dados devolvidos pela API: Reposicao
+ * Explicação: DTO de saída com a sugestão de compra de um produto.
+ *
  * Sugestao de reposicao de um produto.
  *
  * @param consumoBaseDiario       consumo diario usado no calculo (media recente quando a tendencia e de ALTA)

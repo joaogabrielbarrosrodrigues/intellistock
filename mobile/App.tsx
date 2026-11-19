@@ -1,3 +1,8 @@
+/**
+ * Título: Raiz do aplicativo
+ * Explicação: Componente raiz do aplicativo: é o primeiro arquivo que o Expo executa e desenha. Tudo o
+ *   que aparece na tela fica dentro dele.
+ */
 import { Inter_400Regular } from "@expo-google-fonts/inter/400Regular";
 import { Inter_500Medium } from "@expo-google-fonts/inter/500Medium";
 import { Inter_600SemiBold } from "@expo-google-fonts/inter/600SemiBold";
@@ -29,6 +34,11 @@ const queryClient = new QueryClient({
   }
 });
 
+/**
+ * Título: Raiz do aplicativo
+ * Explicação: Mostra a tela de carregamento até as fontes chegarem e depois monta os provedores e o
+ *   navegador.
+ */
 export default function App() {
   const [fontsLoaded, fontError] = useFonts({
     [typography.body]: Inter_400Regular,
@@ -51,6 +61,12 @@ export default function App() {
 
   return (
     <CustomFontsProvider loaded={fontsLoaded}>
+      {/*
+        Título: Provedores do app
+        Explicação: Envolvem todo o app, de fora para dentro: captura de erros, TanStack Query (cache das
+          chamadas), área segura, sessão (AuthProvider), avisos (ToastProvider) e navegação com os endereços
+          web (linking).
+      */}
       <AppErrorBoundary>
         <QueryClientProvider client={queryClient}>
           <SafeAreaProvider>

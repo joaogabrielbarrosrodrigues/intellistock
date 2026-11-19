@@ -1,3 +1,8 @@
+/**
+ * Título: Guarda a sessão (token e usuário) no aparelho
+ * Explicação: Módulo que guarda a sessão de login (token e usuário) no aparelho, para o usuário
+ *   continuar logado quando fecha e abre o app.
+ */
 import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
 import type { User } from "../api/types";
@@ -7,6 +12,10 @@ let pendingWrite: Promise<unknown> = Promise.resolve();
 
 export type StoredSession = { token: string; user: User };
 
+/**
+ * Título: Lê a sessão salva e confere se ela está inteira
+ * Explicação: Usado por AuthContext.
+ */
 export async function readSession(): Promise<StoredSession | null> {
   const value = await readValue();
   if (!value) return null;
@@ -24,6 +33,10 @@ export async function readSession(): Promise<StoredSession | null> {
   }
 }
 
+/**
+ * Título: Grava a sessão
+ * Explicação: Usado por AuthContext.
+ */
 export function writeSession(session: StoredSession) {
   return serializeWrite(async () => {
     const value = JSON.stringify(session);
@@ -38,6 +51,10 @@ export function writeSession(session: StoredSession) {
   });
 }
 
+/**
+ * Título: Apaga a sessão
+ * Explicação: Usado por AuthContext.
+ */
 export function clearSession() {
   return serializeWrite(async () => {
     if (Platform.OS === "web") {
@@ -51,12 +68,20 @@ export function clearSession() {
   });
 }
 
+/**
+ * Título: Põe a operação na fila, depois da anterior
+ * Explicação: Usada só dentro deste arquivo, por writeSession e clearSession.
+ */
 function serializeWrite(operation: () => Promise<void>) {
   const result = pendingWrite.then(operation, operation);
   pendingWrite = result.catch(() => undefined);
   return result;
 }
 
+/**
+ * Título: Lê o texto salvo, do cofre ou do localStorage
+ * Explicação: Usada só dentro deste arquivo, por readSession.
+ */
 async function readValue() {
   if (Platform.OS === "web") {
     return getWebStorage()?.getItem(SESSION_KEY) ?? null;
@@ -65,6 +90,10 @@ async function readValue() {
   return (await SecureStore.isAvailableAsync()) ? SecureStore.getItemAsync(SESSION_KEY) : null;
 }
 
+/**
+ * Título: Pega o localStorage com segurança (alguns navegadores bloqueiam)
+ * Explicação: Usada só dentro deste arquivo, por writeSession, clearSession e readValue.
+ */
 function getWebStorage() {
   try {
     return globalThis.localStorage;
@@ -73,6 +102,10 @@ function getWebStorage() {
   }
 }
 
+/**
+ * Título: Confere se o usuário salvo tem id, nome e e-mail
+ * Explicação: Usada só dentro deste arquivo, por readSession.
+ */
 function isStoredUser(user: unknown): user is User {
   if (!user || typeof user !== "object") return false;
   const candidate = user as Partial<User>;

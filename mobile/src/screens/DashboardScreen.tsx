@@ -1,3 +1,7 @@
+/**
+ * Título: Tela Visão geral
+ * Explicação: Tela "Visão geral", a primeira aba do app logado.
+ */
 import { StyleSheet, View } from "react-native";
 import { getApiErrorMessage } from "../api/errors";
 import type { ConsumoMensalPorUnidade } from "../api/types";
@@ -12,6 +16,13 @@ import { colors } from "../theme/colors";
 import { radius, spacing } from "../theme/tokens";
 import { formatCurrency, formatDate, formatQuantity } from "../utils";
 
+/**
+ * Título: Tela Visão geral (componente DashboardScreen)
+ * Explicação: Busca o resumo em uma única chamada. Cartão de prioridades: produtos sem estoque,
+ *   sugestões de reposição e contas vencidas. Indicadores de estoque (produtos ativos, estoque baixo,
+ *   valor em estoque) e financeiros (valor em aberto, vencidas, próximas a vencer). Usado por
+ *   RootNavigator.
+ */
 export function DashboardScreen() {
   const query = useDashboardQuery();
   const dashboard = query.data;
@@ -22,6 +33,11 @@ export function DashboardScreen() {
   return (
     <Screen refreshing={query.isRefetching} onRefresh={() => void query.refetch()}>
       <Header subtitle="O que precisa de atenção e como está a operação" title="Visão geral" />
+      {/*
+        Título: Carregando / erro da visão geral
+        Explicação: Mostra o carregamento ou o erro de GET /api/dashboard. O botão Tentar novamente chama
+          query.refetch(), que repete a chamada.
+      */}
       <StateView
         error={query.isError ? getApiErrorMessage(query.error, "Não foi possível carregar a visão geral.") : null}
         loading={query.isLoading}
@@ -30,6 +46,12 @@ export function DashboardScreen() {
 
       {dashboard ? (
         <>
+          {/*
+            Título: Cartão de atenção
+            Explicação: Mostra “Acompanhar” se há produto sem estoque, conta vencida ou sugestão de reposição;
+              senão “Tudo em dia”. Os números vêm de useDashboardQuery() → getDashboard() → GET /api/dashboard
+              (DashboardController.resumo).
+          */}
           <Card style={styles.alertCard}>
             <View style={styles.alertTop}>
               <Text style={styles.alertTitle}>Prioridades</Text>
@@ -43,6 +65,11 @@ export function DashboardScreen() {
             <View style={styles.alertRow}><Text style={[styles.alertCount, dashboard.financeiro.contasVencidas > 0 && styles.alertDanger]}>{formatQuantity(dashboard.financeiro.contasVencidas)}</Text><Text style={styles.alertText}>contas vencidas</Text></View>
           </Card>
 
+          {/*
+            Título: Indicadores de estoque
+            Explicação: KpiCards com os números de dashboard.estoque (produtos ativos, estoque baixo, valor
+              total), calculados pelo DashboardService.
+          */}
           <SectionTitle title="Estoque" />
           <View style={styles.grid}>
             <KpiCard icon="cube-outline" label="Produtos ativos" value={String(dashboard.estoque.totalProdutos)} />
@@ -55,6 +82,11 @@ export function DashboardScreen() {
           </View>
           <KpiCard icon="wallet-outline" label="Valor total em estoque" value={formatCurrency(dashboard.estoque.valorTotalEstoque)} />
 
+          {/*
+            Título: Indicadores financeiros
+            Explicação: KpiCards com os números de dashboard.financeiro (em aberto, vencidas, próximas a
+              vencer).
+          */}
           <SectionTitle title="Financeiro" />
           <KpiCard
             detail={dashboard.financeiro.contasVencidas ? `${formatCurrency(dashboard.financeiro.valorVencido)} já vencidos` : "Nenhum valor vencido"}
@@ -68,6 +100,10 @@ export function DashboardScreen() {
             <KpiCard icon="calendar-outline" label="Próximas a vencer" value={String(dashboard.financeiro.contasProximasVencimento)} />
           </View>
 
+          {/*
+            Título: Gráfico de consumo
+            Explicação: Um ConsumptionCard por unidade de medida, com as saídas de estoque mês a mês.
+          */}
           <SectionTitle title="Consumo nos últimos meses" />
           {consumoMensal.length ? (
             consumoMensal.map((serie) => <ConsumptionCard key={serie.unidadeMedida} serie={serie} />)
@@ -75,6 +111,10 @@ export function DashboardScreen() {
             <Card><Text style={styles.muted}>Registre saídas para acompanhar o consumo ao longo do tempo.</Text></Card>
           )}
 
+          {/*
+            Título: Últimas movimentações
+            Explicação: Mostra as 5 movimentações mais recentes que vieram no resumo.
+          */}
           <SectionTitle title="Movimentações recentes" />
           <Card style={styles.listCard}>
             {movimentacoes.length === 0 ? (
@@ -95,6 +135,10 @@ export function DashboardScreen() {
             ))}
           </Card>
 
+          {/*
+            Título: Próximos vencimentos
+            Explicação: Mostra as 3 próximas contas a vencer que vieram no resumo.
+          */}
           <SectionTitle title="Próximos vencimentos" />
           <Card style={styles.listCard}>
             {proximosVencimentos.length === 0 ? (
@@ -117,6 +161,10 @@ export function DashboardScreen() {
   );
 }
 
+/**
+ * Título: Cartão com o gráfico de barras de uma unidade de medida
+ * Explicação: Usada só dentro deste arquivo, por DashboardScreen.
+ */
 function ConsumptionCard({ serie }: { serie: ConsumoMensalPorUnidade }) {
   const points = Array.isArray(serie.pontos) ? serie.pontos : [];
   const max = Math.max(...points.map((point) => Number(point.quantidade)), 1);
@@ -143,6 +191,10 @@ function ConsumptionCard({ serie }: { serie: ConsumoMensalPorUnidade }) {
   );
 }
 
+/**
+ * Título: Transforma 2026-11-01 em 11/26
+ * Explicação: Usada só dentro deste arquivo, por ConsumptionCard.
+ */
 function formatMonth(date: string) {
   const [year, month] = date.split("-");
   return month && year ? `${month}/${year.slice(2)}` : date;

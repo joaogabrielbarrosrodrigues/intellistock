@@ -24,16 +24,32 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Título: Rotas de entradas e saídas de estoque
+ * Explicação: Controller REST das movimentações de estoque (entradas e saídas). É por aqui que o saldo dos
+ *   produtos muda.
+ */
 @RestController
 @RequestMapping("/api/movimentacoes")
 public class MovimentacaoController {
 
     private final MovimentacaoService movimentacaoService;
 
+    /**
+     * Título: Construtor
+     * Explicação: O Spring chama ao criar o objeto e entrega pronto o que ele precisa: movimentacaoService
+     *   (MovimentacaoService).
+     */
     public MovimentacaoController(MovimentacaoService movimentacaoService) {
         this.movimentacaoService = movimentacaoService;
     }
 
+    /**
+     * Título: Lista movimentações por produto, tipo, período e quantidade máxima
+     * Explicação: Recebe produtoId (UUID), tipo (TipoMovimentacao), inicio (LocalDate), fim (LocalDate) e
+     *   limite (int). Lista movimentações das mais recentes para as mais antigas, com filtros opcionais e no
+     *   máximo limite itens (padrão 100, máximo 1000). Devolve List<MovimentacaoResponse>.
+     */
     @GetMapping
     public List<MovimentacaoResponse> listar(
             @RequestParam(required = false) UUID produtoId,
@@ -45,11 +61,21 @@ public class MovimentacaoController {
         return movimentacaoService.listar(produtoId, tipo, inicio, fim, limite);
     }
 
+    /**
+     * Título: Devolve uma movimentação pelo id
+     * Explicação: Recebe id (UUID). Devolve uma movimentação. Devolve MovimentacaoResponse.
+     */
     @GetMapping("/{id}")
     public MovimentacaoResponse buscar(@PathVariable UUID id) {
         return movimentacaoService.buscar(id);
     }
 
+    /**
+     * Título: Registra uma entrada ou saída, guardando quem lançou
+     * Explicação: Recebe request (MovimentacaoRequest) e usuario (User). Recebe MovimentacaoRequest (produto,
+     *   tipo, quantidade, data e observação opcionais) e o usuário logado, e repassa ao service, que atualiza o
+     *   saldo. Responde 201 com o novo saldo. Devolve MovimentacaoResponse.
+     */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public MovimentacaoResponse registrar(@Valid @RequestBody MovimentacaoRequest request,

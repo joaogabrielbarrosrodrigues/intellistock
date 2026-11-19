@@ -4,6 +4,10 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+/**
+ * Título: Dados recebidos pela API: Fornecedor
+ * Explicação: DTO de entrada para criar ou editar fornecedor.
+ */
 public record FornecedorRequest(
         @NotBlank(message = "Nome e obrigatorio.")
         @Size(max = 150, message = "Nome deve ter no maximo 150 caracteres.")

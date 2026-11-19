@@ -1,3 +1,7 @@
+/**
+ * Título: Formulário de entrada e saída de estoque
+ * Explicação: Componente de formulário de lançamento de estoque.
+ */
 import { useEffect, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { getApiErrorMessage } from "../api/errors";
@@ -9,6 +13,13 @@ import { formatQuantity, parseDecimalInput } from "../utils";
 import { Button, Choice, FormModal, TextField } from "./ui";
 import { AppText as Text } from "./AppText";
 
+/**
+ * Título: Formulário de entrada e saída de estoque (componente MovimentacaoModal)
+ * Explicação: Mostra o produto e o saldo disponível. Escolha entre Entrada e Saída, quantidade e
+ *   observação. save(): confere a quantidade (maior que zero, até 3 casas), envia e mostra o novo saldo
+ *   devolvido pelo backend; se for saída maior que o saldo, mostra a mensagem do backend. Usado por
+ *   EstoqueScreen.
+ */
 export function MovimentacaoModal({
   visible,
   item,
@@ -36,6 +47,12 @@ export function MovimentacaoModal({
       setError(null);
     }
   }, [initialType, item?.produtoId, visible]);
+  /**
+   * Título: Valida e registra
+   * Explicação: Valida a quantidade e chama useMovimentacaoMutation() → createMovimentacao() → POST
+   *   /api/movimentacoes (MovimentacaoController.registrar) com produto, tipo, quantidade e observação.
+   *   Com sucesso avisa a tela com o novo saldo devolvido pelo backend.
+   */
   async function save() {
     if (!item || submitting.current) return;
     const amount = parseDecimalInput(quantidade);
@@ -65,6 +82,8 @@ export function MovimentacaoModal({
     }
   }
   return (
+    // Título: Janela de lançamento de estoque
+    // Explicação: O × e o voltar do Android chamam onClose (bloqueado enquanto salva).
     <FormModal
       busy={mutation.isPending}
       onClose={() => {
@@ -73,6 +92,10 @@ export function MovimentacaoModal({
       title="Registrar movimentação"
       visible={visible}
     >
+      {/*
+        Título: Produto e saldo disponível
+        Explicação: Mostra o produto escolhido no cartão do estoque e o saldo atual.
+      */}
       <View style={styles.product}>
         <Text style={styles.productLabel}>Produto</Text>
         <Text style={styles.productName}>{item?.produtoNome}</Text>
@@ -83,6 +106,10 @@ export function MovimentacaoModal({
         ) : null}
       </View>
       <View style={styles.kind}>
+        {/*
+          Título: Escolha Entrada ou Saída
+          Explicação: Cada opção chama setTipo("ENTRADA") ou setTipo("SAIDA").
+        */}
         <Choice
           disabled={mutation.isPending}
           label="Entrada"
@@ -96,6 +123,10 @@ export function MovimentacaoModal({
           selected={tipo === "SAIDA"}
         />
       </View>
+      {/*
+        Título: Campo quantidade
+        Explicação: Guarda o texto em quantidade; precisa ser maior que zero, com até 3 casas decimais.
+      */}
       <TextField
         editable={!mutation.isPending}
         keyboardType="decimal-pad"
@@ -104,6 +135,10 @@ export function MovimentacaoModal({
         placeholder="0"
         value={quantidade}
       />
+      {/*
+        Título: Campo observação
+        Explicação: Guarda o texto em observacao (opcional).
+      */}
       <TextField
         editable={!mutation.isPending}
         label="Observação"
@@ -113,11 +148,22 @@ export function MovimentacaoModal({
         placeholder="Opcional"
         value={observacao}
       />
+      {/*
+        Título: Mensagem de erro
+        Explicação: Aparece quando a validação da tela ou o backend recusam o envio; o texto vem de
+          getApiErrorMessage().
+      */}
       {error ? (
         <Text accessibilityRole="alert" style={styles.error}>
           {error}
         </Text>
       ) : null}
+      {/*
+        Título: Botão Confirmar lançamento
+        Explicação: Chama save() → useMovimentacaoMutation() → createMovimentacao() → POST
+          /api/movimentacoes (MovimentacaoController.registrar). O backend atualiza o saldo do produto e
+          recusa saída maior que o saldo (422). Com sucesso mostra o novo saldo.
+      */}
       <Button
         loading={mutation.isPending}
         onPress={() => void save()}

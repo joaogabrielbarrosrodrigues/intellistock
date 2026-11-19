@@ -1,3 +1,7 @@
+/**
+ * Título: Cartão de sugestão de reposição
+ * Explicação: Componente de cartão de sugestão de compra.
+ */
 import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import type { Reposicao } from "../api/types";
@@ -14,6 +18,12 @@ const priorityLabels = {
   NENHUMA: "Sem reposição"
 } as const;
 
+/**
+ * Título: Cartão de sugestão de reposição (componente ReposicaoCard)
+ * Explicação: Mostra produto, prioridade, fornecedor, saldo, ponto de pedido, duração estimada,
+ *   quantidade sugerida e custo estimado. Avisa quando não houve saídas no período ou quando o consumo
+ *   está em alta. "Entender sugestão" abre o detalhamento do cálculo. Usado por AnalisesScreen.
+ */
 export function ReposicaoCard({ item }: { item: Reposicao }) {
   const [expanded, setExpanded] = useState(false);
   const unit = item.unidadeMedida;
@@ -50,6 +60,11 @@ export function ReposicaoCard({ item }: { item: Reposicao }) {
       ) : item.tendencia === "ALTA" ? (
         <Text style={styles.warning}>A alta recente elevou a base de consumo. Confira se esse ritmo vai continuar antes de comprar.</Text>
       ) : null}
+      {/*
+        Título: Botão Entender sugestão / Ocultar cálculo
+        Explicação: Chama setExpanded, que mostra ou esconde o passo a passo do cálculo da sugestão
+          (consumo, estoque de segurança e prazo).
+      */}
       <Pressable
         accessibilityRole="button"
         accessibilityState={{ expanded }}

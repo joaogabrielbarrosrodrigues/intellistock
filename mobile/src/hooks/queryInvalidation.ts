@@ -1,3 +1,8 @@
+/**
+ * Título: Quais listas recarregar depois de cada alteração
+ * Explicação: Módulo que define os nomes das consultas no cache e quais delas recarregar depois de
+ *   cada tipo de alteração.
+ */
 import type { QueryClient } from "@tanstack/react-query";
 
 export const queryKeys = {
@@ -20,6 +25,10 @@ export const affectedQueries = {
   conta: [queryKeys.contas, queryKeys.dashboard]
 } as const;
 
+/**
+ * Título: Marca as consultas como desatualizadas para serem buscadas de novo
+ * Explicação: Usado por useIntellistockQueries.
+ */
 export function invalidateRelatedQueries(client: QueryClient, keys: readonly (readonly unknown[])[]) {
   return Promise.all(keys.map((queryKey) => client.invalidateQueries({ queryKey })));
 }

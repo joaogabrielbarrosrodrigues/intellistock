@@ -1,3 +1,8 @@
+/**
+ * Título: Hooks que buscam e alteram dados do backend
+ * Explicação: Conjunto de hooks de dados que as telas usam. Liga as funções de intellistock.ts ao
+ *   TanStack Query, que guarda as respostas em cache e controla carregamento e erro.
+ */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   archiveProduto,
@@ -33,6 +38,11 @@ import { affectedQueries, invalidateRelatedQueries, queryKeys } from "./queryInv
 
 export { queryKeys } from "./queryInvalidation";
 const defaultQueryOptions = { staleTime: 30_000 };
+/**
+ * Título: Dados da Visão geral
+ * Explicação: Usa o TanStack Query para chamar GET /api/dashboard (DashboardController). Usado por
+ *   DashboardScreen.
+ */
 export function useDashboardQuery() {
   return useQuery({
     queryKey: queryKeys.dashboard,
@@ -40,6 +50,11 @@ export function useDashboardQuery() {
     ...defaultQueryOptions
   });
 }
+/**
+ * Título: Lista de produtos
+ * Explicação: Usa o TanStack Query para chamar GET /api/produtos (ProdutoController). Usado por
+ *   ProdutosScreen.
+ */
 export function useProdutosQuery(busca?: string) {
   return useQuery({
     queryKey: [...queryKeys.produtos, busca ?? ""],
@@ -47,6 +62,11 @@ export function useProdutosQuery(busca?: string) {
     ...defaultQueryOptions
   });
 }
+/**
+ * Título: Saldos de estoque
+ * Explicação: Usa o TanStack Query para chamar GET /api/estoque (EstoqueController). Usado por
+ *   RootNavigator e EstoqueScreen.
+ */
 export function useEstoqueQuery() {
   return useQuery({
     queryKey: queryKeys.estoque,
@@ -54,6 +74,11 @@ export function useEstoqueQuery() {
     ...defaultQueryOptions
   });
 }
+/**
+ * Título: Contas a pagar, com filtro opcional de estado
+ * Explicação: Usa o TanStack Query para chamar GET /api/contas (ContaPagarController). Usado por
+ *   DueReminderProvider e ContasScreen.
+ */
 export function useContasQuery(status?: string) {
   return useQuery({
     queryKey: [...queryKeys.contas, status ?? ""],
@@ -61,6 +86,11 @@ export function useContasQuery(status?: string) {
     ...defaultQueryOptions
   });
 }
+/**
+ * Título: Fornecedores, com busca opcional
+ * Explicação: Usa o TanStack Query para chamar GET /api/fornecedores (FornecedorController). Usado por
+ *   ContasScreen, FornecedoresScreen e ProdutosScreen.
+ */
 export function useFornecedoresQuery(busca?: string) {
   return useQuery({
     queryKey: [...queryKeys.fornecedores, busca ?? ""],
@@ -68,6 +98,11 @@ export function useFornecedoresQuery(busca?: string) {
     ...defaultQueryOptions
   });
 }
+/**
+ * Título: Movimentações recentes
+ * Explicação: Usa o TanStack Query para chamar GET /api/movimentacoes (MovimentacaoController). Usado
+ *   por EstoqueScreen.
+ */
 export function useMovimentacoesQuery(produtoId?: Id, limite = 100) {
   return useQuery({
     queryKey: [...queryKeys.movimentacoes, produtoId ?? "", limite],
@@ -75,6 +110,11 @@ export function useMovimentacoesQuery(produtoId?: Id, limite = 100) {
     ...defaultQueryOptions
   });
 }
+/**
+ * Título: Análise de consumo
+ * Explicação: Usa o TanStack Query para chamar GET /api/analises/consumo (AnaliseController). Usado
+ *   por AnalisesScreen.
+ */
 export function useConsumoQuery() {
   return useQuery({
     queryKey: queryKeys.consumo,
@@ -82,6 +122,11 @@ export function useConsumoQuery() {
     ...defaultQueryOptions
   });
 }
+/**
+ * Título: Sugestões de reposição
+ * Explicação: Usa o TanStack Query para chamar GET /api/analises/reposicao (AnaliseController). Usado
+ *   por AnalisesScreen.
+ */
 export function useReposicoesQuery() {
   return useQuery({
     queryKey: queryKeys.reposicoes,
@@ -90,11 +135,21 @@ export function useReposicoesQuery() {
   });
 }
 
+/**
+ * Título: Devolve uma função que manda recarregar listas
+ * Explicação: Usada só dentro deste arquivo, por useProdutoMutations, useMovimentacaoMutation,
+ *   useFornecedorMutations e useContaMutations.
+ */
 function useInvalidate() {
   const client = useQueryClient();
   return (keys: readonly (readonly unknown[])[]) =>
     invalidateRelatedQueries(client, keys);
 }
+/**
+ * Título: Criar, editar e desativar produto
+ * Explicação: Usa o TanStack Query para chamar POST, PUT e DELETE em /api/produtos
+ *   (ProdutoController). Usado por ProductFormModal e ProdutosScreen.
+ */
 export function useProdutoMutations() {
   const invalidate = useInvalidate();
   const keys = affectedQueries.estoque;
@@ -111,6 +166,11 @@ export function useProdutoMutations() {
     archive: useMutation({ mutationFn: archiveProduto, onSuccess: () => invalidate(keys) })
   };
 }
+/**
+ * Título: Registrar entrada ou saída
+ * Explicação: Usa o TanStack Query para chamar POST /api/movimentacoes (MovimentacaoController). Usado
+ *   por MovimentacaoModal.
+ */
 export function useMovimentacaoMutation() {
   const invalidate = useInvalidate();
   return useMutation({
@@ -118,6 +178,11 @@ export function useMovimentacaoMutation() {
     onSuccess: () => invalidate(affectedQueries.estoque)
   });
 }
+/**
+ * Título: Criar, editar e excluir fornecedor
+ * Explicação: Usa o TanStack Query para chamar POST, PUT e DELETE em /api/fornecedores
+ *   (FornecedorController). Usado por FornecedorFormModal e FornecedoresScreen.
+ */
 export function useFornecedorMutations() {
   const invalidate = useInvalidate();
   const keys = affectedQueries.fornecedor;
@@ -134,6 +199,11 @@ export function useFornecedorMutations() {
     remove: useMutation({ mutationFn: deleteFornecedor, onSuccess: () => invalidate(keys) })
   };
 }
+/**
+ * Título: Criar, editar, pagar, cancelar, reabrir e excluir conta
+ * Explicação: Usa o TanStack Query para chamar POST, PUT, DELETE e PATCH em /api/contas
+ *   (ContaPagarController). Usado por ContaFormModal e ContasScreen.
+ */
 export function useContaMutations() {
   const invalidate = useInvalidate();
   const keys = affectedQueries.conta;

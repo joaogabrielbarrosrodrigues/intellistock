@@ -16,17 +16,33 @@ import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Título: Filtro que identifica o usuário pelo token em cada pedido
+ * Explicação: Filtro HTTP que roda antes de qualquer controller, uma vez por pedido. É o ponto onde o
+ *   backend descobre quem está fazendo o pedido.
+ */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UserRepository userRepository;
 
+    /**
+     * Título: Construtor
+     * Explicação: O Spring chama ao criar o objeto e entrega pronto o que ele precisa: jwtService (JwtService)
+     *   e userRepository (UserRepository).
+     */
     public JwtAuthenticationFilter(JwtService jwtService, UserRepository userRepository) {
         this.jwtService = jwtService;
         this.userRepository = userRepository;
     }
 
+    /**
+     * Título: Executado uma vez por pedido
+     * Explicação: Recebe request (HttpServletRequest), response (HttpServletResponse) e filterChain
+     *   (FilterChain). Lê o cabeçalho Authorization; se começar com Bearer , pega o token e manda validar. Não
+     *   devolve nada.
+     */
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
@@ -51,6 +67,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
+    /**
+     * Título: Valida o token e devolve o id do usuário, ou null se o token for inválido
+     * Explicação: Recebe token (String). Valida e devolve o id, ou null se o token estiver malformado,
+     *   adulterado ou vencido. Devolve UUID.
+     */
     private UUID validarToken(String token) {
         try {
             return jwtService.validateAndGetUserId(token);

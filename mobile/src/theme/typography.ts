@@ -1,3 +1,7 @@
+/**
+ * Título: Fontes do app
+ * Explicação: Arquivo de tema com as fontes.
+ */
 import type { TextStyle } from "react-native";
 
 export const typography = {
@@ -9,6 +13,10 @@ export const typography = {
   display: "Montserrat_700Bold"
 } as const;
 
+/**
+ * Título: Escolhe a fonte de acordo com o peso (400, 500, 600...)
+ * Explicação: Usado por AppText.
+ */
 export function fontForWeight(weight?: TextStyle["fontWeight"]) {
   if (weight === "bold") return typography.bodyBold;
 

@@ -1,3 +1,7 @@
+/**
+ * Título: Tela de erro quando algo quebra
+ * Explicação: Componente de proteção contra erros de interface (um error boundary do React).
+ */
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { StyleSheet, View } from "react-native";
 import { colors } from "../theme/colors";
@@ -8,6 +12,10 @@ import { AppText as Text } from "./AppText";
 type Props = { children: ReactNode };
 type State = { error: Error | null };
 
+/**
+ * Título: AppErrorBoundary
+ * Explicação: Usado por App.
+ */
 export class AppErrorBoundary extends Component<Props, State> {
   state: State = { error: null };
 
@@ -27,6 +35,10 @@ export class AppErrorBoundary extends Component<Props, State> {
         <Text accessibilityRole="header" style={styles.title}>Não foi possível exibir esta tela</Text>
         <Text style={styles.message}>Tente novamente. Se o problema continuar, reinicie o aplicativo.</Text>
         {__DEV__ ? <Text style={styles.details}>{this.state.error.message}</Text> : null}
+        {/*
+          Título: Botão Tentar novamente
+          Explicação: Limpa o erro guardado e tenta desenhar o app de novo.
+        */}
         <Button onPress={() => this.setState({ error: null })} title="Tentar novamente" />
       </View>
     );

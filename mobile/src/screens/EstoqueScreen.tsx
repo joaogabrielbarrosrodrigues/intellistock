@@ -1,3 +1,7 @@
+/**
+ * Título: Tela de estoque
+ * Explicação: Tela da aba Estoque.
+ */
 import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { getApiErrorMessage } from "../api/errors";
@@ -15,6 +19,12 @@ import { radius, shadow, spacing } from "../theme/tokens";
 import { formatCurrency, formatDate, formatQuantity } from "../utils";
 
 type Filter = "TODOS" | "BAIXO" | "ZERADO";
+/**
+ * Título: Tela de estoque (componente EstoqueScreen)
+ * Explicação: Resumo com quantos produtos estão baixos e quantos zerados. Filtro Todos / Baixo /
+ *   Zerado. Cada cartão mostra saldo, valor em estoque e mínimo, com os botões "Registrar entrada" e
+ *   "Registrar saída", que abrem o formulário de movimentação. Usado por RootNavigator.
+ */
 export function EstoqueScreen() {
   const query = useEstoqueQuery();
   const movements = useMovimentacoesQuery(undefined, 8);
@@ -37,6 +47,11 @@ export function EstoqueScreen() {
       }}
     >
       <Header subtitle="Saldo, alertas e lançamentos" title="Estoque" />
+      {/*
+        Título: Contadores de estoque baixo e sem estoque
+        Explicação: Contados no próprio aparelho a partir da lista de GET /api/estoque (situação BAIXO e
+          ZERADO).
+      */}
       <View style={styles.summary}>
         <Card style={styles.summaryCard}>
           <Text style={styles.summaryValue}>{lowCount}</Text>
@@ -48,6 +63,11 @@ export function EstoqueScreen() {
         </Card>
       </View>
       <View style={styles.filters}>
+        {/*
+          Título: Filtros de situação
+          Explicação: Cada botão chama setFilter(valor) e a lista é filtrada no próprio aparelho; não chama o
+            backend.
+        */}
         {(["TODOS", "BAIXO", "ZERADO"] as Filter[]).map((value) => (
           <Pressable
             key={value}
@@ -61,11 +81,20 @@ export function EstoqueScreen() {
           </Pressable>
         ))}
       </View>
+      {/*
+        Título: Mensagem do último lançamento
+        Explicação: Mostra o texto devolvido pelo MovimentacaoModal depois de salvar, com o novo saldo.
+      */}
       {feedback ? (
         <Text accessibilityRole="alert" style={styles.feedback}>
           {feedback}
         </Text>
       ) : null}
+      {/*
+        Título: Carregando / erro do estoque
+        Explicação: Mostra o carregamento ou o erro de GET /api/estoque. O botão Tentar novamente chama
+          query.refetch(), que repete a chamada.
+      */}
       <StateView
         error={
           query.isError
@@ -76,8 +105,15 @@ export function EstoqueScreen() {
         onRetry={() => void query.refetch()}
       />
       {!query.isLoading && !query.isError && displayed.length === 0 ? (
+        // Título: Aviso de lista vazia
+        // Explicação: Aparece quando nenhum produto está na situação escolhida.
         <EmptyState message="Não há itens nesta situação." title="Estoque sem resultados" />
       ) : null}
+      {/*
+        Título: Cartões de estoque
+        Explicação: Um cartão por produto com saldo, valor em estoque e mínimo, vindos de useEstoqueQuery()
+          → getEstoque() → GET /api/estoque (EstoqueController.listar).
+      */}
       {displayed.map((item) => (
         <View key={item.produtoId} style={styles.card}>
           <View style={styles.cardBody}>
@@ -119,6 +155,12 @@ export function EstoqueScreen() {
             </Text>
           </View>
           <View style={styles.actions}>
+            {/*
+              Título: Botão Registrar entrada
+              Explicação: Chama setLaunch({ item, type: "ENTRADA" }), que abre o MovimentacaoModal já em Entrada.
+                Confirmar faz useMovimentacaoMutation() → createMovimentacao() → POST /api/movimentacoes
+                (MovimentacaoController.registrar), que soma a quantidade ao saldo.
+            */}
             <Pressable
               accessibilityRole="button"
               onPress={() => setLaunch({ item, type: "ENTRADA" })}
@@ -126,6 +168,12 @@ export function EstoqueScreen() {
             >
               <Text style={styles.entryText}>Registrar entrada</Text>
             </Pressable>
+            {/*
+              Título: Botão Registrar saída
+              Explicação: Chama setLaunch({ item, type: "SAIDA" }), que abre o MovimentacaoModal já em Saída.
+                Confirmar faz POST /api/movimentacoes, que subtrai do saldo e recusa quantidade maior que o saldo
+                (erro 422).
+            */}
             <Pressable
               accessibilityRole="button"
               onPress={() => setLaunch({ item, type: "SAIDA" })}
@@ -137,6 +185,11 @@ export function EstoqueScreen() {
         </View>
       ))}
       <SectionTitle title="Histórico recente" />
+      {/*
+        Título: Histórico recente
+        Explicação: Últimas 8 movimentações de useMovimentacoesQuery(undefined, 8) → getMovimentacoes() →
+          GET /api/movimentacoes (MovimentacaoController.listar) com ?limite=8.
+      */}
       <Card style={styles.history}>
         {movements.isLoading ? (
           <Text style={styles.muted}>Atualizando histórico...</Text>
@@ -167,6 +220,11 @@ export function EstoqueScreen() {
           ))
         )}
       </Card>
+      {/*
+        Título: Formulário de entrada e saída
+        Explicação: Visível quando launch tem um produto. Fechar chama setLaunch(null); ao salvar,
+          onSaved=setFeedback mostra a mensagem com o novo saldo.
+      */}
       <MovimentacaoModal
         initialType={launch?.type}
         item={launch?.item}

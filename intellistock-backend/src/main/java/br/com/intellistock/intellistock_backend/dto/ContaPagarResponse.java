@@ -10,6 +10,9 @@ import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 /**
+ * Título: Dados devolvidos pela API: ContaPagar
+ * Explicação: DTO de saída de uma conta.
+ *
  * @param diasParaVencimento negativo quando vencida; null para contas pagas ou canceladas.
  */
 public record ContaPagarResponse(
@@ -26,6 +29,10 @@ public record ContaPagarResponse(
         OffsetDateTime updatedAt
 ) {
 
+    /**
+     * Título: Converte a entidade neste DTO
+     * Explicação: Recebe conta (ContaPagar) e hoje (LocalDate). Devolve ContaPagarResponse.
+     */
     public static ContaPagarResponse from(ContaPagar conta, LocalDate hoje) {
         boolean emAberto = conta.getStatus() == StatusConta.PENDENTE;
         return new ContaPagarResponse(

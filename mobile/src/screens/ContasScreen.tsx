@@ -1,3 +1,7 @@
+/**
+ * Título: Tela de contas a pagar
+ * Explicação: Tela da aba Contas.
+ */
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRef, useState } from "react";
 import { Linking, Pressable, StyleSheet, View } from "react-native";
@@ -26,6 +30,12 @@ type Feedback = { message: string; tone: FeedbackTone };
 
 const filters: Filter[] = ["TODAS", "PENDENTE", "VENCIDA", "PAGA", "CANCELADA"];
 
+/**
+ * Título: Tela de contas a pagar (componente ContasScreen)
+ * Explicação: Filtros Todas / Pendente / Vencida / Paga / Cancelada (o filtro é aplicado pelo
+ *   backend). Botão "Nova conta" e edição ao tocar numa conta em aberto. ContaCard: valor, fornecedor,
+ *   vencimento e os botões Pagar, Cancelar ou Reabrir, e Excluir. Usado por RootNavigator.
+ */
 export function ContasScreen() {
   const [filter, setFilter] = useState<Filter>("TODAS");
   const [editing, setEditing] = useState<ContaPagar | null | undefined>(undefined);
@@ -40,6 +50,11 @@ export function ContasScreen() {
   const reminderStatus = useDueReminderStatus();
   const contas = query.data ?? [];
 
+  /**
+   * Título: Busca todas as contas e agenda o aviso de teste
+   * Explicação: Chama getContas() → GET /api/contas para pegar todas as contas e sendTestDueReminder()
+   *   para agendar, no aparelho, um aviso em 5 segundos. Não grava nada no backend.
+   */
   async function testReminder() {
     if (testingReminder.current) return;
     testingReminder.current = true;
@@ -58,6 +73,14 @@ export function ContasScreen() {
     }
   }
 
+  /**
+   * Título: Executa a ação confirmada (pagar, cancelar, reabrir ou excluir)
+   * Explicação: Conforme a ação guardada em pendingAction chama: pay → payConta() → PATCH
+   *   /api/contas/{id}/pagar (ContaPagarController.pagar); cancel → cancelConta() → PATCH
+   *   /api/contas/{id}/cancelar (ContaPagarController.cancelar); reopen → reopenConta() → PATCH
+   *   /api/contas/{id}/reabrir (ContaPagarController.reabrir); remove → deleteConta() → DELETE
+   *   /api/contas/{id} (ContaPagarController.excluir). Depois mostra a faixa e fecha a confirmação.
+   */
   async function confirmAction() {
     if (!pendingAction || submitting.current) return;
     submitting.current = true;
@@ -83,26 +106,54 @@ export function ContasScreen() {
     <Screen refreshing={query.isRefetching} onRefresh={() => void query.refetch()}>
       <Header subtitle="Compromissos e vencimentos" title="Contas a pagar" />
       <View style={styles.filters}>
+        {/*
+          Título: Filtros por situação da conta
+          Explicação: Cada botão chama setFilter(valor). Trocar o filtro muda a consulta
+            useContasQuery(status), que chama getContas() → GET /api/contas (ContaPagarController.listar) com
+            ?status=... (TODAS não envia filtro).
+        */}
         {filters.map((value) => (
           <Pressable key={value} accessibilityRole="button" onPress={() => setFilter(value)} style={[styles.filter, filter === value && styles.filterSelected]}>
             <Text style={[styles.filterText, filter === value && styles.filterTextSelected]}>{filterLabel(value)}</Text>
           </Pressable>
         ))}
       </View>
+      {/*
+        Título: Botão Nova conta
+        Explicação: Chama setEditing(null), que abre o ContaFormModal vazio. Ao salvar:
+          useContaMutations().create → createConta() → POST /api/contas (ContaPagarController.criar).
+      */}
       <Pressable accessibilityLabel="Cadastrar conta" accessibilityRole="button" onPress={() => setEditing(null)} style={styles.newButton}>
         <Ionicons color={colors.white} name="add" size={21} />
         <Text style={styles.newText}>Nova conta</Text>
       </Pressable>
 
       {reminderStatus === "enabled" ? (
+        // Título: Aviso de lembretes ativos e botão Testar avisos
+        // Explicação: O botão chama testReminder(), que busca todas as contas com getContas() → GET
+        //   /api/contas e agenda no aparelho um aviso de teste (sendTestDueReminder). Nada é gravado no backend.
         <Card style={styles.reminderCard}><Text style={styles.reminderText}>Avisos ativados: 7 dias antes, 3 dias antes e no dia do vencimento, às 9h.</Text><Pressable accessibilityRole="button" accessibilityState={{ disabled: testing }} disabled={testing} onPress={() => void testReminder()}><Text style={styles.reminderAction}>{testing ? "Preparando aviso..." : "Testar avisos"}</Text></Pressable></Card>
       ) : reminderStatus === "disabled" ? (
+        // Título: Aviso de notificações desligadas
+        // Explicação: O botão Abrir configurações chama Linking.openSettings(), que abre as configurações do
+        //   celular para liberar as notificações do app.
         <Card style={styles.reminderCard}><Text style={styles.reminderText}>Ative as notificações do app para receber lembretes de vencimento.</Text><Pressable accessibilityRole="button" onPress={() => void Linking.openSettings()}><Text style={styles.reminderAction}>Abrir configurações</Text></Pressable></Card>
       ) : reminderStatus === "error" ? (
+        // Título: Aviso de falha nos lembretes
+        // Explicação: Aparece quando o agendamento dos lembretes no aparelho falhou.
         <Card style={styles.reminderCard}><Text style={styles.reminderText}>Não foi possível programar os lembretes neste aparelho. Reinicie o app e confira as permissões.</Text></Card>
       ) : null}
 
+      {/*
+        Título: Faixa de sucesso ou erro
+        Explicação: Mostra a mensagem guardada em feedback depois de salvar, excluir ou quando algo falha.
+      */}
       <FeedbackBanner message={feedback?.message} tone={feedback?.tone} />
+      {/*
+        Título: Carregando / erro da lista de contas
+        Explicação: Mostra o carregamento ou o erro de GET /api/contas. O botão Tentar novamente chama
+          query.refetch(), que repete a chamada.
+      */}
       <StateView
         error={query.isError ? getApiErrorMessage(query.error, "Não foi possível carregar as contas.") : null}
         loading={query.isLoading}
@@ -110,11 +161,24 @@ export function ContasScreen() {
       />
 
       {!query.isLoading && !query.isError && contas.length === 0 ? (
+        // Título: Aviso de lista vazia
+        // Explicação: Aparece quando não há contas na situação escolhida.
         <EmptyState message="Cadastre uma conta ou selecione outro filtro." title="Nenhuma conta encontrada" />
       ) : null}
 
+      {/*
+        Título: Lista de contas
+        Explicação: Desenha um ContaCard por conta. Os botões do cartão chamam setPendingAction({ type,
+          conta }), que abre a confirmação; tocar no cartão chama setEditing(conta), que abre a edição.
+      */}
       {contas.map((conta) => <ContaCard key={conta.id} conta={conta} onAction={(type) => setPendingAction({ type, conta })} onEdit={() => setEditing(conta)} />)}
 
+      {/*
+        Título: Formulário de cadastro e edição de conta
+        Explicação: Visível quando editing não é undefined (null = nova conta; uma conta = edição). Recebe
+          os fornecedores de useFornecedoresQuery() → getFornecedores() → GET /api/fornecedores
+          (FornecedorController.listar).
+      */}
       <ContaFormModal
         conta={editing}
         onClose={() => setEditing(undefined)}
@@ -125,6 +189,14 @@ export function ContasScreen() {
         onRetrySuppliers={() => void suppliers.refetch()}
         visible={editing !== undefined}
       />
+      {/*
+        Título: Confirmação da ação escolhida no cartão
+        Explicação: Confirmar chama confirmAction(), que conforme o tipo faz: Pagar → payConta() → PATCH
+          /api/contas/{id}/pagar (ContaPagarController.pagar); Cancelar → cancelConta() → PATCH
+          /api/contas/{id}/cancelar (ContaPagarController.cancelar); Reabrir → reopenConta() → PATCH
+          /api/contas/{id}/reabrir (ContaPagarController.reabrir); Excluir → deleteConta() → DELETE
+          /api/contas/{id} (ContaPagarController.excluir). Cancelar fecha a janela sem chamar o backend.
+      */}
       <ConfirmationDialog
         confirmLabel={dialog?.confirmLabel}
         confirmVariant={pendingAction?.type === "remove" || pendingAction?.type === "cancel" ? "danger" : "primary"}
@@ -139,10 +211,20 @@ export function ContasScreen() {
   );
 }
 
+/**
+ * Título: Cartão de uma conta com seus botões
+ * Explicação: Usada só dentro deste arquivo, por ContasScreen.
+ */
 function ContaCard({ conta, onEdit, onAction }: { conta: ContaPagar; onEdit: () => void; onAction: (action: Action) => void }) {
   const open = conta.status === "PENDENTE" || conta.status === "VENCIDA";
   return (
     <View style={styles.card}>
+      {/*
+        Título: Corpo do cartão da conta (toque para editar)
+        Explicação: Só responde em contas PENDENTE ou VENCIDA. Chama onEdit, que abre o ContaFormModal;
+          salvar faz useContaMutations().update → updateConta() → PUT /api/contas/{id}
+          (ContaPagarController.atualizar).
+      */}
       <Pressable accessibilityHint={open ? "Abre a edição da conta" : undefined} accessibilityRole="button" disabled={!open} onPress={onEdit} style={styles.cardBody}>
         <View style={styles.cardHeader}>
           <Text numberOfLines={1} style={styles.title}>{conta.descricao}</Text>
@@ -160,25 +242,50 @@ function ContaCard({ conta, onEdit, onAction }: { conta: ContaPagar; onEdit: () 
       <View style={styles.actions}>
         {open ? (
           <>
+            {/*
+              Título: Botões Pagar e Cancelar
+              Explicação: Aparecem só em contas em aberto. Chamam onAction("pay") ou onAction("cancel"), que abrem
+                a confirmação; a chamada ao backend acontece em confirmAction().
+            */}
             <ActionButton label="Pagar" onPress={() => onAction("pay")} tone="success" />
             <ActionButton label="Cancelar" onPress={() => onAction("cancel")} tone="neutral" />
           </>
         ) : (
+          // Título: Botão Reabrir
+          // Explicação: Aparece em contas pagas ou canceladas. Chama onAction("reopen"); depois da confirmação,
+          //   confirmAction() faz PATCH /api/contas/{id}/reabrir.
           <ActionButton label="Reabrir" onPress={() => onAction("reopen")} tone="primary" />
         )}
+        {/*
+          Título: Botão lixeira (excluir conta)
+          Explicação: Chama onAction("remove"), que abre a confirmação; depois de confirmar, confirmAction()
+            faz DELETE /api/contas/{id}.
+        */}
         <Pressable accessibilityLabel={`Excluir ${conta.descricao}`} accessibilityRole="button" onPress={() => onAction("remove")} style={styles.delete}>
           <Ionicons color={colors.danger} name="trash-outline" size={19} />
         </Pressable>
       </View>
+    {/*
+      Título: Toque do botão de ação
+      Explicação: Chama o onPress recebido do ContaCard (Pagar, Cancelar ou Reabrir).
+    */}
     </View>
   );
 }
 
+/**
+ * Título: Botão de ação dentro do cartão
+ * Explicação: Usada só dentro deste arquivo, por ContaCard.
+ */
 function ActionButton({ label, onPress, tone }: { label: string; onPress: () => void; tone: "success" | "primary" | "neutral" }) {
   const color = tone === "success" ? colors.success : tone === "primary" ? colors.primary : colors.textSecondary;
   return <Pressable accessibilityRole="button" onPress={onPress} style={styles.actionButton}><Text style={[styles.actionText, { color }]}>{label}</Text></Pressable>;
 }
 
+/**
+ * Título: Cor da etiqueta de cada estado
+ * Explicação: Usada só dentro deste arquivo, por ContaCard.
+ */
 function statusTone(status: StatusConta): "success" | "warning" | "danger" | "neutral" {
   if (status === "PAGA") return "success";
   if (status === "VENCIDA") return "danger";
@@ -186,6 +293,10 @@ function statusTone(status: StatusConta): "success" | "warning" | "danger" | "ne
   return "neutral";
 }
 
+/**
+ * Título: Texto do vencimento ("Vence hoje", "Pago em ...")
+ * Explicação: Usada só dentro deste arquivo, por ContaCard.
+ */
 function dueLabel(conta: ContaPagar) {
   if (conta.status === "PAGA") return conta.dataPagamento ? `Pago em ${formatDate(conta.dataPagamento)}` : "Pagamento registrado";
   if (conta.status === "CANCELADA") return "Cancelada";
@@ -194,11 +305,19 @@ function dueLabel(conta: ContaPagar) {
   return `Vence em ${formatDate(conta.dataVencimento)}`;
 }
 
+/**
+ * Título: Nome legível de cada filtro
+ * Explicação: Usada só dentro deste arquivo, por ContasScreen.
+ */
 function filterLabel(filter: Filter) {
   if (filter === "TODAS") return "Todas";
   return filter[0] + filter.slice(1).toLowerCase();
 }
 
+/**
+ * Título: Título e texto da confirmação de cada ação
+ * Explicação: Usada só dentro deste arquivo, por ContasScreen.
+ */
 function actionDialog(action: PendingAction) {
   const amount = formatCurrency(action.conta.valor);
   if (action.type === "pay") return { title: "Confirmar pagamento", message: `Registrar o pagamento de ${amount}?`, confirmLabel: "Registrar" };
@@ -207,6 +326,10 @@ function actionDialog(action: PendingAction) {
   return { title: "Excluir conta?", message: "Esta exclusão é definitiva. Verifique se o registro não é mais necessário.", confirmLabel: "Excluir" };
 }
 
+/**
+ * Título: Mensagem de sucesso de cada ação
+ * Explicação: Usada só dentro deste arquivo, por ContasScreen.
+ */
 function successMessage(action: Action) {
   if (action === "pay") return "Pagamento registrado com sucesso.";
   if (action === "cancel") return "Conta cancelada com sucesso.";
@@ -214,6 +337,10 @@ function successMessage(action: Action) {
   return "Conta excluída com sucesso.";
 }
 
+/**
+ * Título: Mensagem de erro padrão de cada ação
+ * Explicação: Usada só dentro deste arquivo, por ContasScreen.
+ */
 function fallbackMessage(action: Action) {
   if (action === "pay") return "Não foi possível registrar o pagamento.";
   if (action === "cancel") return "Não foi possível cancelar a conta.";
@@ -221,6 +348,10 @@ function fallbackMessage(action: Action) {
   return "Não foi possível excluir a conta.";
 }
 
+/**
+ * Título: Se a ação escolhida ainda está em andamento
+ * Explicação: Usada só dentro deste arquivo, por ContasScreen.
+ */
 function isActionPending(action: Action | undefined, mutations: ReturnType<typeof useContaMutations>) {
   if (action === "pay") return mutations.pay.isPending;
   if (action === "cancel") return mutations.cancel.isPending;

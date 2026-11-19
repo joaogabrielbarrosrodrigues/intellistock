@@ -5,6 +5,9 @@ import jakarta.validation.constraints.PastOrPresent;
 import java.time.LocalDate;
 
 /**
+ * Título: Dados recebidos pela API: Pagamento
+ * Explicação: DTO de entrada opcional do pagamento.
+ *
  * @param dataPagamento opcional; quando omitida usa a data atual.
  */
 public record PagamentoRequest(

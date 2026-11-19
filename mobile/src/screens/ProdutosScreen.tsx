@@ -1,3 +1,7 @@
+/**
+ * Título: Tela de produtos
+ * Explicação: Tela da aba Produtos.
+ */
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useMemo, useRef, useState } from "react";
 import { FlatList, Pressable, StyleSheet, TextInput, View } from "react-native";
@@ -20,6 +24,12 @@ import { formatCurrency, formatQuantity, matchesSearch } from "../utils";
 
 type Feedback = { message: string; tone: FeedbackTone };
 
+/**
+ * Título: Tela de produtos (componente ProdutosScreen)
+ * Explicação: Busca todos os produtos uma vez e filtra no próprio aparelho conforme o texto digitado,
+ *   ignorando acentos. Lista em FlatList, que só desenha os itens visíveis. Cada cartão mostra nome,
+ *   situação, fornecedor, saldo e preço; tocar abre a edição. Usado por RootNavigator.
+ */
 export function ProdutosScreen() {
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState<Produto | null | undefined>(undefined);
@@ -35,6 +45,12 @@ export function ProdutosScreen() {
     [query.data, debouncedSearch]
   );
 
+  /**
+   * Título: Desativa o produto escolhido depois da confirmação
+   * Explicação: Roda quando o usuário confirma. Chama useProdutoMutations().archive → archiveProduto() →
+   *   DELETE /api/produtos/{id} (ProdutoController.excluir), mostra a faixa de sucesso ou erro e fecha a
+   *   confirmação. O submitting evita envio duplo.
+   */
   async function archive() {
     if (!archiving || submitting.current) return;
     submitting.current = true;
@@ -51,6 +67,12 @@ export function ProdutosScreen() {
 
   return (
     <Screen scroll={false}>
+      {/*
+        Título: Lista de produtos
+        Explicação: Desenha só os cartões visíveis. Os dados vêm de useProdutosQuery() → getProdutos() → GET
+          /api/produtos (ProdutoController.listar) e são filtrados no aparelho pelo texto da busca. Puxar a
+          lista para baixo chama query.refetch().
+      */}
       <FlatList
         data={products}
         keyExtractor={(product) => product.id}
@@ -64,6 +86,11 @@ export function ProdutosScreen() {
             <View style={styles.toolbar}>
               <View style={styles.search}>
                 <Ionicons color={colors.muted} name="search-outline" size={20} />
+                {/*
+                  Título: Campo de busca de produtos
+                  Explicação: Guarda o texto em search. Depois de uma pausa (useDebouncedValue), a lista é filtrada no
+                    próprio aparelho por matchesSearch(); não chama o backend de novo.
+                */}
                 <TextInput
                   accessibilityLabel="Buscar produtos"
                   autoCapitalize="none"
@@ -74,12 +101,26 @@ export function ProdutosScreen() {
                   value={search}
                 />
               </View>
+              {/*
+                Título: Botão + para cadastrar produto
+                Explicação: Chama setEditing(null), que abre o ProductFormModal vazio. Ao salvar, o formulário chama
+                  useProdutoMutations().create → createProduto() → POST /api/produtos (ProdutoController.criar).
+              */}
               <Pressable accessibilityLabel="Adicionar produto" accessibilityRole="button" onPress={() => setEditing(null)} style={styles.add}>
                 <Ionicons color={colors.white} name="add" size={24} />
               </Pressable>
             </View>
 
+            {/*
+              Título: Faixa de sucesso ou erro
+              Explicação: Mostra a mensagem guardada em feedback depois de salvar, excluir ou quando algo falha.
+            */}
             <FeedbackBanner message={feedback?.message} tone={feedback?.tone} />
+            {/*
+              Título: Carregando / erro da lista de produtos
+              Explicação: Mostra o carregamento ou o erro de GET /api/produtos. O botão Tentar novamente chama
+                query.refetch(), que repete a chamada.
+            */}
             <StateView
               error={query.isError ? getApiErrorMessage(query.error, "Não foi possível carregar os produtos.") : null}
               loading={query.isLoading}
@@ -89,6 +130,8 @@ export function ProdutosScreen() {
           </View>
         }
         ListEmptyComponent={!query.isLoading && !query.isError ? (
+          // Título: Aviso de lista vazia
+          // Explicação: Aparece quando não há produtos ou quando a busca não encontrou nada.
           <EmptyState
             message={search ? "Tente outra busca ou cadastre um produto." : "Cadastre seu primeiro produto para começar."}
             title={search ? "Nenhum produto encontrado" : "Seu catálogo está vazio"}
@@ -97,6 +140,12 @@ export function ProdutosScreen() {
 
         renderItem={({ item: product }) => (
           <View key={product.id} style={styles.card}>
+            {/*
+              Título: Cartão do produto (toque para editar)
+              Explicação: Chama setEditing(product), que abre o ProductFormModal preenchido. Ao salvar:
+                useProdutoMutations().update → updateProduto() → PUT /api/produtos/{id}
+                (ProdutoController.atualizar).
+            */}
             <Pressable accessibilityHint="Abre a edição do produto" accessibilityRole="button" onPress={() => setEditing(product)} style={styles.cardPress}>
               <View style={styles.cardHeader}>
                 <Text numberOfLines={1} style={styles.title}>{product.nome}</Text>
@@ -114,6 +163,11 @@ export function ProdutosScreen() {
                 </View>
               </View>
             </Pressable>
+            {/*
+              Título: Botão Desativar produto
+              Explicação: Chama setArchiving(product), que só abre a janela de confirmação. Quem desativa de fato
+                é archive(), chamada pelo botão Desativar da confirmação.
+            */}
             <Pressable accessibilityLabel={`Desativar ${product.nome}`} accessibilityRole="button" onPress={() => setArchiving(product)} style={styles.archive}>
               <Text style={styles.archiveText}>Desativar</Text>
             </Pressable>
@@ -121,6 +175,12 @@ export function ProdutosScreen() {
         )}
       />
 
+      {/*
+        Título: Formulário de cadastro e edição de produto
+        Explicação: Fica visível quando editing não é undefined (null = novo produto; um produto = edição).
+          Recebe os fornecedores de useFornecedoresQuery() → getFornecedores() → GET /api/fornecedores
+          (FornecedorController.listar) para a escolha do fornecedor.
+      */}
       <ProductFormModal
         onClose={() => setEditing(undefined)}
         onSaved={(message) => setFeedback({ message, tone: "success" })}
@@ -131,6 +191,12 @@ export function ProdutosScreen() {
         onRetrySuppliers={() => void suppliers.refetch()}
         visible={editing !== undefined}
       />
+      {/*
+        Título: Confirmação de desativar produto
+        Explicação: O botão Desativar chama archive() → useProdutoMutations().archive → archiveProduto() →
+          DELETE /api/produtos/{id} (ProdutoController.excluir). O produto não é apagado do banco: só fica com
+          ativo = false. Cancelar chama setArchiving(null) e fecha a janela.
+      */}
       <ConfirmationDialog
         confirmLabel="Desativar"
         loading={mutations.archive.isPending}

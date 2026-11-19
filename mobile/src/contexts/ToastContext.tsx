@@ -1,3 +1,7 @@
+/**
+ * Título: Avisos flutuantes por cima das telas
+ * Explicação: Contexto React do aviso flutuante (toast) que aparece no topo da tela.
+ */
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Pressable, StyleSheet, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -12,6 +16,10 @@ type ToastContextValue = { showToast: (options: ToastOptions) => void };
 
 const ToastContext = createContext<ToastContextValue | null>(null);
 
+/**
+ * Título: Guarda o aviso atual e o desenha por cima de todas as telas
+ * Explicação: Usado por App.
+ */
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toast, setToast] = useState<ToastOptions | null>(null);
   const opacity = useRef(new Animated.Value(0)).current;
@@ -62,6 +70,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   );
 }
 
+/**
+ * Título: Atalho para mostrar um aviso
+ * Explicação: Usado por RootNavigator.
+ */
 export function useToast() {
   const context = useContext(ToastContext);
   if (!context) throw new Error("useToast deve ser usado dentro de ToastProvider.");

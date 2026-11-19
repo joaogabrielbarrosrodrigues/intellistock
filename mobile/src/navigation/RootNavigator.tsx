@@ -1,3 +1,8 @@
+/**
+ * Título: Navegação: acesso, abas e alerta de estoque
+ * Explicação: Componente de navegação principal. Decide qual conjunto de telas mostrar conforme a
+ *   sessão e define as abas.
+ */
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
@@ -29,6 +34,10 @@ const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 const Tab = createBottomTabNavigator<AppTabParamList>();
 const MaisStack = createNativeStackNavigator<MaisStackParamList>();
 
+/**
+ * Título: Pilha da aba Mais: Menu, Fornecedores e Análises
+ * Explicação: Usada só dentro deste arquivo.
+ */
 function MaisNavigator() {
   return (
     <MaisStack.Navigator screenOptions={{ headerShown: false }}>
@@ -39,6 +48,10 @@ function MaisNavigator() {
   );
 }
 
+/**
+ * Título: A barra de abas inferior com as cinco abas
+ * Explicação: Usada só dentro deste arquivo, por AuthenticatedApp.
+ */
 function AppTabs() {
   const insets = useSafeAreaInsets();
   const bottomPadding = Math.max(insets.bottom, 8);
@@ -66,6 +79,10 @@ function AppTabs() {
         }
       })}
     >
+      {/*
+        Título: Abas inferiores
+        Explicação: Cada Tab.Screen liga uma aba à sua tela: Visão geral, Produtos, Estoque, Contas e Mais.
+      */}
       <Tab.Screen name="Dashboard" component={DashboardScreen} />
       <Tab.Screen name="Produtos" component={ProdutosScreen} />
       <Tab.Screen name="Estoque" component={EstoqueScreen} />
@@ -75,6 +92,10 @@ function AppTabs() {
   );
 }
 
+/**
+ * Título: O app logado: vigia o estoque para o alerta e liga os lembretes de vencimento
+ * Explicação: Usada só dentro deste arquivo, por RootNavigator.
+ */
 function AuthenticatedApp() {
   const estoqueQuery = useEstoqueQuery();
   const { showToast } = useToast();
@@ -108,6 +129,10 @@ function AuthenticatedApp() {
   return <DueReminderProvider><AppTabs /></DueReminderProvider>;
 }
 
+/**
+ * Título: Escolhe entre carregamento, acesso e app logado conforme a sessão
+ * Explicação: Usado por App.
+ */
 export function RootNavigator() {
   const { token, loading } = useAuth();
 

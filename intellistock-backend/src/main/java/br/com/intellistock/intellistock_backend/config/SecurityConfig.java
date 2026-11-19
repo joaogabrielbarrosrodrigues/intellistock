@@ -28,9 +28,23 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * Título: Configuração de segurança da API
+ * Explicação: Classe de configuração da segurança da API, usando o Spring Security. Define quem pode
+ *   acessar o quê e como o login é verificado.
+ */
 @Configuration
 public class SecurityConfig {
 
+    /**
+     * Título: Monta a cadeia de filtros de segurança que todo pedido HTTP atravessa antes de chegar a um controller
+     * Explicação: Recebe http (HttpSecurity), jwtAuthenticationFilter (JwtAuthenticationFilter),
+     *   authenticationProvider (AuthenticationProvider) e securityErrorHandler (JsonSecurityErrorHandler). Monta
+     *   as regras aplicadas a todo pedido. Libera sem token só /api/auth/register, /api/auth/login e /error;
+     *   todo o resto exige usuário autenticado. Desliga sessão (cada pedido se identifica pelo token), desliga
+     *   CSRF (não se aplica a API com token) e coloca o JwtAuthenticationFilter antes de qualquer controller.
+     *   Devolve SecurityFilterChain.
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter,
                                                    AuthenticationProvider authenticationProvider,
@@ -53,6 +67,12 @@ public class SecurityConfig {
                 .build();
     }
 
+    /**
+     * Título: Define quais sites podem chamar a API pelo navegador (necessário para o app na versão web)
+     * Explicação: Recebe allowedOrigins (List<String>). Diz quais endereços web podem chamar a API pelo
+     *   navegador (o Expo web em localhost:8081 e 19006), quais métodos e cabeçalhos são aceitos. Devolve
+     *   CorsConfigurationSource.
+     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource(
             @Value("${app.cors.allowed-origins}") List<String> allowedOrigins) {
@@ -67,6 +87,11 @@ public class SecurityConfig {
         return source;
     }
 
+    /**
+     * Título: Ensina o Spring Security a buscar um usuário pelo e-mail no banco durante o login
+     * Explicação: Recebe userRepository (UserRepository). Ensina o Spring a encontrar um usuário pelo e-mail
+     *   na tabela users durante o login. Devolve UserDetailsService.
+     */
     @Bean
     public UserDetailsService userDetailsService(UserRepository userRepository) {
         return username -> userRepository.findByEmail(username.toLowerCase(Locale.ROOT))
@@ -78,6 +103,12 @@ public class SecurityConfig {
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario nao encontrado."));
     }
 
+    /**
+     * Título: Junta a busca de usuário com o comparador de senhas
+     * Explicação: Recebe userDetailsService (UserDetailsService) e passwordEncoder (PasswordEncoder). Junta
+     *   essa busca com o comparador de senhas BCrypt. É quem confere se a senha digitada bate com a gravada.
+     *   Devolve AuthenticationProvider.
+     */
     @Bean
     public AuthenticationProvider authenticationProvider(UserDetailsService userDetailsService,
                                                          PasswordEncoder passwordEncoder) {
@@ -86,11 +117,20 @@ public class SecurityConfig {
         return provider;
     }
 
+    /**
+     * Título: Expõe o gerenciador de autenticação para o AuthService usar no login
+     * Explicação: Recebe configuration (AuthenticationConfiguration). Expõe o verificador para o AuthService
+     *   usar. Devolve AuthenticationManager.
+     */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
         return configuration.getAuthenticationManager();
     }
 
+    /**
+     * Título: Define o BCrypt como algoritmo para embaralhar e comparar senhas
+     * Explicação: Define o BCrypt como forma de guardar e comparar senhas. Devolve PasswordEncoder.
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

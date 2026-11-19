@@ -14,17 +14,32 @@ import org.springframework.transaction.annotation.Transactional;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
+/**
+ * Título: Criação e busca de usuários
+ * Explicação: Service que cria usuários e busca usuário por e-mail.
+ */
 @Service
 public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
+    /**
+     * Título: Construtor
+     * Explicação: O Spring chama ao criar o objeto e entrega pronto o que ele precisa: userRepository
+     *   (UserRepository) e passwordEncoder (PasswordEncoder).
+     */
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
+    /**
+     * Título: Valida e grava um usuário novo
+     * Explicação: Recebe request (RegisterRequest). Padroniza o e-mail (sem espaços, minúsculo), recusa senha
+     *   acima de 72 bytes (limite do BCrypt), recusa e-mail já cadastrado (409), embaralha a senha com BCrypt e
+     *   grava o usuário. Devolve UserResponse. Chamado por AuthService.
+     */
     @Transactional
     public UserResponse register(RegisterRequest request) {
         String email = request.email().trim().toLowerCase(Locale.ROOT);
@@ -46,6 +61,11 @@ public class UserService {
         return UserResponse.from(userRepository.save(user));
     }
 
+    /**
+     * Título: Busca um usuário pelo e-mail
+     * Explicação: Recebe email (String). Busca um usuário pelo e-mail (404 se não existir). Devolve User.
+     *   Chamado por AuthService.
+     */
     @Transactional(readOnly = true)
     public User findByEmail(String email) {
         return userRepository.findByEmail(email.toLowerCase(Locale.ROOT))

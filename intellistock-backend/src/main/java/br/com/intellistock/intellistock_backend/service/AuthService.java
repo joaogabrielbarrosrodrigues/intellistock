@@ -17,6 +17,10 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Locale;
 
+/**
+ * Título: Regras de cadastro e login
+ * Explicação: Service das regras de acesso: quem pode criar conta e como o login é feito.
+ */
 @Service
 public class AuthService {
 
@@ -25,6 +29,11 @@ public class AuthService {
     private final UserService userService;
     private final byte[] registrationCode;
 
+    /**
+     * Título: Construtor
+     * Explicação: O Spring chama ao criar o objeto e entrega pronto o que ele precisa: authenticationManager
+     *   (AuthenticationManager), jwtService (JwtService), userService (UserService) e registrationCode (String).
+     */
     public AuthService(AuthenticationManager authenticationManager, JwtService jwtService, UserService userService,
                        @Value("${app.cadastro.codigo:}") String registrationCode) {
         if (registrationCode == null || registrationCode.isBlank() || registrationCode.length() > 128) {
@@ -36,6 +45,12 @@ public class AuthService {
         this.registrationCode = registrationCode.getBytes(StandardCharsets.UTF_8);
     }
 
+    /**
+     * Título: Confere o código de acesso e repassa o cadastro ao UserService
+     * Explicação: Recebe request (RegisterRequest). Compara o código digitado com o configurado (comparação em
+     *   tempo constante). Se errado, lança InvalidRegistrationCodeException (403); se certo, repassa ao
+     *   UserService. Devolve UserResponse. Chamado por AuthController.
+     */
     public UserResponse register(RegisterRequest request) {
         if (!MessageDigest.isEqual(registrationCode, request.codigoAcesso().getBytes(StandardCharsets.UTF_8))) {
             throw new InvalidRegistrationCodeException();
@@ -43,6 +58,13 @@ public class AuthService {
         return userService.register(request);
     }
 
+    /**
+     * Título: Valida e-mail e senha pelo Spring Security e devolve o token com os dados do usuário
+     * Explicação: Recebe request (LoginRequest). Recusa senhas acima de 72 bytes, padroniza o e-mail, pede ao
+     *   Spring Security para conferir e-mail e senha (senha errada vira 401), carrega o usuário e devolve o
+     *   token gerado pelo JwtService dentro de um AuthResponse. Devolve AuthResponse. Chamado por
+     *   AuthController.
+     */
     public AuthResponse login(LoginRequest request) {
         if (request.senha().getBytes(StandardCharsets.UTF_8).length > 72) {
             throw new BadCredentialsException("Credenciais invalidas.");

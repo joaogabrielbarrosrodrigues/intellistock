@@ -1,3 +1,7 @@
+/**
+ * Título: Faixa de sucesso ou erro
+ * Explicação: Componente de faixa de retorno depois de uma ação.
+ */
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { StyleSheet, View } from "react-native";
 import { colors } from "../theme/colors";
@@ -6,6 +10,11 @@ import { AppText as Text } from "./AppText";
 
 export type FeedbackTone = "success" | "error";
 
+/**
+ * Título: Faixa de sucesso ou erro (componente FeedbackBanner)
+ * Explicação: Faixa verde com ícone de confirmação (sucesso) ou vermelha com ícone de alerta (erro).
+ *   Não aparece se não houver mensagem. Usado por ContasScreen, FornecedoresScreen e ProdutosScreen.
+ */
 export function FeedbackBanner({ message, tone = "success" }: { message?: string | null; tone?: FeedbackTone }) {
   if (!message) return null;
 

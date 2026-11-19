@@ -1,3 +1,7 @@
+/**
+ * Título: Agenda e cancela os lembretes no aparelho
+ * Explicação: Módulo que conversa com o sistema de notificações do celular (expo-notifications).
+ */
 import { Platform } from "react-native";
 import type { ContaPagar } from "../api/types";
 import { buildDueReminderPlan, buildTestReminderBody, DUE_REMINDER_SOURCE } from "./dueReminderPlan";
@@ -9,10 +13,19 @@ let notificationsModule: Promise<typeof import("expo-notifications")> | null = n
 let reminderGeneration = 0;
 
 // Capture antes de buscar contas: sair invalida também solicitações ainda em andamento.
+/**
+ * Título: Número da sessão atual de lembretes
+ * Explicação: Usado por ContasScreen.
+ */
 export function getDueReminderGeneration() {
   return reminderGeneration;
 }
 
+/**
+ * Título: Carrega o módulo de notificações só quando precisa
+ * Explicação: Usada só dentro deste arquivo, por checkDueReminderPermission, reconcileDueReminders,
+ *   cancelDueReminders e sendTestDueReminder.
+ */
 async function getNotifications() {
   notificationsModule ??= import("expo-notifications").then((Notifications) => {
     Notifications.setNotificationHandler({
@@ -28,12 +41,21 @@ async function getNotifications() {
   return notificationsModule;
 }
 
+/**
+ * Título: Põe a operação na fila, depois da anterior
+ * Explicação: Usada só dentro deste arquivo, por reconcileDueReminders, cancelDueReminders e
+ *   sendTestDueReminder.
+ */
 function serialize<T>(operation: () => Promise<T>): Promise<T> {
   const result = pendingOperation.then(operation, operation);
   pendingOperation = result.then(() => undefined, () => undefined);
   return result;
 }
 
+/**
+ * Título: Verifica (e, se for a primeira vez, pede) a permissão
+ * Explicação: Usado por DueReminderProvider.
+ */
 export async function checkDueReminderPermission(requestIfUndetermined: boolean) {
   if (Platform.OS === "web") return false;
   const Notifications = await getNotifications();
@@ -50,6 +72,10 @@ export async function checkDueReminderPermission(requestIfUndetermined: boolean)
   return permission.granted;
 }
 
+/**
+ * Título: Cancela os lembretes que não valem mais e agenda os que faltam
+ * Explicação: Usado por DueReminderProvider.
+ */
 export function reconcileDueReminders(accounts: ContaPagar[], userId: string) {
   if (Platform.OS === "web") return Promise.resolve();
   const generation = reminderGeneration;
@@ -96,6 +122,10 @@ export function reconcileDueReminders(accounts: ContaPagar[], userId: string) {
   });
 }
 
+/**
+ * Título: Cancela todos os lembretes (usado no logout)
+ * Explicação: Usado por AuthContext.
+ */
 export function cancelDueReminders() {
   reminderGeneration += 1;
   if (Platform.OS === "web") return Promise.resolve();
@@ -111,6 +141,10 @@ export function cancelDueReminders() {
   });
 }
 
+/**
+ * Título: Agenda um aviso de teste para daqui a 5 segundos
+ * Explicação: Usado por ContasScreen.
+ */
 export function sendTestDueReminder(accounts: ContaPagar[], generation: number): Promise<boolean> {
   if (Platform.OS === "web") return Promise.resolve(false);
   return serialize(async () => {

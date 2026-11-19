@@ -1,3 +1,7 @@
+/**
+ * Título: Formulário de cadastro e edição de fornecedor
+ * Explicação: Componente de formulário de fornecedor (cadastro ou edição).
+ */
 import { useEffect, useRef, useState } from "react";
 import { StyleSheet } from "react-native";
 import { getApiErrorMessage } from "../api/errors";
@@ -7,6 +11,12 @@ import { colors } from "../theme/colors";
 import { Button, FormModal, TextField } from "./ui";
 import { AppText as Text } from "./AppText";
 
+/**
+ * Título: Formulário de cadastro e edição de fornecedor (componente FornecedorFormModal)
+ * Explicação: Campos: nome (obrigatório), CNPJ, telefone e e-mail. save(): confere o nome e envia; o
+ *   CNPJ é validado pelo backend, que devolve a mensagem se estiver errado. Usado por
+ *   FornecedoresScreen.
+ */
 export function FornecedorFormModal({
   visible,
   supplier,
@@ -34,6 +44,13 @@ export function FornecedorFormModal({
       setError(null);
     }
   }, [supplier, visible]);
+  /**
+   * Título: Valida e salva
+   * Explicação: Valida o nome e monta o corpo (campos vazios viram null). Na edição chama
+   *   useFornecedorMutations().update → updateFornecedor() → PUT /api/fornecedores/{id}
+   *   (FornecedorController.atualizar); no cadastro, create → createFornecedor() → POST /api/fornecedores
+   *   (FornecedorController.criar).
+   */
   async function save() {
     if (submitting.current) return;
     if (!nome.trim()) return setError("Informe o nome do fornecedor.");
@@ -60,6 +77,8 @@ export function FornecedorFormModal({
   }
   const saving = mutations.create.isPending || mutations.update.isPending;
   return (
+    // Título: Janela do formulário de fornecedor
+    // Explicação: O × e o voltar do Android chamam onClose (bloqueado enquanto salva).
     <FormModal
       busy={saving}
       onClose={() => {
@@ -68,6 +87,10 @@ export function FornecedorFormModal({
       title={supplier ? "Editar fornecedor" : "Novo fornecedor"}
       visible={visible}
     >
+      {/*
+        Título: Campo nome
+        Explicação: Guarda o texto em nome (obrigatório).
+      */}
       <TextField
         autoCapitalize="words"
         editable={!saving}
@@ -77,6 +100,11 @@ export function FornecedorFormModal({
         placeholder="Razão social ou nome"
         value={nome}
       />
+      {/*
+        Título: Campo CNPJ
+        Explicação: Opcional. O backend limpa a pontuação, valida os dígitos (CnpjUtils) e recusa CNPJ
+          repetido com 409.
+      */}
       <TextField
         editable={!saving}
         keyboardType="numeric"
@@ -86,6 +114,10 @@ export function FornecedorFormModal({
         placeholder="Opcional"
         value={cnpj}
       />
+      {/*
+        Título: Campo telefone
+        Explicação: Guarda o texto em telefone (opcional).
+      */}
       <TextField
         editable={!saving}
         keyboardType="phone-pad"
@@ -95,6 +127,10 @@ export function FornecedorFormModal({
         placeholder="Opcional"
         value={telefone}
       />
+      {/*
+        Título: Campo e-mail
+        Explicação: Guarda o texto em email (opcional; o backend confere o formato).
+      */}
       <TextField
         autoCapitalize="none"
         autoCorrect={false}
@@ -106,11 +142,22 @@ export function FornecedorFormModal({
         placeholder="Opcional"
         value={email}
       />
+      {/*
+        Título: Mensagem de erro
+        Explicação: Aparece quando a validação da tela ou o backend recusam o envio; o texto vem de
+          getApiErrorMessage().
+      */}
       {error ? (
         <Text accessibilityRole="alert" style={styles.error}>
           {error}
         </Text>
       ) : null}
+      {/*
+        Título: Botão Cadastrar fornecedor / Salvar alterações
+        Explicação: Chama save(): na edição, useFornecedorMutations().update → updateFornecedor() → PUT
+          /api/fornecedores/{id} (FornecedorController.atualizar); no cadastro, create → createFornecedor() →
+          POST /api/fornecedores (FornecedorController.criar). Com sucesso fecha a janela.
+      */}
       <Button
         loading={saving}
         onPress={() => void save()}

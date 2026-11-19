@@ -1,3 +1,7 @@
+/**
+ * Título: Logotipo do InteliStock
+ * Explicação: Componente do logotipo do InteliStock.
+ */
 import { Image, StyleSheet, View } from "react-native";
 
 const logoSource = require("../../assets/brand/intelistock-logo.png");
@@ -14,6 +18,12 @@ type Props = {
   width?: number;
 };
 
+/**
+ * Título: Logotipo do InteliStock (componente BrandLogo)
+ * Explicação: Recorta a imagem original para mostrar o logotipo completo ou só o símbolo, no tamanho
+ *   pedido, sem distorcer. Usado por App, BackHeader, Header, RootNavigator, LoginScreen e
+ *   RegisterScreen.
+ */
 export function BrandLogo({ variant = "full", width = 240 }: Props) {
   const region = regions[variant];
   const scale = width / region.width;

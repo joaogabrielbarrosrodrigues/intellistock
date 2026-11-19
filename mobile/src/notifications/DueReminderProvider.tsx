@@ -1,3 +1,8 @@
+/**
+ * Título: Liga os lembretes de vencimento
+ * Explicação: Componente provedor que cuida dos lembretes de vencimento das contas enquanto o usuário
+ *   está logado.
+ */
 import { createContext, type ReactNode, useContext, useEffect, useState } from "react";
 import { AppState, Platform } from "react-native";
 import { useAuth } from "../contexts/AuthContext";
@@ -7,6 +12,10 @@ import { checkDueReminderPermission, reconcileDueReminders } from "./dueReminder
 type ReminderStatus = "checking" | "enabled" | "disabled" | "error" | "unsupported";
 const DueReminderContext = createContext<ReminderStatus>("checking");
 
+/**
+ * Título: Componente que cuida da permissão e da sincronização dos lembretes
+ * Explicação: Usado por RootNavigator.
+ */
 export function DueReminderProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const accounts = useContasQuery();
@@ -44,6 +53,10 @@ export function DueReminderProvider({ children }: { children: ReactNode }) {
   return <DueReminderContext.Provider value={status}>{children}</DueReminderContext.Provider>;
 }
 
+/**
+ * Título: Informa à tela de Contas se os lembretes estão ativos
+ * Explicação: Usado por ContasScreen.
+ */
 export function useDueReminderStatus() {
   return useContext(DueReminderContext);
 }

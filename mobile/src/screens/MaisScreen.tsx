@@ -1,3 +1,7 @@
+/**
+ * Título: Tela do menu Mais
+ * Explicação: Tela de menu da aba Mais.
+ */
 import Ionicons from "@expo/vector-icons/Ionicons";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Pressable, StyleSheet, View } from "react-native";
@@ -9,16 +13,30 @@ import type { MaisStackParamList } from "../navigation/types";
 import { colors } from "../theme/colors";
 import { radius, shadow, spacing } from "../theme/tokens";
 
+/**
+ * Título: Tela do menu Mais (componente MaisScreen)
+ * Explicação: Dois cartões tocáveis (MenuCard): Fornecedores e Análise e reposição, que abrem as telas
+ *   correspondentes na pilha da aba. Um cartão de orientação sobre as sugestões de compra. Usado por
+ *   RootNavigator.
+ */
 export function MaisScreen({ navigation }: NativeStackScreenProps<MaisStackParamList, "Menu">) {
   return (
     <Screen>
       <Header subtitle="Fornecedores e planejamento" title="Mais" />
+      {/*
+        Título: Cartão Fornecedores
+        Explicação: Chama navigation.navigate("Fornecedores") e abre a FornecedoresScreen.
+      */}
       <MenuCard
         icon="people-outline"
         onPress={() => navigation.navigate("Fornecedores")}
         subtitle="Cadastre e mantenha parceiros atualizados"
         title="Fornecedores"
       />
+      {/*
+        Título: Cartão Análise e reposição
+        Explicação: Chama navigation.navigate("Analises") e abre a AnalisesScreen.
+      */}
       <MenuCard
         icon="analytics-outline"
         onPress={() => navigation.navigate("Analises")}
@@ -35,6 +53,10 @@ export function MaisScreen({ navigation }: NativeStackScreenProps<MaisStackParam
   );
 }
 
+/**
+ * Título: Cartão tocável do menu
+ * Explicação: Usada só dentro deste arquivo, por MaisScreen.
+ */
 function MenuCard({
   icon,
   title,
@@ -47,6 +69,8 @@ function MenuCard({
   onPress: () => void;
 }) {
   return (
+    // Título: Toque do cartão do menu
+    // Explicação: Chama o onPress recebido, que é a navegação definida na MaisScreen.
     <Pressable accessibilityRole="button" onPress={onPress} style={styles.menuCard}>
       <View style={styles.menuIcon}>
         <Ionicons color={colors.primary} name={icon} size={24} />

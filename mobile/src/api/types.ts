@@ -1,3 +1,8 @@
+/**
+ * Título: Formato dos dados trocados com o backend
+ * Explicação: Definições de tipos TypeScript dos dados trocados com o backend. Não executa nada; serve
+ *   para o editor e o compilador avisarem se o código usar um campo que não existe.
+ */
 export type Id = string;
 
 export type User = { id: Id; nome: string; email: string; createdAt?: string };

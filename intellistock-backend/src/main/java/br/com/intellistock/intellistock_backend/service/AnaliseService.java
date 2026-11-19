@@ -38,6 +38,9 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
+ * Título: Cálculo das análises de consumo e da reposição
+ * Explicação: Service de análise. Calcula indicadores a partir das saídas registradas; não grava nada.
+ *
  * Indicadores calculados a partir do historico de SAIDAS (consumo).
  *
  * <p>Tendencia: o periodo analisado e dividido em duas metades e a media diaria da metade
@@ -65,6 +68,12 @@ public class AnaliseService {
     private final AnaliseProperties properties;
     private final Clock clock;
 
+    /**
+     * Título: Construtor
+     * Explicação: O Spring chama ao criar o objeto e entrega pronto o que ele precisa: produtoRepository
+     *   (ProdutoRepository), movimentacaoRepository (MovimentacaoRepository), produtoService (ProdutoService),
+     *   properties (AnaliseProperties) e clock (Clock).
+     */
     public AnaliseService(ProdutoRepository produtoRepository, MovimentacaoRepository movimentacaoRepository,
                           ProdutoService produtoService, AnaliseProperties properties, Clock clock) {
         this.produtoRepository = produtoRepository;
@@ -82,6 +91,12 @@ public class AnaliseService {
         }
     }
 
+    /**
+     * Título: Consumo e tendência de um produto ou de todos os ativos
+     * Explicação: Recebe produtoId (UUID) e dias (Integer). Para um produto ou todos os ativos, soma as saídas
+     *   da janela (padrão 30 dias), calcula média diária, semanal (×7) e mensal (×30) e a tendência. Devolve
+     *   List<ConsumoResponse>. Chamado por AnaliseController.
+     */
     @Transactional(readOnly = true)
     public List<ConsumoResponse> consumo(UUID produtoId, Integer dias) {
         Janela janela = janela(dias == null ? properties.diasAnalise() : dias);
@@ -113,6 +128,11 @@ public class AnaliseService {
     }
 
     /**
+     * Título: Série temporal de consumo por produto ou por unidade de medida
+     * Explicação: Recebe produtoId (UUID), unidadeMedida (UnidadeMedida), agrupamento (Agrupamento) e dias
+     *   (Integer). Distribui as saídas em grupos por dia, semana (começando na segunda) ou mês, para gráficos.
+     *   Devolve ConsumoSerieResponse. Chamado por AnaliseController.
+     *
      * Serie de consumo agrupada por dia, semana (iniciando na segunda-feira) ou mes.
      *
      * @param produtoId produto específico; quando omitido, unidadeMedida é obrigatória
@@ -142,6 +162,11 @@ public class AnaliseService {
     }
 
     /**
+     * Título: Consumo mês a mês separado por unidade (usado no dashboard)
+     * Explicação: Recebe meses (int). Consumo mês a mês dos últimos meses, separado por unidade de medida (não
+     *   soma quilos com litros). Usado no dashboard. Devolve List<ConsumoPorUnidadeResponse>. Chamado por
+     *   DashboardService.
+     *
      * Consumo mensal separado por unidade de medida. Somar, por exemplo, litros e unidades
      * produz um indicador sem significado; por isso cada unidade possui sua própria série.
      */
@@ -171,6 +196,12 @@ public class AnaliseService {
                 .toList();
     }
 
+    /**
+     * Título: Calcula a sugestão de todos os produtos ativos e ordena por prioridade
+     * Explicação: Recebe parametros (ParametrosReposicao) e incluirTodos (boolean). Calcula a sugestão de
+     *   compra de todos os produtos ativos com o CalculoReposicao e ordena por prioridade, dias restantes e
+     *   nome. Devolve List<ReposicaoResponse>. Chamado por AnaliseController.
+     */
     @Transactional(readOnly = true)
     public List<ReposicaoResponse> reposicao(ParametrosReposicao parametros, boolean incluirTodos) {
         int diasCobertura = valor(parametros.diasCobertura(), properties.diasCobertura());
@@ -189,6 +220,11 @@ public class AnaliseService {
                 .toList();
     }
 
+    /**
+     * Título: Conta quantos produtos precisam de reposição (número do dashboard)
+     * Explicação: Conta quantos produtos precisam de compra, para o número do dashboard. Devolve long. Chamado
+     *   por DashboardService.
+     */
     @Transactional(readOnly = true)
     public long contarSugestoesReposicao() {
         Janela janela = janela(properties.diasAnalise());
@@ -200,6 +236,11 @@ public class AnaliseService {
                 .count();
     }
 
+    /**
+     * Título: Junta os números do cálculo em uma resposta ou chama o CalculoReposicao
+     * Explicação: Recebe produto (Produto), consumo (Consumo), periodoAnaliseDias (int), diasCobertura (int),
+     *   prazoEntrega (int) e diasSeguranca (int). Devolve ReposicaoResponse.
+     */
     private ReposicaoResponse calcularReposicao(Produto produto, Consumo consumo, int periodoAnaliseDias,
                                                 int diasCobertura, int prazoEntrega, int diasSeguranca) {
         BigDecimal estoqueAtual = produto.getQuantidade();
@@ -232,6 +273,11 @@ public class AnaliseService {
         );
     }
 
+    /**
+     * Título: Junta os números do cálculo em uma resposta ou chama o CalculoReposicao
+     * Explicação: Recebe produto (Produto), consumo (Consumo), diasCobertura (int), prazoEntrega (int) e
+     *   diasSeguranca (int). Devolve CalculoReposicao.
+     */
     private CalculoReposicao calcularReposicao(Produto produto, Consumo consumo,
                                                int diasCobertura, int prazoEntrega, int diasSeguranca) {
         return CalculoReposicao.calcular(produto.getQuantidade(), produto.getEstoqueMinimo(),
@@ -239,6 +285,10 @@ public class AnaliseService {
                 diasCobertura, prazoEntrega, diasSeguranca);
     }
 
+    /**
+     * Título: Calcula total, médias e tendência de um produto
+     * Explicação: Recebe produtoId (UUID), janela (Janela) e totais (Totais). Devolve Consumo.
+     */
     private Consumo calcularConsumo(UUID produtoId, Janela janela, Totais totais) {
         BigDecimal antigo = totais.antigos().getOrDefault(produtoId, BigDecimal.ZERO);
         BigDecimal recente = totais.recentes().getOrDefault(produtoId, BigDecimal.ZERO);
@@ -275,6 +325,10 @@ public class AnaliseService {
         return new Consumo(total, mediaDiaria, mediaRecente, tendencia, variacao);
     }
 
+    /**
+     * Título: Soma as saídas na metade antiga e na metade recente do período
+     * Explicação: Recebe janela (Janela) e produtoId (UUID). Devolve Totais.
+     */
     private Totais totais(Janela janela, UUID produtoId) {
         if (produtoId != null) {
             return new Totais(
@@ -289,6 +343,11 @@ public class AnaliseService {
         );
     }
 
+    /**
+     * Título: Busca as saídas do período e distribui em grupos por dia, semana ou mês
+     * Explicação: Recebe produtoId (UUID), unidadeMedida (UnidadeMedida), agrupamento (Agrupamento), inicio
+     *   (LocalDate) e fim (LocalDate). Devolve List<ConsumoSerieResponse.Ponto>.
+     */
     private List<ConsumoSerieResponse.Ponto> pontos(UUID produtoId, UnidadeMedida unidadeMedida,
                                                     Agrupamento agrupamento, LocalDate inicio, LocalDate fim) {
         ZoneId zona = clock.getZone();
@@ -314,6 +373,10 @@ public class AnaliseService {
         return pontosDosBuckets(buckets, inicio, fim, agrupamento);
     }
 
+    /**
+     * Título: Cria os meses vazios do período
+     * Explicação: Recebe inicio (LocalDate) e fim (LocalDate). Devolve Map<LocalDate, BigDecimal>.
+     */
     private Map<LocalDate, BigDecimal> bucketsMensais(LocalDate inicio, LocalDate fim) {
         Map<LocalDate, BigDecimal> buckets = new TreeMap<>();
         for (LocalDate cursor = inicio.withDayOfMonth(1); !cursor.isAfter(fim); cursor = cursor.plusMonths(1)) {
@@ -322,6 +385,11 @@ public class AnaliseService {
         return buckets;
     }
 
+    /**
+     * Título: Transforma os grupos em pontos com data de início e fim
+     * Explicação: Recebe buckets (Map<LocalDate,BigDecimal>), inicio (LocalDate), fim (LocalDate) e
+     *   agrupamento (Agrupamento). Devolve List<ConsumoSerieResponse.Ponto>.
+     */
     private List<ConsumoSerieResponse.Ponto> pontosDosBuckets(Map<LocalDate, BigDecimal> buckets,
                                                                LocalDate inicio, LocalDate fim,
                                                                Agrupamento agrupamento) {
@@ -335,6 +403,10 @@ public class AnaliseService {
         return pontos;
     }
 
+    /**
+     * Título: Primeiro dia do grupo (dia, segunda-feira da semana ou dia 1 do mês)
+     * Explicação: Recebe data (LocalDate) e agrupamento (Agrupamento). Devolve LocalDate.
+     */
     private LocalDate inicioDoBucket(LocalDate data, Agrupamento agrupamento) {
         return switch (agrupamento) {
             case DIARIO -> data;
@@ -343,6 +415,10 @@ public class AnaliseService {
         };
     }
 
+    /**
+     * Título: Início do grupo seguinte
+     * Explicação: Recebe inicioBucket (LocalDate) e agrupamento (Agrupamento). Devolve LocalDate.
+     */
     private LocalDate proximoBucket(LocalDate inicioBucket, Agrupamento agrupamento) {
         return switch (agrupamento) {
             case DIARIO -> inicioBucket.plusDays(1);
@@ -351,6 +427,10 @@ public class AnaliseService {
         };
     }
 
+    /**
+     * Título: Calcula as datas da janela de análise e o ponto do meio
+     * Explicação: Recebe dias (int). Devolve Janela.
+     */
     private Janela janela(int dias) {
         ZoneId zona = clock.getZone();
         LocalDate fim = LocalDate.now(clock);
@@ -369,18 +449,34 @@ public class AnaliseService {
         );
     }
 
+    /**
+     * Título: Transforma a lista de somas em um mapa produto → total
+     * Explicação: Recebe totais (List<TotalPorProduto>). Devolve Map<UUID, BigDecimal>.
+     */
     private static Map<UUID, BigDecimal> porProduto(List<TotalPorProduto> totais) {
         return totais.stream().collect(Collectors.toMap(TotalPorProduto::produtoId, TotalPorProduto::total));
     }
 
+    /**
+     * Título: Divide o total pelos dias com 3 casas decimais
+     * Explicação: Recebe total (BigDecimal) e dias (int). Devolve BigDecimal.
+     */
     private static BigDecimal media(BigDecimal total, int dias) {
         return total.divide(BigDecimal.valueOf(dias), ESCALA_QUANTIDADE, RoundingMode.HALF_UP);
     }
 
+    /**
+     * Título: Arredonda para 3 casas decimais
+     * Explicação: Recebe valor (BigDecimal). Devolve BigDecimal.
+     */
     private static BigDecimal escala(BigDecimal valor) {
         return valor.setScale(ESCALA_QUANTIDADE, RoundingMode.HALF_UP);
     }
 
+    /**
+     * Título: Usa o valor informado ou o padrão
+     * Explicação: Recebe informado (Integer) e padrao (int). Devolve int.
+     */
     private static int valor(Integer informado, int padrao) {
         return informado == null ? padrao : informado;
     }
